@@ -1,0 +1,875 @@
+---
+title: "Department of Agriculture"
+subtitle: "A comprehensive look at the budget, FY 2018–2026"
+date: "`r format(Sys.Date(), '%B %Y')`"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    toc_depth: 3
+    number_sections: true
+    code_folding: hide
+    self_contained: true
+    df_print: paged
+    fig_width: 10
+    fig_height: 5.5
+---
+
+```{css, echo=FALSE}
+:root { --ink:#1a1a1a; --muted:#6e6e6e; --accent:#08519C; --rule:#e6e6e6; --band:#1B4965; }
+body, .main-container { font-family: Arial, Helvetica, "IBM Plex Sans", sans-serif; color: var(--ink); }
+.main-container { max-width: 980px; }
+h1, h2, h3, h4 { font-family: Arial, Helvetica, sans-serif; font-weight: 600; }
+h1.title { font-size: 30px; }
+h1 { font-size: 25px; margin-top: 1.6em; padding-top: .3em; border-top: 2px solid var(--rule); }
+h2 { font-size: 20px; margin-top: 1.4em; }
+h3 { font-size: 17px; color: #333; }
+.author, .date { color: var(--muted); }
+p, li { font-size: 15.5px; line-height: 1.62; }
+blockquote { border-left: 3px solid var(--accent); background: #f5f8fc; color: #25405e;
+  font-size: 14.5px; padding: .6em 1em; margin: 1.2em 0; }
+.lead { font-size: 16.5px; color: #2b2b2b; }
+.takeaway { background: #f7f9fb; border: 1px solid var(--rule); border-radius: 6px;
+  padding: .4em 1.1em; margin: 1.1em 0; }
+.takeaway p, .takeaway li { font-size: 14.5px; }
+.section-band { background: var(--band); color: #fff; padding: .55em .9em; border-radius: 6px;
+  margin-top: 2em; border-top: none; }
+.section-band.h1-band { font-size: 22px; font-weight: 600; }
+.caption, .figcaption { color: var(--muted); font-size: 13px; }
+table.dataTable { font-size: 13px; }
+.kbl-note { color: var(--muted); font-size: 12.5px; margin-top: -.5em; }
+hr { border-top: 1px solid var(--rule); }
+.home-link { font-size: 13.5px; }
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                     dpi = 150, fig.align = "center", out.width = "100%")
+
+# ---- Self-contained setup ------------------------------------------------
+options(knitr.kable.NA = "")
+library(readxl); library(dplyr); library(tidyr); library(stringr)
+library(ggplot2); library(scales); library(knitr); library(kableExtra); library(DT)
+
+.candidates <- c(
+  "../data/Compiled_-_NEP-GAA-SAAODB-ByPAPLabelled.xlsx",
+  "data/Compiled_-_NEP-GAA-SAAODB-ByPAPLabelled.xlsx",
+  "Compiled - NEP-GAA-SAAODB-ByPAPLabelled.xlsx",
+  "Compiled_-_NEP-GAA-SAAODB-ByPAPLabelled.xlsx")
+file_path <- .candidates[file.exists(.candidates)][1]
+stopifnot(!is.na(file_path))
+
+theme_da <- function(base_size = 12) {
+  theme_minimal(base_size = base_size, base_family = "sans") +
+    theme(
+      plot.title = element_text(face = "bold", size = base_size + 2, color = "black"),
+      plot.subtitle = element_text(color = "grey30", size = base_size),
+      plot.caption = element_text(color = "grey40", size = base_size - 3, hjust = 0),
+      panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
+      axis.title = element_text(size = base_size - 1, color = "grey20"),
+      axis.text = element_text(color = "grey20"),
+      legend.position = "bottom", legend.title = element_blank(),
+      legend.text = element_text(size = base_size - 1),
+      strip.text = element_text(face = "bold", size = base_size - 1.5, lineheight = 0.9))
+}
+
+exec_pal <- c("NEP (proposed)" = "#9E9AC8", "GAA (enacted)" = "#54278F",
+  "Adj. Appropriation" = "#3182BD", "Adj. Allotment" = "#08519C",
+  "Obligations" = "#E6550D", "Disbursements" = "#31A354")
+absorp_pal <- c("Obligations / Adj. Allotment" = "#3182BD",
+  "Disbursements / Obligations" = "#E6550D", "Disbursements / Adj. Allotment" = "#31A354")
+ec_pal <- c("Personnel Services (PS)" = "#2CA02C", "Maintenance & Other Op. Exp. (MOOE)" = "#FF7F0E",
+  "Financial Expenses (FE)" = "#1F77B4", "Capital Outlays (CO)" = "#9467BD")
+cat_pal <- c(
+  "General Administration and Support" = "#A6761D", "Support to Operations" = "#E6AB02",
+  "Production and Marketing Support" = "#1B9E77", "Infrastructure Support" = "#D95F02",
+  "Policy Formulation" = "#7570B3", "Regulatory Services" = "#E7298A",
+  "Locally-Funded and Foreign-Assisted" = "#666666")
+# Banner-program (service) and commodity palettes
+banner_pal <- c("PSS" = "#1B9E77", "ESETS" = "#D95F02", "PAEF" = "#7570B3",
+  "R&D" = "#E7298A", "MDS" = "#66A61E", "INS" = "#E6AB02")
+commodity_pal <- c("Rice" = "#1B9E77", "Corn" = "#E6AB02", "Livestock" = "#D95F02",
+  "High-Value Crops" = "#7570B3", "Organic" = "#66A61E",
+  "Urban/Peri-Urban" = "#A6761D", "Halal" = "#E7298A")
+bar_fill <- "#08519C"
+
+peso <- "PHP "
+php_b      <- function(x) paste0(peso, scales::comma(x / 1e9, accuracy = 0.1), "B")
+php_b_axis <- function(x) paste0(peso, scales::comma(x / 1e9, accuracy = 1), "B")
+
+dt_table <- function(df, caption = NULL, page = 10, money_cols = NULL, pct_cols = NULL, money_digits = 2) {
+  dt <- datatable(df, rownames = FALSE, caption = caption, extensions = "Buttons",
+    options = list(pageLength = page, lengthMenu = c(10, 20, 50, 100), dom = "Bfrtip",
+      buttons = c("copy", "csv"), scrollX = TRUE, autoWidth = FALSE,
+      columnDefs = list(list(className = "dt-right", targets = which(sapply(df, is.numeric)) - 1))),
+    class = "stripe hover compact")
+  if (!is.null(money_cols)) { mc <- which(names(df) %in% money_cols)
+    if (length(mc)) dt <- formatRound(dt, mc, digits = money_digits, mark = ",") }
+  if (!is.null(pct_cols)) { pc <- which(names(df) %in% pct_cols)
+    if (length(pc)) dt <- formatPercentage(dt, pc, digits = 0) }
+  dt
+}
+kbl_clean <- function(x, font = 14, ...) {
+  x %>% kable(...) %>% kable_styling(full_width = TRUE, font_size = font,
+    bootstrap_options = c("condensed", "striped", "hover"))
+}
+
+# ---- Data load & processing ---------------------------------------------
+raw <- read_excel(file_path, sheet = "DA")
+
+df_long_all <- raw %>% filter(!is.na(`P/A/P`)) %>%
+  pivot_longer(cols = matches("^(NEP|GAA|AuthAppro|AdjAppro|AdjAllot|Obligations|Disbursements)_\\d{4}_EXP_(1PS|2MOOE|3FE|6CO|TOTAL)$"),
+               names_to = "var", values_to = "amount") %>%
+  separate(var, into = c("metric", "year", "tag", "expense_class"), sep = "_") %>%
+  mutate(year = as.integer(year), amount = as.numeric(amount)) %>%
+  select(-tag) %>% rename(agency = UACS_AGY_DSC, pap = `P/A/P`)
+
+df_long <- df_long_all %>% filter(expense_class == "TOTAL") %>% select(-expense_class) %>%
+  mutate(is_osec = agency == "Office of the Secretary",
+         category = case_when(
+           is_osec & PREXC_PROG == 1000 ~ "General Administration and Support",
+           is_osec & PREXC_PROG == 2000 ~ "Support to Operations",
+           is_osec & PREXC_PROG == 3101 ~ "Production and Marketing Support",
+           is_osec & PREXC_PROG == 3102 ~ "Infrastructure Support",
+           is_osec & PREXC_PROG == 3103 ~ "Policy Formulation",
+           is_osec & PREXC_PROG == 3104 ~ "Regulatory Services",
+           is_osec & PREXC_PROG == 3105 ~ "Locally-Funded and Foreign-Assisted",
+           TRUE ~ NA_character_))
+
+# Tag the operational core by service type (banner program) and commodity
+df_long <- df_long %>% mutate(
+  service = case_when(
+    str_detect(pap, "Production Support Services \\(PSS\\)") ~ "PSS",
+    str_detect(pap, "Market Development Services") ~ "MDS",
+    str_detect(pap, "Extension Support, Education and Training Services \\(ESETS\\)") ~ "ESETS",
+    str_detect(pap, "Research and Development") ~ "R&D",
+    str_detect(pap, "Provision of Agricultural Equipment and Facilities \\(PAEF\\)") ~ "PAEF",
+    str_detect(pap, "Irrigation Network Services \\(INS\\)") ~ "INS", TRUE ~ NA_character_),
+  commodity = case_when(
+    str_detect(pap, "National Rice Program") ~ "Rice",
+    str_detect(pap, "National Corn Program") ~ "Corn",
+    str_detect(pap, "National Livestock Program") ~ "Livestock",
+    str_detect(pap, "High-Value Crops") ~ "High-Value Crops",
+    str_detect(pap, "Organic Agriculture") ~ "Organic",
+    str_detect(pap, "Halal") ~ "Halal",
+    str_detect(pap, "Urban and Peri-Urban") ~ "Urban/Peri-Urban", TRUE ~ NA_character_))
+
+osec_long <- df_long %>% filter(is_osec)
+osec_pap_year <- osec_long %>% group_by(pap, year, metric) %>%
+  summarise(amount = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = amount)
+osec_totals <- osec_long %>% group_by(year, metric) %>%
+  summarise(total = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE), .groups = "drop")
+osec_absorp <- osec_totals %>% pivot_wider(names_from = metric, values_from = total) %>%
+  filter(year %in% 2018:2025) %>%
+  mutate(oblig_allot = Obligations/AdjAllot, disb_oblig = Disbursements/Obligations, disb_allot = Disbursements/AdjAllot)
+
+SERVICE_LV <- c("PSS","ESETS","PAEF","R&D","MDS","INS")
+COMMODITY_LV <- c("Rice","Corn","Livestock","High-Value Crops","Organic","Urban/Peri-Urban","Halal")
+LFP_LABEL <- "Locally-Funded and Foreign-Assisted Program"
+FMR_LABEL <- "Repair/Rehabilitation and Construction of Farm-to-Market Roads in Designated Key Production Areas"
+
+# Attached-agency short names
+short_map <- c(
+  "Bureau of Fisheries and Aquatic Resources" = "BFAR",
+  "Agricultural Credit Policy Council" = "ACPC",
+  "Philippine Carabao Center" = "PCC",
+  "National Fisheries Research and Development Institute" = "NFRDI",
+  "National Meat Inspection Service" = "NMIS",
+  "Philippine Fiber Industry Development Authority" = "PhilFIDA",
+  "Philippine Center For Postharvest Development and Mechanization" = "PHilMech",
+  "Fertilizer and Pesticide Authority" = "FPA",
+  "Philippine Council for Agriculture and Fisheries" = "PCAF")
+```
+
+<p class="home-link"><a href="index.html">← All agencies</a></p>
+
+# Overview {#overview .unnumbered}
+
+<p class="lead">
+This document tracks the budget of the **Department of Agriculture (DA)** across nine fiscal years, FY 2018 to FY 2026, following each peso from the Executive's proposal (NEP) to enactment (GAA), release (allotment), commitment (obligation), and final cash payment (disbursement). It covers the **Office of the Secretary (OSEC)** in depth and the **nine attached agencies** in a dedicated section.
+</p>
+
+It is the long-form companion to the DA briefing deck — and the most expanded of the set. The deck necessarily treats DA's operational core as a handful of headline lines; this version opens that core up. In addition to the standard analysis, it adds three deep-dives the slide format could not carry:
+
+- **The operational core by service type** — aggregating the commodity programs into the six "banner" service components: Production Support Services (PSS), Extension Support, Education and Training Services (ESETS), Market Development Services (MDS), Research and Development (R&D), Provision of Agricultural Equipment and Facilities (PAEF), and Irrigation Network Services (INS).
+- **The operational core by commodity** — re-cutting the same money by what it grows: rice, corn, livestock, high-value crops, organic agriculture, and others — including a full service × commodity cross-tab.
+- **The two aggregated mega-lines** — Farm-to-Market Roads (FMR) and the Locally-Funded and Foreign-Assisted Program (LFP/FAP), each presented as a single aggregate (they are itemized into hundreds of sub-projects in the source budget documents), with particular attention to the puzzle of FMR's perennially-zero execution.
+
+The headline story is one of rapid growth running ahead of delivery capacity. DA-OSEC's budget nearly **quadrupled** — from ₱43.9B (2018 GAA) to a proposed ₱165.5B (2026) — but disbursement-to-allotment has *fallen* from the high-70s/low-80s to **69% by 2025**. Two enormous lines drive both the growth and the delivery gap: FMR (₱33B in 2026, zero recorded DA execution) and the LFP/FAP "black box" (₱71.6B in 2026, recent absorption around 33–53%).
+
+# Executive summary {#exec}
+
+**The DA-OSEC budget nearly quadrupled** — from ₱43.9B (2018 GAA) to a proposed ₱165.5B (2026), a 3.8× scale-up, with a step-change in 2023 and a further +₱57B leap proposed for 2026.
+
+**Three lines dominate 79% of the 2026 OSEC budget:** the Locally-Funded and Foreign-Assisted Program (₱71.6B), Farm-to-Market Roads (₱33.0B), and Production Support Services on the National Rice Program (₱26.4B).
+
+**The operational commodity core is overwhelmingly Production Support Services, and overwhelmingly rice.** Of the roughly ₱47.6B in service-tagged operational spending in 2026, **PSS is ₱35.6B (~75%)** and, cut the other way, **rice is ~63%** of the commodity total. The other services (ESETS, PAEF, R&D, MDS, INS) and other commodities (corn, livestock, high-value crops) are comparatively small.
+
+**Absorption is weak exactly where capital is involved.** Among service types, **PAEF (farm equipment) disbursed just 41%** of its 2025 allotment and **INS (irrigation) 55%**, while PSS and R&D ran ~79%. Among commodities, **livestock absorbed only 33%** while **corn led at 84%**.
+
+**Farm-to-Market Roads show zero DA execution every year.** The FMR line carries ₱10–33B of GAA annually but records **zero allotment, obligation, and disbursement** in DA's books for all of 2018–2025. Two explanations are in play — a transfer to DPWH for implementation, and a spill into the *following* year's Continuing Appropriations — and this dataset (Current New Appropriations only) cannot distinguish them. Either way, ~₱33B of the 2026 budget (20% of OSEC) is appropriated to DA but not executed by DA within the year.
+
+**Aggregate absorption has weakened as the budget grew.** Disbursement-to-allotment ran 74–81% from 2018 to 2023, then fell to **70% (2024) and 69% (2025)** — the lowest in the series. The LFP/FAP line, proposed at ₱71.6B for 2026 (≈6× its 2025 GAA) against recent absorption near 50%, is the central delivery risk.
+
+**Congress redirects within DA rather than just adding.** Cumulatively it has added **+₱29B to Farm-to-Market Roads** and **+₱15B to LFP/FAP**, while **cutting −₱15B from Rice PSS** — a deliberate-looking shift from operational commodity subsidies toward infrastructure (much of it implemented outside DA).
+
+**The nine attached agencies are ~11% of the department** and add ₱20.8B in 2026. BFAR is by far the largest; several others (ACPC, FPA, PCAF, PHilMech) are sub-₱0.7B single-purpose bodies with heavy overhead.
+
+> DA is the clearest case in this series of appropriation outrunning execution. The money is increasingly concentrated in two giant lines — one that DA does not appear to spend at all (FMR) and one it spends at barely half (LFP/FAP) — even as its hands-on commodity programs, led by rice, remain comparatively modest and, in the case of equipment and irrigation, hard to disburse.
+
+# A note on the data {#data-notes}
+
+**Period.** FY 2018 through FY 2026 for NEP and GAA. Execution data (Adjusted Appropriations, Adjusted Allotments, Obligations, Disbursements) is available **for the Office of the Secretary** for every year 2018–2025; FY 2026 reflects NEP/GAA only. **Attached-agency execution data is not available** and those sections are NEP/GAA only.
+
+**Scope.** DA Office of the Secretary (68 P/A/Ps) plus nine attached agencies. **Current New Appropriations only** — this excludes Continuing and Automatic Appropriations and Special Purpose Fund transfers, a point that matters for the FMR discussion below. Nominal pesos.
+
+**Expense classes.** Personnel Services (PS), Maintenance & Other Operating Expenses (MOOE), Financial Expenses (FE, negligible at DA), and Capital Outlays (CO).
+
+**PREXC structure (OSEC).** General Administration (1000), Support to Operations (2000), Production and Marketing Support (3101 — the operational core), Infrastructure Support (3102), Policy Formulation (3103), Regulatory Services (3104), and a Locally-Funded and Foreign-Assisted bucket (3105).
+
+**The service and commodity decomposition.** DA's operational P/A/Ps are labelled in a regular "{service} on the {commodity} Program" form — e.g. *Production Support Services (PSS) on the National Rice Program*. This report parses that structure to aggregate the operational core two ways: by **service type** (PSS, ESETS, MDS, R&D, PAEF, INS) and by **commodity** (rice, corn, livestock, high-value crops, organic, halal, urban/peri-urban). These cuts cover the commodity operational core (~₱47.6B in 2026); they deliberately exclude FMR, LFP/FAP, administration, and regulatory lines, which are not commodity-tagged.
+
+**Two lines are aggregates of many.** In the source budget documents, both Farm-to-Market Roads and the Locally-Funded and Foreign-Assisted Program are itemized into hundreds of individual sub-projects. Presenting those individually would bury the analysis in small amounts, so each is treated here as a single aggregate line — which is also how they appear in this dataset.
+
+**Absorptive-capacity denominator.** Unless noted, ratios use **Adjusted Allotments** — how well DA spent what was actually placed in its hands, separate from how much of its GAA was transferred out or never released.
+
+<h1 class="section-band h1-band">Section 1 — Office of the Secretary</h1>
+
+# The aggregate budget {#aggregate}
+
+## The budget keeps growing
+
+```{r osec-evolution, fig.height=5.2}
+evo <- osec_totals %>% filter(metric %in% c("NEP","GAA","AdjAllot","Obligations","Disbursements")) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA","AdjAllot","Obligations","Disbursements"),
+    labels = c("NEP (proposed)","GAA (enacted)","Adj. Allotment","Obligations","Disbursements")))
+ggplot(evo, aes(year, total, color = metric, group = metric)) +
+  geom_line(linewidth = 1.0) + geom_point(size = 2) +
+  scale_color_manual(values = exec_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "DA-OSEC budget, NEP through Disbursements (FY 2018–2026)",
+       subtitle = "The budget grew 3.8×; disbursements lagged further behind allotments after 2023",
+       x = NULL, y = NULL, caption = "FY 2026 reflects NEP/GAA only; execution data not yet available.") +
+  theme_da() + guides(color = guide_legend(nrow = 1))
+```
+
+The growth is dramatic, but the more important feature is the **widening gap between the allotment line and the disbursement line** after 2023. The budget roughly doubled again between 2022 and 2026, yet the green disbursement line increasingly trails the blue allotment line — money is arriving faster than it is going out the door.
+
+```{r osec-tbl-evolution}
+tbl_evo <- osec_totals %>% filter(metric %in% c("NEP","GAA","AdjAllot","Obligations","Disbursements")) %>%
+  mutate(value = total/1e9) %>% select(year, metric, value) %>%
+  pivot_wider(names_from = year, values_from = value) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA","AdjAllot","Obligations","Disbursements"),
+    labels = c("NEP","GAA","Adj. Allotment","Obligations","Disbursements"))) %>%
+  arrange(metric) %>% rename(`PHP B` = metric)
+kbl_clean(tbl_evo, font = 13, digits = 1, format.args = list(big.mark = ","), na = "")
+```
+
+## Year-on-year growth and the annual augmentation
+
+```{r osec-growth}
+wide_yr <- osec_totals %>% pivot_wider(names_from = metric, values_from = total)
+growth <- wide_yr %>% arrange(year) %>%
+  transmute(year, `GAA (B)` = round(GAA/1e9,1), `Growth %` = scales::percent(GAA/lag(GAA) - 1, accuracy = 0.1),
+            `NEP (B)` = round(NEP/1e9,1), `Net adj. GAA−NEP (B)` = round((GAA-NEP)/1e9,1))
+kbl_clean(growth, font = 13, align = "rrrrr", na = "")
+```
+
+Congress stayed within about ₱5B of the Executive's proposal in most years — sometimes trimming (2022, 2023, 2025), sometimes adding. The exception is the proposed **FY 2026 +₱31B Congressional add**, the largest in the series, concentrated in the two mega-lines.
+
+# Where the money goes {#composition}
+
+## By PREXC program
+
+```{r osec-composition, fig.height=5.2}
+comp <- osec_long %>% filter(metric == "GAA", year <= 2026, !is.na(amount)) %>%
+  group_by(year, category) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(category = factor(category, levels = names(cat_pal)))
+ggplot(comp, aes(year, amount, fill = category)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = cat_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "Composition of the GAA by PREXC program, 2018–2026",
+       subtitle = "Locally-Funded/Foreign-Assisted explodes in 2025–2026; Production & Marketing is the operational backbone",
+       x = NULL, y = NULL) +
+  theme_da() + guides(fill = guide_legend(nrow = 3, byrow = TRUE))
+```
+
+The grey **Locally-Funded and Foreign-Assisted** band is modest until 2024, then explodes to dominate the 2026 budget. The green **Production and Marketing Support** program — the hands-on commodity work decomposed later in this report — grows steadily but is increasingly outweighed by the LFP/FAP and infrastructure (FMR) blocks.
+
+```{r osec-comp-tbl}
+comp_pct <- comp %>% group_by(year) %>% mutate(share = round(amount/sum(amount)*100,1)) %>% ungroup() %>%
+  select(category, year, share) %>% pivot_wider(names_from = year, values_from = share)
+kbl_clean(comp_pct %>% rename(`Program (% of GAA)` = category), font = 12, digits = 1, na = "")
+```
+
+## By expense class
+
+```{r osec-comp-ec, fig.height=5.2}
+ec_levels <- c("Personnel Services (PS)","Maintenance & Other Op. Exp. (MOOE)","Financial Expenses (FE)","Capital Outlays (CO)")
+comp_ec <- df_long_all %>% filter(agency == "Office of the Secretary", metric == "GAA", year <= 2026,
+                                  expense_class %in% c("1PS","2MOOE","3FE","6CO")) %>%
+  group_by(year, expense_class) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(expense_class = factor(expense_class, levels = c("1PS","2MOOE","3FE","6CO"), labels = ec_levels))
+ggplot(comp_ec, aes(year, amount, fill = expense_class)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = ec_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "GAA composition by Expense Class, 2018–2026",
+       subtitle = "Capital Outlays are 37–49% of the budget — far higher than most departments, and concentrated in FMR",
+       x = NULL, y = NULL) +
+  theme_da() + guides(fill = guide_legend(nrow = 1))
+```
+
+DA is, unusually, a **capital-heavy department**: Capital Outlay runs **37–49% of the GAA** every year — the highest in this series — with Personnel Services a sliver (3–9%) and MOOE the rest. But the CO figure is misleading taken at face value: a large share of it is the **FMR line, which is 100% Capital Outlay and records zero execution**. The table separates the two views.
+
+```{r osec-co-split}
+co_tbl <- df_long_all %>% filter(agency == "Office of the Secretary", metric == "GAA",
+                                 expense_class %in% c("1PS","2MOOE","3FE","6CO")) %>%
+  mutate(isFMR = pap == FMR_LABEL) %>% group_by(year) %>%
+  summarise(total = sum(amount, na.rm = TRUE),
+            co_all = sum(amount[expense_class == "6CO"], na.rm = TRUE),
+            co_exfmr = sum(amount[expense_class == "6CO" & !isFMR], na.rm = TRUE), .groups = "drop") %>%
+  transmute(Year = year,
+            `CO incl. FMR` = scales::percent(co_all/total, accuracy = 1),
+            `CO excl. FMR` = scales::percent(co_exfmr/total, accuracy = 1))
+kbl_clean(co_tbl, font = 13, align = "rrr")
+```
+
+<p class="kbl-note">Excluding FMR, the genuine capital share is a more moderate 25–34% — still high, reflecting the equipment (PAEF) and irrigation (INS) programs and the capital half of LFP/FAP.</p>
+
+## The ten largest P/A/Ps
+
+```{r osec-top10, fig.height=5.4}
+top10 <- osec_pap_year %>% filter(year == 2026, !is.na(GAA), GAA > 0) %>%
+  arrange(desc(GAA)) %>% slice_head(n = 10) %>% mutate(pap = factor(pap, levels = rev(pap)))
+ggplot(top10, aes(pap, GAA)) +
+  geom_col(fill = bar_fill, width = 0.75) +
+  geom_text(aes(label = php_b(GAA)), hjust = -0.1, size = 3.3, color = "grey20") +
+  coord_flip() +
+  scale_x_discrete(labels = function(x) str_wrap(x, 48)) +
+  scale_y_continuous(labels = php_b_axis, expand = expansion(mult = c(0, .20)), limits = c(0, NA)) +
+  labs(title = "Top 10 P/A/Ps by FY 2026 GAA",
+       subtitle = "LFP/FAP is PHP 72B — 43% of the OSEC budget on its own; FMR and Rice PSS follow",
+       x = NULL, y = NULL) +
+  theme_da() +
+  theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"))
+```
+
+### Full P/A/P ranking (interactive) {.unnumbered}
+
+All 68 OSEC P/A/Ps, ranked by 2026 GAA, with 2026 NEP, the 2025 enacted figure, and the implied 2026 net Congressional change.
+
+```{r osec-allpaps}
+allp <- osec_pap_year %>% filter(year == 2026) %>%
+  transmute(`P/A/P` = pap, `NEP 2026 (B)` = NEP/1e9, `GAA 2026 (B)` = GAA/1e9) %>% arrange(desc(`GAA 2026 (B)`))
+g25 <- osec_pap_year %>% filter(year == 2025) %>% transmute(`P/A/P` = pap, g = GAA/1e9)
+allp <- allp %>% left_join(g25, by = "P/A/P") %>% rename(`GAA 2025 (B)` = g) %>%
+  mutate(`Net chg 2026 (B)` = `GAA 2026 (B)` - `NEP 2026 (B)`)
+dt_table(allp, page = 12, money_cols = c("NEP 2026 (B)","GAA 2026 (B)","GAA 2025 (B)","Net chg 2026 (B)"))
+```
+
+# The operational core by service type {#banner}
+
+DA's hands-on commodity work is organised into six "banner" service components. Aggregating every commodity program into these services shows *how* DA delivers, independent of *what* it grows. (This covers the commodity operational core — about ₱47.6B in 2026 — and excludes FMR, LFP/FAP, administration, and regulatory lines.)
+
+```{r banner-2026, fig.height=4.4}
+ban_26 <- osec_long %>% filter(metric == "GAA", year == 2026, !is.na(service)) %>%
+  group_by(service) %>% summarise(GAA = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(service = factor(service, levels = rev(SERVICE_LV)))
+ggplot(ban_26, aes(service, GAA)) +
+  geom_col(aes(fill = as.character(service)), width = 0.72) +
+  geom_text(aes(label = php_b(GAA)), hjust = -0.1, size = 3.4, color = "grey20") +
+  coord_flip() + scale_fill_manual(values = banner_pal, guide = "none") +
+  scale_y_continuous(labels = php_b_axis, expand = expansion(mult = c(0, .18)), limits = c(0, NA)) +
+  labs(title = "Operational core by service type, FY 2026 GAA",
+       subtitle = "Production Support Services (PSS) is ~75% of the commodity operational core",
+       x = NULL, y = NULL) +
+  theme_da() + theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"))
+```
+
+PSS — direct production inputs (seeds, fertilizer, planting materials, fingerlings) — dwarfs everything else at ₱35.6B. The training/extension arm (ESETS, ₱4.7B), equipment (PAEF, ₱3.5B), research (R&D, ₱2.5B), market development (MDS, ₱0.7B), and irrigation (INS, ₱0.7B) are all an order of magnitude smaller. DA's operational model is, in budget terms, overwhelmingly about **distributing production inputs**.
+
+## How the service mix has evolved
+
+```{r banner-evo, fig.height=4.8}
+ban_evo <- osec_long %>% filter(metric == "GAA", year <= 2026, !is.na(service)) %>%
+  group_by(year, service) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(service = factor(service, levels = SERVICE_LV))
+ggplot(ban_evo, aes(year, amount, fill = service)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = banner_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "Operational core by service type, GAA 2018–2026",
+       subtitle = "PSS drove the 2023 surge (rice input support); other services stayed comparatively flat",
+       x = NULL, y = NULL) +
+  theme_da() + guides(fill = guide_legend(nrow = 1))
+```
+
+The 2023 jump in the operational core is almost entirely **PSS** — the input-subsidy response to food-price and supply pressures, concentrated in rice (next section). The other services have grown only modestly, so the core has become *more* PSS-weighted over time, not less.
+
+## Absorption by service type
+
+Here the value of the service cut becomes clear: the weak absorbers are the **capital-type services**.
+
+```{r banner-absorb}
+ban_abs <- osec_long %>% filter(year == 2025, !is.na(service), metric %in% c("AdjAllot","Obligations","Disbursements")) %>%
+  group_by(service, metric) %>% summarise(a = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = a) %>%
+  transmute(`Service` = service, `Allotment (B)` = round(AdjAllot/1e9,2),
+            `Disbursed (B)` = round(Disbursements/1e9,2),
+            `O/A` = scales::percent(Obligations/AdjAllot, accuracy = 1),
+            `D/A` = scales::percent(Disbursements/AdjAllot, accuracy = 1)) %>%
+  arrange(desc(`Allotment (B)`))
+kbl_clean(ban_abs, font = 13.5, align = "lrrrr")
+```
+
+PSS and R&D disburse at ~79%, ESETS and MDS in the low 70s — but **PAEF (farm equipment) manages only 41%** and **INS (irrigation) 55%**. Both involve physical procurement and construction, which DA struggles to convert into payments within the year — the same capital-execution weakness that shows up in the expense-class view, now located precisely in the equipment and irrigation services.
+
+# The operational core by commodity {#commodity}
+
+Re-cutting the identical operational money by commodity answers a different question: which crops and sectors does DA back?
+
+```{r commodity-2026, fig.height=4.4}
+com_26 <- osec_long %>% filter(metric == "GAA", year == 2026, !is.na(commodity)) %>%
+  group_by(commodity) %>% summarise(GAA = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(commodity = factor(commodity, levels = rev(COMMODITY_LV)))
+ggplot(com_26, aes(commodity, GAA)) +
+  geom_col(aes(fill = as.character(commodity)), width = 0.72) +
+  geom_text(aes(label = php_b(GAA)), hjust = -0.1, size = 3.4, color = "grey20") +
+  coord_flip() + scale_fill_manual(values = commodity_pal, guide = "none") +
+  scale_y_continuous(labels = php_b_axis, expand = expansion(mult = c(0, .18)), limits = c(0, NA)) +
+  labs(title = "Operational core by commodity, FY 2026 GAA",
+       subtitle = "Rice is ~63% of the commodity operational core — more than all other commodities combined",
+       x = NULL, y = NULL) +
+  theme_da() + theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"))
+```
+
+Rice (₱30.2B) is larger than every other commodity put together. Corn (₱6.7B) and livestock (₱3.8B) are distant seconds; high-value crops (₱2.6B), organic agriculture (₱1.0B), and the small urban/peri-urban and halal programs trail. Philippine agricultural budgeting is, operationally, **rice budgeting** with everything else at the margin.
+
+## How the commodity mix has evolved
+
+```{r commodity-evo, fig.height=4.8}
+com_evo <- osec_long %>% filter(metric == "GAA", year <= 2026, !is.na(commodity)) %>%
+  group_by(year, commodity) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(commodity = factor(commodity, levels = COMMODITY_LV))
+ggplot(com_evo, aes(year, amount, fill = commodity)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = commodity_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "Operational core by commodity, GAA 2018–2026",
+       subtitle = "Rice's dominance widened with the 2023 PSS surge",
+       x = NULL, y = NULL) +
+  theme_da() + guides(fill = guide_legend(nrow = 1))
+```
+
+Rice was always the largest commodity, but its lead *widened* with the 2023 input-support surge. The relative position of corn, livestock, and high-value crops has been broadly stable.
+
+## Absorption by commodity
+
+```{r commodity-absorb}
+com_abs <- osec_long %>% filter(year == 2025, !is.na(commodity), metric %in% c("AdjAllot","Obligations","Disbursements")) %>%
+  group_by(commodity, metric) %>% summarise(a = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = a) %>%
+  transmute(`Commodity` = commodity, `Allotment (B)` = round(AdjAllot/1e9,2),
+            `Disbursed (B)` = round(Disbursements/1e9,2),
+            `O/A` = scales::percent(Obligations/AdjAllot, accuracy = 1),
+            `D/A` = scales::percent(Disbursements/AdjAllot, accuracy = 1)) %>%
+  arrange(desc(`Allotment (B)`))
+kbl_clean(com_abs, font = 13.5, align = "lrrrr")
+```
+
+Absorption varies sharply by commodity. **Corn is the strongest absorber at 84%**, rice a solid 79% — but **livestock disbursed only 33%** of its 2025 allotment, dragged down by its equipment-heavy mix, and high-value crops and organic sit in the high-50s. The commodities that lean on physical procurement (livestock, with large PAEF lines) absorb worst, echoing the service-level finding.
+
+## The full picture: service × commodity
+
+The cross-tab below holds both dimensions at once — every cell is a 2026 GAA figure (₱B), with row and column totals. It is the operational core in a single view.
+
+```{r service-commodity-matrix}
+mat <- osec_long %>% filter(metric == "GAA", year == 2026, !is.na(service), !is.na(commodity)) %>%
+  group_by(commodity, service) %>% summarise(v = sum(amount, na.rm = TRUE)/1e9, .groups = "drop") %>%
+  pivot_wider(names_from = service, values_from = v, values_fill = 0)
+# order columns and rows, add totals
+svc_present <- intersect(SERVICE_LV, names(mat))
+mat <- mat %>% mutate(commodity = factor(commodity, levels = COMMODITY_LV)) %>% arrange(commodity)
+mat <- mat %>% select(commodity, all_of(svc_present))
+mat$Total <- rowSums(mat[svc_present])
+tot_row <- c(list(commodity = "Total"), as.list(round(colSums(mat[c(svc_present,"Total")]), 2)))
+mat_disp <- mat %>% mutate(across(all_of(c(svc_present,"Total")), ~round(.,2)))
+mat_disp <- bind_rows(mat_disp, as_tibble(tot_row))
+kbl_clean(mat_disp %>% rename(`Commodity \\ Service` = commodity), font = 13, align = "lrrrrrr", na = "")
+```
+
+<p class="kbl-note">Reading across rows shows a commodity's service mix; reading down columns shows a service's commodity mix. The single largest cell — Rice × PSS — is ₱26.4B, larger than every commodity-total except rice itself.</p>
+
+# The two aggregated mega-lines {#megalines}
+
+Two single P/A/Ps account for ₱104.6B — 63% — of the 2026 OSEC budget. Both are aggregates of hundreds of itemized sub-projects in the source documents, and both raise execution questions.
+
+## Farm-to-Market Roads: appropriated, but never executed by DA
+
+```{r fmr-table}
+fmr <- osec_pap_year %>% filter(pap == FMR_LABEL) %>%
+  transmute(FY = year, `GAA (B)` = round(GAA/1e9,1),
+            `Allotment (B)` = round(AdjAllot/1e9,2), `Obligations (B)` = round(Obligations/1e9,2),
+            `Disbursed (B)` = round(Disbursements/1e9,2))
+kbl_clean(fmr, font = 13.5, align = "rrrrr", na = "")
+```
+
+The FMR construction line carries ₱10–33B of GAA a year, growing steadily — yet its **allotment, obligations, and disbursements are recorded as exactly zero in every year, 2018 through 2025**. This is the pattern the briefing flagged, and it is worth being precise about what it can and cannot mean.
+
+<div class="takeaway">
+Two explanations are consistent with zero recorded DA execution:
+
+1. **Transfer to DPWH.** The FMR appropriation sits in DA's budget but is transferred to the Department of Public Works and Highways for actual implementation via a memorandum of agreement; the spending then appears in DPWH's books, not DA's.
+2. **A spill into next year's Continuing Appropriations.** The funds are retained by DA but not released or disbursed within the budget year, and are instead executed the *following* year under Continuing Appropriations — which this dataset (Current New Appropriations only) does not capture. On this reading, the zero is a symptom of DA being unable to disburse these items in the year they are budgeted.
+
+This dataset cannot distinguish the two: a DPWH transfer and a spill into Continuing Appropriations both leave a zero footprint in DA's current-year SAAODB. Settling it would require the MOA records or the Continuing-Appropriations execution data, neither of which is in scope here.
+</div>
+
+Either way, the consequence for this analysis is the same and substantial: roughly **₱33B in 2026 — 20% of the OSEC budget — is appropriated to DA but not executed by DA within the year**. It inflates DA's apparent Capital-Outlay share (the line is 100% CO) while contributing nothing to measured disbursement, and it is a large part of why DA's GAA-to-allotment ratio looks so low.
+
+## The Locally-Funded and Foreign-Assisted black box
+
+```{r lfp-fap, fig.height=4.4}
+lfp <- osec_pap_year %>% filter(pap == LFP_LABEL) %>%
+  select(year, NEP, GAA, AdjAllot, Disbursements) %>%
+  pivot_longer(-year, names_to = "metric", values_to = "amount") %>% filter(!is.na(amount)) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA","AdjAllot","Disbursements"),
+    labels = c("NEP (proposed)","GAA (enacted)","Adj. Allotment","Disbursements")))
+ggplot(lfp, aes(year, amount, color = metric, group = metric)) +
+  geom_line(linewidth = 1.0) + geom_point(size = 2.2) +
+  scale_color_manual(values = exec_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(5), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = 2018:2026) +
+  labs(title = "Locally-Funded and Foreign-Assisted Program: 2018–2026",
+       subtitle = "A single P/A/P line that balloons to PHP 72B in 2026 — and historically a poor absorber",
+       x = NULL, y = NULL) +
+  theme_da() + guides(color = guide_legend(nrow = 1))
+```
+
+```{r lfp-table}
+osec_pap_year %>% filter(pap == LFP_LABEL, year %in% 2018:2025) %>%
+  transmute(FY = year, `GAA (B)` = round(GAA/1e9,1), `Allotment (B)` = round(AdjAllot/1e9,1),
+            `Disbursed (B)` = round(Disbursements/1e9,1),
+            `D/A` = scales::percent(Disbursements/AdjAllot, accuracy = 1)) %>%
+  kbl_clean(font = 13.5, align = "rrrrr", na = "")
+```
+
+Unlike FMR, LFP/FAP *does* execute — but poorly, and with a large share of its GAA never released as allotment in the first place (in 2025, ₱35B GAA yielded only ₱10.2B of allotment). Of what is released, disbursement-to-allotment averaged ~60% through 2018–2023 and then fell to **33% (2024) and 53% (2025)**. The 2026 GAA proposes **₱71.6B for this single line — roughly 6× the 2025 GAA** — against a recent absorption record near half. Like FMR, it bundles dozens of distinct loan- and locally-funded projects into one line with no sub-project visibility in the GAA itself; unlike FMR, it stays with DA to spend.
+
+# Congressional action: NEP → GAA {#augmentation}
+
+```{r osec-augmentation, fig.height=4.8}
+aug <- osec_pap_year %>% group_by(pap) %>%
+  summarise(nep = sum(NEP, na.rm = TRUE), gaa = sum(GAA, na.rm = TRUE), .groups = "drop") %>%
+  mutate(change = gaa - nep) %>% filter(abs(change) >= 5e8)
+aug_plot <- bind_rows(aug %>% arrange(desc(change)) %>% slice_head(n = 8),
+                      aug %>% arrange(change) %>% slice_head(n = 5)) %>% distinct() %>%
+  mutate(direction = ifelse(change >= 0, "Net increase (GAA > NEP)", "Net decrease (GAA < NEP)"),
+         hj = ifelse(change >= 0, -0.12, 1.12), pap = factor(pap, levels = pap[order(change)]))
+ggplot(aug_plot, aes(pap, change/1e9, fill = direction)) +
+  geom_col(width = 0.7) +
+  geom_text(aes(label = sprintf("%+.1fB", change/1e9), hjust = hj), size = 2.9, color = "grey20") +
+  coord_flip() +
+  scale_fill_manual(values = c("Net increase (GAA > NEP)" = "#1B9E77", "Net decrease (GAA < NEP)" = "#D95F02")) +
+  scale_x_discrete(labels = function(x) str_trunc(x, 50)) +
+  scale_y_continuous(labels = function(v) paste0(peso, v, "B"), expand = expansion(mult = c(0.2, 0.2))) +
+  labs(title = "Cumulative NEP-to-GAA change by P/A/P, 2018–2026",
+       subtitle = "Congress shifts money from Rice PSS to FMR and Foreign-Assisted lines",
+       x = NULL, y = NULL) +
+  theme_da() +
+  theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85")) +
+  guides(fill = guide_legend(nrow = 1))
+```
+
+The redirection is the striking pattern: Congress has added **+₱29B to Farm-to-Market Roads** (which DA does not execute) and **+₱15B to LFP/FAP** over the period, while **cutting −₱15B from Rice PSS** — the agency's single most operational, best-executing commodity line. A smaller but notable **+₱7B** went to farm equipment (PAEF). The full list of material movers is below.
+
+```{r osec-aug-full}
+aug_full <- osec_pap_year %>% group_by(pap) %>%
+  summarise(nep = sum(NEP, na.rm = TRUE), gaa = sum(GAA, na.rm = TRUE), .groups = "drop") %>%
+  mutate(change = gaa - nep) %>% filter(abs(change) >= 5e8) %>%
+  transmute(`P/A/P` = pap, `Σ NEP (B)` = nep/1e9, `Σ GAA (B)` = gaa/1e9, `Cumulative change (B)` = change/1e9) %>%
+  arrange(desc(`Cumulative change (B)`))
+dt_table(aug_full, page = 10, money_cols = c("Σ NEP (B)","Σ GAA (B)","Cumulative change (B)"))
+```
+
+# Absorptive capacity {#absorption}
+
+## At the aggregate
+
+```{r osec-absorp-agg, fig.height=5}
+absorp_long <- osec_absorp %>% select(year, oblig_allot, disb_oblig, disb_allot) %>%
+  pivot_longer(-year, names_to = "ratio", values_to = "value") %>%
+  mutate(ratio = factor(ratio, levels = c("oblig_allot","disb_oblig","disb_allot"),
+    labels = c("Obligations / Adj. Allotment","Disbursements / Obligations","Disbursements / Adj. Allotment")))
+ggplot(absorp_long, aes(year, value, color = ratio, group = ratio)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 2) +
+  scale_color_manual(values = absorp_pal) +
+  scale_y_continuous(labels = percent_format(accuracy = 1), limits = c(0, 1.08), breaks = seq(0, 1, 0.2)) +
+  scale_x_continuous(breaks = 2018:2025) +
+  labs(title = "DA-OSEC absorptive capacity, 2018–2025",
+       subtitle = "Disbursement-to-allotment fell from 74–81% (2018–2023) to 69–70% (2024–2025) — against a rising budget",
+       x = NULL, y = NULL) +
+  theme_da() + guides(color = guide_legend(nrow = 1))
+```
+
+```{r osec-absorp-tbl}
+osec_absorp %>% transmute(Year = year, `Allotment (B)` = round(AdjAllot/1e9,1),
+            `Obligations (B)` = round(Obligations/1e9,1), `Disbursements (B)` = round(Disbursements/1e9,1),
+            `O/A` = scales::percent(oblig_allot, accuracy = 1), `D/O` = scales::percent(disb_oblig, accuracy = 1),
+            `D/A` = scales::percent(disb_allot, accuracy = 1)) %>%
+  kbl_clean(font = 13, align = "rrrrrrr")
+```
+
+These ratios use Adjusted Allotments — what DA actually held — so they are *not* depressed by the FMR transfer (FMR never becomes a DA allotment). The decline to 69% is therefore a genuine within-DA delivery story: even setting aside the money that leaves the department, DA is converting a falling share of its releases into payments as the budget climbs.
+
+## By expense class
+
+```{r osec-absorp-ec, fig.height=5}
+absorp_ec <- df_long_all %>% filter(agency == "Office of the Secretary",
+    metric %in% c("AdjAllot","Disbursements"), expense_class %in% c("1PS","2MOOE","6CO"), year %in% 2018:2025) %>%
+  group_by(year, metric, expense_class) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = amount) %>%
+  mutate(da = ifelse(AdjAllot > 1e8, Disbursements/AdjAllot, NA_real_),
+         expense_class = factor(expense_class, levels = c("1PS","2MOOE","6CO"),
+                                labels = c("Personnel Services (PS)","Maintenance & Other Op. Exp. (MOOE)","Capital Outlays (CO)")))
+ggplot(absorp_ec, aes(year, da, color = expense_class, group = expense_class)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 1.8) +
+  geom_text(aes(label = scales::percent(da, accuracy = 1)), vjust = -1.0, size = 2.8, show.legend = FALSE, color = "grey20") +
+  scale_color_manual(values = ec_pal) +
+  scale_y_continuous(labels = percent_format(accuracy = 1), limits = c(0, 1.08), breaks = seq(0, 1, 0.2)) +
+  scale_x_continuous(breaks = 2018:2025) +
+  labs(title = "Disbursement-to-Allotment by Expense Class, 2018–2025",
+       subtitle = "PS and MOOE absorb at 87–99%; Capital Outlays struggles at 38–72% — the source of the aggregate drag",
+       x = NULL, y = NULL, caption = "Financial Expenses excluded (negligible base); CO here excludes FMR, which has no allotment.") +
+  theme_da() + guides(color = guide_legend(nrow = 1))
+```
+
+The aggregate weakness is, at root, a **capital-execution** problem. Personnel and operating spending clear at 87–99%; the **Capital Outlays that DA actually holds disburse at only 38–72%**. That is the equipment (PAEF), irrigation (INS), and project-type spending identified in the service and commodity cuts — physical procurement that DA struggles to turn into payments within the year.
+
+## Strongest and weakest absorbers (FY 2025)
+
+```{r osec-absorb-build}
+abs_2025 <- osec_pap_year %>% filter(year == 2025, !is.na(AdjAllot), AdjAllot >= 5e8) %>%
+  mutate(`O/A` = Obligations/AdjAllot, `D/O` = Disbursements/Obligations, `D/A` = Disbursements/AdjAllot,
+         `Allotment (B)` = round(AdjAllot/1e9, 2))
+```
+
+::: {.takeaway}
+**Strongest absorbers, FY 2025** — established commodity programs (Corn PSS, R&D, general management) and the Rice PSS flagship.
+:::
+
+```{r osec-top-absorb}
+abs_2025 %>% arrange(desc(`D/A`)) %>% slice_head(n = 7) %>%
+  transmute(`P/A/P` = str_trunc(pap, 54), `Allotment (B)`,
+            `O/A` = scales::percent(`O/A`, accuracy = 1), `D/O` = scales::percent(`D/O`, accuracy = 1),
+            `D/A` = scales::percent(`D/A`, accuracy = 1)) %>%
+  kbl_clean(font = 13, align = "lrrrr")
+```
+
+::: {.takeaway}
+**Weakest absorbers, FY 2025** — equipment-provision (PAEF) lines and livestock, plus the LFP/FAP black box.
+:::
+
+```{r osec-bot-absorb}
+abs_2025 %>% arrange(`D/A`) %>% slice_head(n = 7) %>%
+  transmute(`P/A/P` = str_trunc(pap, 54), `Allotment (B)`,
+            `O/A` = scales::percent(`O/A`, accuracy = 1), `D/O` = scales::percent(`D/O`, accuracy = 1),
+            `D/A` = scales::percent(`D/A`, accuracy = 1)) %>%
+  kbl_clean(font = 13, align = "lrrrr")
+```
+
+### Full absorption table, FY 2025 (interactive) {.unnumbered}
+
+```{r osec-absorb-full}
+abs_full <- osec_pap_year %>% filter(year == 2025, !is.na(AdjAllot), AdjAllot > 0) %>%
+  transmute(`P/A/P` = pap, `Allotment (B)` = AdjAllot/1e9, `Obligations (B)` = Obligations/1e9,
+            `Disbursements (B)` = Disbursements/1e9, `O/A` = Obligations/AdjAllot,
+            `D/O` = ifelse(Obligations>0, Disbursements/Obligations, NA_real_), `D/A` = Disbursements/AdjAllot) %>%
+  arrange(`D/A`)
+dt_table(abs_full, page = 15, money_cols = c("Allotment (B)","Obligations (B)","Disbursements (B)"),
+         pct_cols = c("O/A","D/O","D/A"))
+```
+
+# Program deep-dives {#deep-dives}
+
+## Trajectories of the three largest programs
+
+```{r osec-trend, fig.height=4.8}
+trend_paps <- c(LFP_LABEL, FMR_LABEL, "Production Support Services (PSS) on the National Rice Program")
+trend_dat <- osec_pap_year %>% filter(pap %in% trend_paps) %>%
+  select(pap, year, GAA, AdjAllot, Disbursements) %>%
+  pivot_longer(c(GAA, AdjAllot, Disbursements), names_to = "metric", values_to = "amount") %>%
+  filter(!is.na(amount)) %>%
+  mutate(metric = factor(metric, levels = c("GAA","AdjAllot","Disbursements"),
+    labels = c("GAA (enacted)","Adj. Allotment","Disbursements")),
+    pap = factor(pap, levels = trend_paps,
+      labels = c("Locally-Funded / Foreign-Assisted","Farm-to-Market Roads","National Rice Program PSS")))
+trend_pal <- c("GAA (enacted)" = "#54278F","Adj. Allotment" = "#08519C","Disbursements" = "#31A354")
+ggplot(trend_dat, aes(year, amount, color = metric, group = metric)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 1.5) +
+  facet_wrap(~ pap, ncol = 3, scales = "free_y", labeller = label_wrap_gen(width = 22)) +
+  expand_limits(y = 0) +
+  scale_color_manual(values = trend_pal) +
+  scale_y_continuous(labels = php_b, breaks = pretty_breaks(4)) +
+  scale_x_continuous(breaks = c(2018, 2022, 2026)) +
+  labs(title = "How the three largest DA-OSEC programs have evolved (2018–2026)",
+       subtitle = "FMR shows zero execution at DA; LFP/FAP has the worst within-DA gap; Rice PSS executes most cleanly",
+       x = NULL, y = NULL) +
+  theme_da() + guides(color = guide_legend(nrow = 1))
+```
+
+The three panels capture the whole DA-OSEC story. **Rice PSS** (right) is the model: allotment and disbursement track the enacted budget closely. **FMR** (centre) is a flat zero for allotment and disbursement under a rising GAA. **LFP/FAP** (left) shows both pathologies — a GAA racing upward while allotment and especially disbursement lag far below.
+
+<h1 class="section-band h1-band">Section 2 — Attached Agencies</h1>
+
+The Department of Agriculture has nine attached agencies. Together they are about **11% of the department** (₱20.8B of the ₱185.8B 2026 GAA); the Office of the Secretary is the other 89%. Execution data is not available for these units, so this section covers **NEP and GAA only** — what was proposed and what was enacted.
+
+```{r attached-overview, fig.height=5.6}
+att <- df_long %>% filter(!is_osec, metric %in% c("NEP","GAA")) %>%
+  group_by(agency, year, metric) %>% summarise(v = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(short = recode(agency, !!!short_map),
+         metric = factor(metric, levels = c("NEP","GAA"), labels = c("NEP (proposed)","GAA (enacted)")))
+ord <- att %>% filter(metric == "GAA (enacted)", year == 2026) %>% arrange(desc(v)) %>% pull(short)
+att <- att %>% mutate(short = factor(short, levels = ord))
+ggplot(att, aes(year, v, color = metric, group = metric)) +
+  geom_line(linewidth = 0.8) + geom_point(size = 1.4) +
+  facet_wrap(~ short, ncol = 3, scales = "free_y", labeller = label_wrap_gen(width = 22)) +
+  expand_limits(y = 0) +
+  scale_color_manual(values = c("NEP (proposed)" = "#9E9AC8","GAA (enacted)" = "#54278F")) +
+  scale_y_continuous(labels = php_b, breaks = pretty_breaks(4)) +
+  scale_x_continuous(breaks = c(2018, 2022, 2026)) +
+  labs(title = "Attached agencies: NEP vs GAA, 2018–2026",
+       subtitle = "BFAR dwarfs the rest; most others are small and slow-growing",
+       x = NULL, y = NULL) +
+  theme_da() + guides(color = guide_legend(nrow = 1))
+```
+
+```{r attached-summary}
+att_sum <- df_long %>% filter(!is_osec, metric %in% c("NEP","GAA")) %>%
+  group_by(agency, year, metric) %>% summarise(v = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = v) %>% group_by(agency) %>%
+  summarise(`GAA 2018 (B)` = round(GAA[year==2018]/1e9,2), `GAA 2026 (B)` = round(GAA[year==2026]/1e9,2),
+            `NEP 2026 (B)` = round(NEP[year==2026]/1e9,2),
+            `Cumulative NEP→GAA (B)` = round(sum(GAA-NEP, na.rm=TRUE)/1e9,2), .groups = "drop") %>%
+  mutate(Agency = paste0(recode(agency, !!!short_map), " — ", str_trunc(agency, 48))) %>%
+  select(Agency, `GAA 2018 (B)`, `GAA 2026 (B)`, `NEP 2026 (B)`, `Cumulative NEP→GAA (B)`) %>%
+  arrange(desc(`GAA 2026 (B)`))
+kbl_clean(att_sum, font = 12.5, align = "lrrrr", na = "")
+```
+
+## The agencies in brief
+
+**Bureau of Fisheries and Aquatic Resources (BFAR)** is by far the largest attached agency — ₱6.1B in 2018 nearly doubling to ₱11.8B in 2026 — covering fisheries production, monitoring/control/surveillance, post-harvest infrastructure, and aquaculture. It is also the most consistently augmented: cumulatively Congress added ₱4.2B over its proposals, most strikingly +₱1.9B in 2024. The World Bank–funded **FishCORE** (Philippine Fisheries and Coastal Resiliency Project) has grown into a ₱2B line, the agency's second-largest, signalling a shift toward externally-financed coastal resilience.
+
+**Agricultural Credit Policy Council (ACPC)** tripled from ₱1.1B to ₱3.1B, but is effectively a one-program agency: the **Agro-Industry Modernization Credit and Financing Program (AMCFP)** is about 97% of its budget, with all other lines together under ₱0.1B. Congress has been a slight net *trimmer* here over the period (−₱0.1B cumulative), including a notable ₱1.0B cut to the 2019 NEP. A single-program agency wrapped in management overhead invites the structural question of whether AMCFP needs its own agency at all.
+
+**Philippine Carabao Center (PCC)** more than doubled into 2026 — from ₱0.5B (2018) to ₱2.1B — almost entirely because of a **+₱1.1B Congressional add for a new school milk-feeding program** (a component of DepEd's School-Based Feeding Program) that had essentially no NEP line. That single insertion is now PCC's largest item, eclipsing its core dairy-buffalo breeding and herd build-up work. It assigns a DepEd-style delivery mandate to a small research-and-breeding agency.
+
+**National Fisheries Research and Development Institute (NFRDI)** is the newest meaningful unit, with no DA line before 2020, growing to ₱0.74B by 2026. Its mandate is fisheries research distinct from BFAR's operations. Research is about 63% of its budget; general management is a heavy ~31%, characteristic of a young, still-scaling institution. Congress has been almost entirely hands-off, enacting the NEP as proposed in nearly every year.
+
+**National Meat Inspection Service (NMIS)** is a stable regulator — ₱0.6–0.7B across the period — overseeing meat establishments, importers/exporters, and inspection deputation. Its two core lines (inspection enforcement; importer/exporter registration) carry most of the budget, and since 2019 Congress has enacted the NEP unchanged every year.
+
+**Philippine Fiber Industry Development Authority (PhilFIDA)** supports the abaca, cotton, silk, and other natural-fiber industries across production support, R&D, extension, and quality control. It is stable at ₱0.6–0.7B with only tiny Congressional adjustments, and carries one of the heaviest overheads among the attached units — general management is roughly 30% of the agency.
+
+**Philippine Center for Postharvest Development and Mechanization (PHilMech)** focuses on postharvest technology, mechanization research, and farmer extension. It is remarkably static — ₱0.3–0.5B across nine years — and is the one agency whose NEP has been enacted as-is in *every* year, without a single peso of Congressional adjustment. Operationally it is essentially two lines, extension (ESETS) and R&D, mirroring its mandate.
+
+**Fertilizer and Pesticide Authority (FPA)** regulates fertilizer and pesticide registration, licensing, and quality control. It had no DA line until 2019 (established by a +₱0.2B Congressional add when the NEP was zero) and has grown slowly to ₱0.42B, with the 2026 step-up its largest single-year increase. Two regulatory lines carry most of the budget.
+
+**Philippine Council for Agriculture and Fisheries (PCAF)** is the smallest attached agency — ₱0.18–0.26B — a policy-coordination and partnership council rather than a field-delivery body. It is also the only attached agency Congress *systematically trims*: its NEP has been cut in several years (a −₱0.1B cumulative net), even as it grows gradually with the rest of the department.
+
+### Full attached-agency P/A/P table (interactive) {.unnumbered}
+
+Every attached-agency P/A/P, with 2018 and 2026 GAA and the 2026 NEP. Search by agency short-name or program.
+
+```{r attached-full}
+att_full <- df_long %>% filter(!is_osec, metric %in% c("NEP","GAA")) %>%
+  group_by(agency, pap, year, metric) %>% summarise(v = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = c(metric, year), values_from = v)
+g18 <- att_full[["GAA_2018"]]; g26 <- att_full[["GAA_2026"]]; n26 <- att_full[["NEP_2026"]]
+att_full <- att_full %>% transmute(Agency = recode(agency, !!!short_map), `P/A/P` = str_trunc(pap, 70),
+            `GAA 2018 (B)` = round(g18/1e9,3), `NEP 2026 (B)` = round(n26/1e9,3), `GAA 2026 (B)` = round(g26/1e9,3)) %>%
+  arrange(Agency, desc(`GAA 2026 (B)`))
+dt_table(att_full, page = 12, money_cols = c("GAA 2018 (B)","NEP 2026 (B)","GAA 2026 (B)"), money_digits = 3)
+```
+
+<h1 class="section-band h1-band">Section 3 — Department-Wide Perspective</h1>
+
+# The whole Department of Agriculture {#department}
+
+```{r dept-evolution, fig.height=4.8}
+dept_totals <- df_long %>% group_by(year, metric) %>% summarise(total = sum(amount, na.rm = TRUE), .groups = "drop")
+evo2 <- dept_totals %>% filter(metric %in% c("NEP","GAA")) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA"), labels = c("NEP (proposed)","GAA (enacted)")))
+osec_exec <- df_long %>% filter(is_osec, metric %in% c("AdjAllot","Obligations","Disbursements")) %>%
+  group_by(year, metric) %>% summarise(total = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(metric = factor(metric, levels = c("AdjAllot","Obligations","Disbursements"),
+    labels = c("Adj. Allotment (OSEC only)","Obligations (OSEC only)","Disbursements (OSEC only)")))
+ev_pal <- c("NEP (proposed)" = "#9E9AC8","GAA (enacted)" = "#54278F",
+  "Adj. Allotment (OSEC only)" = "#08519C","Obligations (OSEC only)" = "#E6550D","Disbursements (OSEC only)" = "#31A354")
+ggplot() +
+  geom_line(data = evo2, aes(year, total, color = metric, group = metric), linewidth = 1.0) +
+  geom_point(data = evo2, aes(year, total, color = metric), size = 2) +
+  geom_line(data = osec_exec, aes(year, total, color = metric, group = metric), linewidth = 0.8, linetype = "longdash") +
+  geom_point(data = osec_exec, aes(year, total, color = metric), size = 1.8) +
+  scale_color_manual(values = ev_pal, limits = names(ev_pal)) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "Whole Department of Agriculture: NEP/GAA (all units), execution (OSEC only)",
+       subtitle = "Total department GAA grew from PHP 53.3B (2018) to PHP 185.8B (2026 proposed) — a 3.5× scale-up",
+       x = NULL, y = NULL,
+       caption = "OSEC ≈ 89% of the department; attached agencies add PHP 20.8B in 2026 but lack execution data.") +
+  theme_da() + guides(color = guide_legend(nrow = 2, byrow = TRUE))
+```
+
+```{r dept-composition, fig.height=4.6}
+share <- df_long %>% filter(metric == "GAA", year <= 2026, !is.na(amount)) %>%
+  mutate(grp = ifelse(is_osec, "Office of the Secretary", "All attached agencies")) %>%
+  group_by(year, grp) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(grp = factor(grp, levels = c("Office of the Secretary","All attached agencies")))
+ggplot(share, aes(year, amount, fill = grp)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = c("Office of the Secretary" = "#08519C","All attached agencies" = "#D9D9D9")) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "DA total GAA: OSEC vs. attached agencies, 2018–2026",
+       subtitle = "OSEC was 82% of the department in 2018, 89% in 2026 — growth has been concentrated in OSEC",
+       x = NULL, y = NULL) +
+  theme_da() + guides(fill = guide_legend(nrow = 1))
+```
+
+The Executive has concentrated the department's growth in the Office of the Secretary, whose share rose from 82% to 89%. The attached agencies — with the partial exception of BFAR and the Congressionally-boosted PCC — have grown only slowly.
+
+### Top 15 P/A/Ps across the whole department (interactive) {.unnumbered}
+
+```{r dept-top}
+dept_top <- df_long %>% filter(metric == "GAA", year == 2026, !is.na(amount), amount > 0) %>%
+  group_by(agency, pap) %>% summarise(GAA = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  arrange(desc(GAA)) %>% slice_head(n = 15) %>%
+  transmute(Agency = recode(agency, !!!short_map), `P/A/P` = str_trunc(pap, 64), `GAA 2026 (B)` = round(GAA/1e9,2))
+kbl_clean(dept_top, font = 12.5, align = "llr")
+```
+
+# Questions for discussion {#discussion}
+
+1. **The Locally-Funded and Foreign-Assisted black box.** A single line absorbs 43% of the 2026 OSEC budget without sub-project transparency, with historical disbursement near half. Can a 6× increase to ₱72B be justified against that absorption record — and should the line be disaggregated in the GAA?
+2. **Farm-to-Market Roads and the zero-execution puzzle.** ₱33B (20% of OSEC) shows no DA execution at all. Is it genuinely transferred to DPWH, or spilling into next year's Continuing Appropriations because DA cannot disburse it in-year? The answer determines whether this is a clean inter-agency arrangement or a recurring delivery failure — and it is not visible in the current-appropriations data.
+3. **Capital execution as the binding constraint.** The aggregate D/A decline traces almost entirely to Capital Outlays, and within the operational core to the equipment (PAEF, 41%) and irrigation (INS, 55%) services and the livestock commodity (33%). Is DA's procurement and construction machinery the real bottleneck on its growing budget?
+4. **Rice concentration.** Rice is ~63% of the commodity operational core and rising. Is this the right balance against corn, livestock, high-value crops, and fisheries — and what does the −₱15B cumulative Congressional cut to Rice PSS, alongside +₱29B to FMR, say about legislative priorities?
+5. **The case for fewer attached agencies.** ACPC is 97% one program; FPA, PCAF, PHilMech, and PhilFIDA each carry under ₱0.7B with heavy overhead. Is there a case for folding some into OSEC bureaus — and what oversight is in place for the ₱1.1B milk-feeding mandate newly handed to PCC?
+
+---
+
+<p class="caption">
+Underlying data: DBM-published budget and execution data for the DA Office of the Secretary (Current New Appropriations only), FY 2018–2026; NEP/GAA only for the nine attached agencies. Service-type and commodity aggregations are parsed from P/A/P labels and cover the commodity operational core (PSS, ESETS, MDS, R&D, PAEF, INS), excluding FMR, LFP/FAP, administration, and regulatory lines. Farm-to-Market Roads and the Locally-Funded and Foreign-Assisted Program are each presented as single aggregates of many itemized sub-projects. Prepared as the long-form companion to the DA budget briefing.
+</p>

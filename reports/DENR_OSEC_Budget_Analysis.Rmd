@@ -1,0 +1,551 @@
+---
+title: "Department of Environment and Natural Resources — Office of the Secretary"
+subtitle: "Budget evolution and absorptive capacity, FY 2018–2026"
+date: "`r format(Sys.Date(), '%B %Y')`"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    toc_depth: 3
+    number_sections: true
+    code_folding: hide
+    self_contained: true
+    df_print: paged
+    fig_width: 10
+    fig_height: 5.5
+---
+
+```{css, echo=FALSE}
+:root { --ink:#1a1a1a; --muted:#6e6e6e; --accent:#08519C; --rule:#e6e6e6; }
+body, .main-container { font-family: Arial, Helvetica, "IBM Plex Sans", sans-serif; color: var(--ink); }
+.main-container { max-width: 980px; }
+h1, h2, h3, h4 { font-family: Arial, Helvetica, sans-serif; font-weight: 600; }
+h1.title { font-size: 30px; }
+h1 { font-size: 25px; margin-top: 1.6em; padding-top: .3em; border-top: 2px solid var(--rule); }
+h2 { font-size: 20px; margin-top: 1.4em; }
+h3 { font-size: 17px; color: #333; }
+.author, .date { color: var(--muted); }
+p, li { font-size: 15.5px; line-height: 1.62; }
+blockquote { border-left: 3px solid var(--accent); background: #f5f8fc; color: #25405e;
+  font-size: 14.5px; padding: .6em 1em; margin: 1.2em 0; }
+.lead { font-size: 16.5px; color: #2b2b2b; }
+.takeaway { background: #f7f9fb; border: 1px solid var(--rule); border-radius: 6px;
+  padding: .4em 1.1em; margin: 1.1em 0; }
+.takeaway p, .takeaway li { font-size: 14.5px; }
+.caption, .figcaption { color: var(--muted); font-size: 13px; }
+table.dataTable { font-size: 13px; }
+.kbl-note { color: var(--muted); font-size: 12.5px; margin-top: -.5em; }
+hr { border-top: 1px solid var(--rule); }
+.home-link { font-size: 13.5px; }
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                     dpi = 150, fig.align = "center", out.width = "100%")
+
+options(knitr.kable.NA = "")
+library(readxl); library(dplyr); library(tidyr); library(stringr)
+library(ggplot2); library(scales); library(knitr); library(kableExtra); library(DT)
+
+.candidates <- c(
+  "../data/Compiled_-_NEP-GAA-SAAODB-ByPAPLabelled.xlsx",
+  "data/Compiled_-_NEP-GAA-SAAODB-ByPAPLabelled.xlsx",
+  "Compiled - NEP-GAA-SAAODB-ByPAPLabelled.xlsx",
+  "Compiled_-_NEP-GAA-SAAODB-ByPAPLabelled.xlsx")
+file_path <- .candidates[file.exists(.candidates)][1]
+stopifnot(!is.na(file_path))
+
+theme_denr <- function(base_size = 12) {
+  theme_minimal(base_size = base_size, base_family = "sans") +
+    theme(
+      plot.title = element_text(face = "bold", size = base_size + 2, color = "black"),
+      plot.subtitle = element_text(color = "grey30", size = base_size),
+      plot.caption = element_text(color = "grey40", size = base_size - 3, hjust = 0),
+      panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
+      axis.title = element_text(size = base_size - 1, color = "grey20"),
+      axis.text = element_text(color = "grey20"),
+      legend.position = "bottom", legend.title = element_blank(),
+      legend.text = element_text(size = base_size - 1),
+      strip.text = element_text(face = "bold", size = base_size - 1.5, lineheight = 0.9))
+}
+
+exec_pal <- c("NEP (proposed)" = "#9E9AC8", "GAA (enacted)" = "#54278F",
+  "Adj. Appropriation" = "#3182BD", "Adj. Allotment" = "#08519C",
+  "Obligations" = "#E6550D", "Disbursements" = "#31A354")
+absorp_pal <- c("Obligations / Adj. Allotment" = "#3182BD",
+  "Disbursements / Obligations" = "#E6550D", "Disbursements / Adj. Allotment" = "#31A354")
+ec_pal <- c("Personnel Services (PS)" = "#2CA02C",
+  "Maintenance & Other Op. Exp. (MOOE)" = "#FF7F0E", "Capital Outlays (CO)" = "#9467BD")
+cat_pal <- c(
+  "General Administration and Support" = "#A6761D", "Support to Operations" = "#E6AB02",
+  "Natural Resources Conservation and Development" = "#1B9E77",
+  "Natural Resources Enforcement and Permitting" = "#7570B3",
+  "Natural Resources Assessment and Research" = "#666666")
+bar_fill <- "#1B9E77"
+
+peso <- "PHP "
+php_b      <- function(x) paste0(peso, scales::comma(x / 1e9, accuracy = 0.1), "B")
+php_b_axis <- function(x) paste0(peso, scales::comma(x / 1e9, accuracy = 1), "B")
+
+dt_table <- function(df, caption = NULL, page = 10, money_cols = NULL, pct_cols = NULL, money_digits = 2) {
+  dt <- datatable(df, rownames = FALSE, caption = caption, extensions = "Buttons",
+    options = list(pageLength = page, lengthMenu = c(10, 20, 50, 100), dom = "Bfrtip",
+      buttons = c("copy", "csv"), scrollX = TRUE, autoWidth = FALSE,
+      columnDefs = list(list(className = "dt-right", targets = which(sapply(df, is.numeric)) - 1))),
+    class = "stripe hover compact")
+  if (!is.null(money_cols)) { mc <- which(names(df) %in% money_cols)
+    if (length(mc)) dt <- formatRound(dt, mc, digits = money_digits, mark = ",") }
+  if (!is.null(pct_cols)) { pc <- which(names(df) %in% pct_cols)
+    if (length(pc)) dt <- formatPercentage(dt, pc, digits = 0) }
+  dt
+}
+kbl_clean <- function(x, font = 14, ...) {
+  x %>% kable(...) %>% kable_styling(full_width = TRUE, font_size = font,
+    bootstrap_options = c("condensed", "striped", "hover"))
+}
+
+# ---- Data load & processing ---------------------------------------------
+raw <- read_excel(file_path, sheet = "DENR") %>% filter(!is.na(`P/A/P`))
+
+df_long_all <- raw %>%
+  pivot_longer(cols = matches("^(NEP|GAA|AuthAppro|AdjAppro|AdjAllot|Obligations|Disbursements)_\\d{4}_EXP_(1PS|2MOOE|6CO|TOTAL)$"),
+               names_to = "var", values_to = "amount") %>%
+  separate(var, into = c("metric", "year", "tag", "expense_class"), sep = "_") %>%
+  mutate(year = as.integer(year), amount = as.numeric(amount)) %>%
+  select(-tag) %>% rename(agency = UACS_AGY_DSC, pap = `P/A/P`)
+
+df_long <- df_long_all %>% filter(expense_class == "TOTAL") %>% select(-expense_class) %>%
+  mutate(is_osec = agency == "Office of the Secretary",
+         category = case_when(
+           is_osec & PREXC_PROG == 1000 ~ "General Administration and Support",
+           is_osec & PREXC_PROG == 2000 ~ "Support to Operations",
+           is_osec & PREXC_PROG == 3101 ~ "Natural Resources Enforcement and Permitting",
+           is_osec & PREXC_PROG == 3102 ~ "Natural Resources Conservation and Development",
+           is_osec & PREXC_PROG == 3203 ~ "Natural Resources Assessment and Research",
+           TRUE ~ NA_character_))
+
+osec_long <- df_long %>% filter(is_osec)
+osec_pap_year <- osec_long %>% group_by(pap, year, metric) %>%
+  summarise(amount = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = amount)
+osec_totals <- osec_long %>% group_by(year, metric) %>%
+  summarise(total = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE), .groups = "drop")
+osec_absorp <- osec_totals %>% pivot_wider(names_from = metric, values_from = total) %>%
+  filter(year %in% 2018:2025) %>%
+  mutate(oblig_allot = Obligations/AdjAllot, disb_oblig = Disbursements/Obligations, disb_allot = Disbursements/AdjAllot)
+```
+
+<p class="home-link"><a href="index.html">← All agencies</a></p>
+
+# Overview {#overview .unnumbered}
+
+<p class="lead">
+This document tracks the budget of the **Department of Environment and Natural Resources – Office of the Secretary (DENR-OSEC)** across nine fiscal years, FY 2018 to FY 2026, following each peso from the Executive's proposal (NEP) to enactment (GAA), release (allotment), commitment (obligation), and final cash payment (disbursement). It covers the Office of the Secretary, which is the analytical scope of the briefing; the department's attached bureaus are not included.
+</p>
+
+It is the long-form companion to the DENR-OSEC briefing material. Where a slide deck must compress, this version keeps the full argument and adds reference tables — sortable, searchable, and exportable — so a reader can interrogate the figures directly.
+
+DENR stands apart from the other departments in this series in one fundamental way: **its budget has not grown.** While health, education, agriculture, and social welfare scaled up over 2018–2026, DENR-OSEC has been held almost perfectly flat in nominal terms at ₱16–19B — which, against the inflation of the period, is a real-terms *cut*. Three further features define it: Congress is a **net subtractor**, trimming the proposal in most years and cutting **forestry** hardest of all; **administration is the single largest line** in the budget; and the department has been **shedding capital spending** (down from 37% of the budget to 12%) in favour of payroll. The result is an environment department doing relatively less on-the-ground work, on a budget that has effectively shrunk, even as its mandate — climate resilience, Manila Bay, biodiversity, mining oversight — has expanded.
+
+# Executive summary {#exec}
+
+**DENR-OSEC's budget has been frozen.** The enacted GAA has held at ₱16–20B for nine straight years — ₱19.4B in 2018, ₱19.3B in 2026 — making DENR one of the few line departments not to scale up. **2018 remains the peak.** In nominal terms that is near-zero growth; adjusting for inflation, the FY 2026 budget is worth roughly **₱13.6B in 2018 pesos — about 30% below where the department started the period**.
+
+**Congress is a net subtractor, and forestry is the target.** The enacted GAA came in below the Executive's proposal in six of nine years. The cuts fall overwhelmingly on **Forest Development** (the greening/reforestation line): cumulatively **−₱12.4B from NEP to GAA**, and the enacted line itself shrank from **₱6.6B (2018) to ₱2.4B (2026)** — a ~63% collapse as the National Greening Program wound down.
+
+**Administration is the single largest line.** General Management and Supervision (₱4.0B in 2026, about **21% of the OSEC budget**) is the biggest single P/A/P — larger than any one operational program.
+
+**The department is shedding capital and adding payroll.** Capital Outlays fell from **37% of the GAA (2018) to 12% (2026)**, while Personnel Services rose from **31% to 45%**. The foreign-assisted field projects (INREMP and the Forestland Management Project) wound down by 2021 and 2023 respectively and were not replaced.
+
+**Absorption is decent and improving, but capital lags.** Aggregate disbursement-to-allotment held at **82–88% from 2019 onward** (with 2018 the one weak year at 74%). Personnel spending disburses at 97–99%, but **MOOE and Capital Outlays trail (53–84%)**, and information-systems lines absorb worst.
+
+**Court-mandated cleanups are sizable line items.** The Manila Bay rehabilitation (₱1.24B, pursuant to a Supreme Court continuing mandamus) and the Pasig River rehabilitation (₱0.10B) sit inside the operational program.
+
+> DENR is the portrait of a mandate outgrowing its money. The budget has been flat for nearly a decade, Congress keeps cutting the reforestation line, and the department is spending relatively more on salaries and less on the ground — even as climate and environmental pressures intensify.
+
+# A note on the data {#data-notes}
+
+**Period.** FY 2018 through FY 2026 for NEP and GAA. Execution data (Adjusted Appropriations, Adjusted Allotments, Obligations, Disbursements) is available for every year 2018–2025; FY 2026 reflects NEP/GAA only.
+
+**Scope.** DENR **Office of the Secretary only** — this excludes the attached bureaus (EMB, MGB, NAMRIA, NWRB, PCSDS), which is the scope of the briefing this document accompanies. **Current New Appropriations only**; nominal pesos unless a real (2018-constant) figure is named.
+
+**Expense classes.** Personnel Services (PS), Maintenance & Other Operating Expenses (MOOE), and Capital Outlays (CO). DENR carries no Financial Expenses.
+
+**PREXC structure (OSEC).** General Administration and Support; Support to Operations; and three operational programs — **Natural Resources Conservation and Development** (PREXC 3102, the operational core: forestry, protected areas, land survey, coastal/marine, and the Manila Bay and Pasig cleanups), **Natural Resources Enforcement and Permitting** (3101), and a small **Natural Resources Assessment and Research** line (3203).
+
+**On "real terms".** This dataset contains no price index. The real-terms figures cited here (e.g. the FY 2026 budget at ≈₱13.6B in 2018 pesos, ~30% below 2018) are drawn from the briefing, which deflates by the PSA Consumer Price Index (2018 = 100); the underlying nominal series is reproduced in full here.
+
+**Absorptive-capacity denominator.** Unless noted, ratios use **Adjusted Allotments**. The three ratios are **O/A** (Obligations ÷ Allotment), **D/O** (Disbursements ÷ Obligations), and **D/A** (Disbursements ÷ Allotment).
+
+# The aggregate budget {#aggregate}
+
+## A flat budget for nine years
+
+```{r fig-evolution, fig.height=5.2}
+evo <- osec_totals %>% filter(metric %in% c("NEP","GAA","AdjAllot","Obligations","Disbursements")) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA","AdjAllot","Obligations","Disbursements"),
+    labels = c("NEP (proposed)","GAA (enacted)","Adj. Allotment","Obligations","Disbursements")))
+ggplot(evo, aes(year, total, color = metric, group = metric)) +
+  geom_line(linewidth = 1.0) + geom_point(size = 2) +
+  scale_color_manual(values = exec_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "DENR-OSEC budget, NEP through Disbursements (FY 2018–2026)",
+       subtitle = "Held almost perfectly flat at PHP 16–19B for nine years — while peers grew",
+       x = NULL, y = NULL, caption = "FY 2026 reflects NEP/GAA only; execution data not yet available.") +
+  theme_denr() + guides(color = guide_legend(nrow = 1))
+```
+
+The flat line is the whole story. In a period when most departments' budgets rose by half or doubled, DENR-OSEC's enacted budget barely moved — ₱19.4B in 2018, ₱19.3B in 2026. The NEP line (proposed) sits consistently *above* the GAA line: the Executive asks for more than Congress grants, year after year.
+
+```{r tbl-evolution}
+tbl_evo <- osec_totals %>% filter(metric %in% c("NEP","GAA","AdjAllot","Obligations","Disbursements")) %>%
+  mutate(value = total/1e9) %>% select(year, metric, value) %>%
+  pivot_wider(names_from = year, values_from = value) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA","AdjAllot","Obligations","Disbursements"),
+    labels = c("NEP","GAA","Adj. Allotment","Obligations","Disbursements"))) %>%
+  arrange(metric) %>% rename(`PHP B` = metric)
+kbl_clean(tbl_evo, font = 13, digits = 1, format.args = list(big.mark = ","), na = "")
+```
+
+## Flat in name, falling in real value
+
+A flat nominal budget understates the squeeze. The index below sets each year's enacted GAA against 2018 = 100: the nominal line hovers around its starting point the entire period.
+
+```{r fig-index, fig.height=4.2}
+idx <- osec_totals %>% filter(metric == "GAA") %>% arrange(year) %>%
+  mutate(index = total / total[year == 2018] * 100)
+ggplot(idx, aes(year, index)) +
+  geom_hline(yintercept = 100, linetype = "dashed", color = "grey55") +
+  geom_line(linewidth = 1.1, color = "#1B9E77") + geom_point(size = 2.2, color = "#1B9E77") +
+  geom_text(aes(label = round(index)), vjust = -1.0, size = 3, color = "grey25") +
+  scale_x_continuous(breaks = 2018:2026) +
+  scale_y_continuous(limits = c(0, 115), breaks = seq(0, 100, 25)) +
+  labs(title = "DENR-OSEC enacted GAA, indexed to 2018 = 100 (nominal)",
+       subtitle = "Nine years near the starting line — before any adjustment for inflation",
+       x = NULL, y = "Index (2018 = 100)") +
+  theme_denr()
+```
+
+Because the underlying dataset has no price index, the deflated figure here is drawn from the briefing (PSA CPI, 2018 = 100): adjusting for inflation, the FY 2026 budget of ₱19.3B is worth roughly **₱13.6B in 2018 pesos — about 30% below the department's 2018 level**. The department's real resources have shrunk by nearly a third even as its mandate has widened.
+
+## Congress as a net subtractor
+
+```{r tbl-growth}
+wide_yr <- osec_totals %>% pivot_wider(names_from = metric, values_from = total)
+growth <- wide_yr %>% arrange(year) %>%
+  transmute(year, `GAA (B)` = round(GAA/1e9,1), `Growth %` = scales::percent(GAA/lag(GAA) - 1, accuracy = 0.1),
+            `NEP (B)` = round(NEP/1e9,1), `Net adj. GAA−NEP (B)` = round((GAA-NEP)/1e9,1))
+kbl_clean(growth, font = 13, align = "rrrrr", na = "")
+```
+
+The net-adjustment column is negative in six of nine years. Congress trims the Executive's environment proposal more often than not — most heavily in 2018–2021 (−₱1B to −₱2.2B a year). As the next sections show, those cuts are concentrated in one place: forestry.
+
+# Where the money goes {#composition}
+
+## By PREXC program
+
+```{r fig-composition, fig.height=5.2}
+comp <- osec_long %>% filter(metric == "GAA", year <= 2026, !is.na(amount)) %>%
+  group_by(year, category) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(category = factor(category, levels = names(cat_pal)))
+ggplot(comp, aes(year, amount, fill = category)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = cat_pal, labels = function(x) str_wrap(x, 24)) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "Composition of the GAA by PREXC program, 2018–2026",
+       subtitle = "The field program (NR Conservation & Development) shrank; administration held its ground",
+       x = NULL, y = NULL) +
+  theme_denr() + guides(fill = guide_legend(nrow = 3, byrow = TRUE))
+```
+
+The green **Natural Resources Conservation and Development** band — the on-the-ground field program housing forestry, protected areas, and land management — *contracted* over the period, because forestry inside it was cut. Administration (gold) and Support to Operations held roughly steady, so the department's mix tilted away from field operations.
+
+```{r tbl-comp}
+comp_tbl <- comp %>% group_by(year) %>% mutate(share = round(amount/sum(amount)*100,1)) %>% ungroup() %>%
+  select(category, year, share) %>% pivot_wider(names_from = year, values_from = share)
+kbl_clean(comp_tbl %>% rename(`Program (% of GAA)` = category), font = 12.5, digits = 1, na = "")
+```
+
+## By expense class
+
+```{r fig-comp-ec, fig.height=5.2}
+ec_levels <- c("Personnel Services (PS)","Maintenance & Other Op. Exp. (MOOE)","Capital Outlays (CO)")
+comp_ec <- df_long_all %>% filter(agency == "Office of the Secretary", metric == "GAA", year <= 2026,
+                                  expense_class %in% c("1PS","2MOOE","6CO")) %>%
+  group_by(year, expense_class) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(expense_class = factor(expense_class, levels = c("1PS","2MOOE","6CO"), labels = ec_levels))
+ggplot(comp_ec, aes(year, amount, fill = expense_class)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = ec_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "GAA composition by Expense Class, 2018–2026",
+       subtitle = "Capital Outlays fell from 37% (2018) to 12% (2026); Personnel Services rose from 31% to 45%",
+       x = NULL, y = NULL) +
+  theme_denr() + guides(fill = guide_legend(nrow = 1))
+```
+
+This is the most telling chart in the report. **Capital Outlays — physical works like reforestation, facilities, and survey infrastructure — fell from 37% of the budget to 12%**, while **Personnel Services climbed from 31% to 45%**. On a frozen total, a department spending a rising share on salaries is necessarily spending a falling share on the ground. The wind-down of the foreign-assisted field projects (next section) is part of this story.
+
+```{r tbl-ec-share}
+ec_share <- comp_ec %>% group_by(year) %>% mutate(share = round(amount/sum(amount)*100,1)) %>% ungroup() %>%
+  select(expense_class, year, share) %>% pivot_wider(names_from = year, values_from = share)
+kbl_clean(ec_share %>% rename(`Expense class (% of GAA)` = expense_class), font = 12.5, digits = 1, na = "")
+```
+
+## The largest P/A/Ps
+
+```{r fig-top10, fig.height=5.4}
+top10 <- osec_pap_year %>% filter(year == 2026, !is.na(GAA), GAA > 0) %>%
+  arrange(desc(GAA)) %>% slice_head(n = 10) %>% mutate(pap = factor(pap, levels = rev(pap)))
+ggplot(top10, aes(pap, GAA)) +
+  geom_col(fill = bar_fill, width = 0.75) +
+  geom_text(aes(label = php_b(GAA)), hjust = -0.1, size = 3.3, color = "grey20") +
+  coord_flip() +
+  scale_x_discrete(labels = function(x) str_wrap(x, 44)) +
+  scale_y_continuous(labels = php_b_axis, expand = expansion(mult = c(0, .20)), limits = c(0, NA)) +
+  labs(title = "Top 10 P/A/Ps by FY 2026 GAA",
+       subtitle = "General Management & Supervision is the single largest line — bigger than any one field program",
+       x = NULL, y = NULL) +
+  theme_denr() +
+  theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"))
+```
+
+That administration tops the list is itself a finding: in a department whose purpose is forests, mines, water, and biodiversity, the single largest line is **General Management and Supervision — ₱4.0B, about 21% of the 2026 OSEC budget**. The operational heavyweights that follow — Forest Development, Protected Areas, Land Survey, and the natural-resources permitting line — are each smaller than the overhead.
+
+### Full P/A/P ranking (interactive) {.unnumbered}
+
+```{r tbl-allpaps}
+allp <- osec_pap_year %>% filter(year == 2026) %>%
+  transmute(`P/A/P` = pap, `NEP 2026 (B)` = NEP/1e9, `GAA 2026 (B)` = GAA/1e9) %>% arrange(desc(`GAA 2026 (B)`))
+g25 <- osec_pap_year %>% filter(year == 2025) %>% transmute(`P/A/P` = pap, g = GAA/1e9)
+allp <- allp %>% left_join(g25, by = "P/A/P") %>% rename(`GAA 2025 (B)` = g) %>%
+  mutate(`Net chg 2026 (B)` = `GAA 2026 (B)` - `NEP 2026 (B)`)
+dt_table(allp, page = 12, money_cols = c("NEP 2026 (B)","GAA 2026 (B)","GAA 2025 (B)","Net chg 2026 (B)"))
+```
+
+# The shrinking of forestry {#forestry}
+
+The clearest movement in the DENR budget is the steady retreat of its reforestation effort. **Forest Development, Rehabilitation, Maintenance and Protection** — the line that carried the National Greening Program — was the department's largest field program at the start of the period and has been cut, both by the Executive's own proposals and by Congress on top of them.
+
+```{r fig-forest, fig.height=4.6}
+forest <- osec_pap_year %>% filter(str_detect(pap, "Forest Development")) %>%
+  select(year, NEP, GAA, AdjAllot, Disbursements) %>%
+  pivot_longer(-year, names_to = "metric", values_to = "amount") %>% filter(!is.na(amount)) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA","AdjAllot","Disbursements"),
+    labels = c("NEP (proposed)","GAA (enacted)","Adj. Allotment","Disbursements")))
+ggplot(forest, aes(year, amount, color = metric, group = metric)) +
+  geom_line(linewidth = 1.0) + geom_point(size = 2.2) +
+  scale_color_manual(values = exec_pal) +
+  scale_y_continuous(labels = php_b, breaks = pretty_breaks(5), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = 2018:2026) +
+  labs(title = "Forest Development: proposed, enacted, allotted, disbursed (2018–2026)",
+       subtitle = "From PHP 6.6B enacted (2018) to PHP 2.4B (2026); Congress cuts the proposal further every year",
+       x = NULL, y = NULL) +
+  theme_denr() + guides(color = guide_legend(nrow = 1))
+```
+
+```{r tbl-forest}
+osec_pap_year %>% filter(str_detect(pap, "Forest Development")) %>%
+  transmute(FY = year, `NEP (B)` = round(NEP/1e9,2), `GAA (B)` = round(GAA/1e9,2),
+            `Cong. cut (B)` = round((GAA-NEP)/1e9,2), `Allotment (B)` = round(AdjAllot/1e9,2),
+            `Disbursed (B)` = round(Disbursements/1e9,2),
+            `D/A` = ifelse(!is.na(AdjAllot) & AdjAllot > 0, scales::percent(Disbursements/AdjAllot, accuracy = 1), NA_character_)) %>%
+  arrange(FY) %>% kbl_clean(font = 13, align = "rrrrrrr", na = "")
+```
+
+Two cuts compound here. The Executive's *proposal* for forestry fell from ₱8.6B (2018) to ₱3.5B (2026); then Congress trimmed the proposal further in almost every year — cumulatively **−₱12.4B** below NEP across the period. The enacted line ends at ₱2.4B, roughly a third of its 2018 level. Alongside this, the department's two **foreign-assisted field projects** — the Integrated Natural Resources and Environmental Management Project (INREMP) and the Forestland Management Project — wound down by 2021 and 2023 respectively and were not replaced, removing what had been a meaningful slice of capital-intensive, on-the-ground work (and a chronically weak absorber, disbursing 17–50% in its active years).
+
+The forestry retreat has a mirror image. As **active reforestation (Forest Development) shrank from ₱6.6B to ₱2.4B**, **conservation (Protected Areas Development and Management) grew from ₱1.4B to ₱2.3B** — the two faces of DENR's forest strategy. Congress is not simply cutting the environment budget; within a frozen total it is reallocating from planting trees toward managing and protecting what already stands.
+
+# Congressional action: NEP → GAA {#augmentation}
+
+```{r fig-augmentation, fig.height=4.6}
+aug <- osec_pap_year %>% group_by(pap) %>%
+  summarise(nep = sum(NEP, na.rm = TRUE), gaa = sum(GAA, na.rm = TRUE), .groups = "drop") %>%
+  mutate(change = gaa - nep) %>% filter(abs(change) >= 2e8)
+aug_plot <- bind_rows(aug %>% arrange(desc(change)) %>% slice_head(n = 7),
+                      aug %>% arrange(change) %>% slice_head(n = 5)) %>% distinct() %>%
+  mutate(direction = ifelse(change >= 0, "Net increase (GAA > NEP)", "Net decrease (GAA < NEP)"),
+         hj = ifelse(change >= 0, -0.12, 1.12), pap = factor(pap, levels = pap[order(change)]))
+ggplot(aug_plot, aes(pap, change/1e9, fill = direction)) +
+  geom_col(width = 0.7) +
+  geom_text(aes(label = sprintf("%+.1fB", change/1e9), hjust = hj), size = 2.9, color = "grey20") +
+  coord_flip() +
+  scale_fill_manual(values = c("Net increase (GAA > NEP)" = "#1B9E77", "Net decrease (GAA < NEP)" = "#D95F02")) +
+  scale_x_discrete(labels = function(x) str_trunc(x, 48)) +
+  scale_y_continuous(labels = function(v) paste0(peso, v, "B"), expand = expansion(mult = c(0.25, 0.25))) +
+  labs(title = "Cumulative NEP-to-GAA change by P/A/P, 2018–2026",
+       subtitle = "Forestry is cut far more than anything else; protected areas and coastal work are added",
+       x = NULL, y = NULL) +
+  theme_denr() +
+  theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85")) +
+  guides(fill = guide_legend(nrow = 1))
+```
+
+The pattern is lopsided. Forest Development absorbs essentially all of the cutting (−₱12.4B). On the additions side, Congress consistently tops up **Protected Areas** (+₱2.9B cumulative), **Coastal and Marine Resources** (+₱0.7B), and **Land Survey** (+₱0.6B) — reallocating, in effect, from reforestation toward conservation and land administration. The full list of material movers is below.
+
+```{r tbl-aug-full}
+aug_full <- osec_pap_year %>% group_by(pap) %>%
+  summarise(nep = sum(NEP, na.rm = TRUE), gaa = sum(GAA, na.rm = TRUE), .groups = "drop") %>%
+  mutate(change = gaa - nep) %>% filter(abs(change) >= 1e8) %>%
+  transmute(`P/A/P` = pap, `Σ NEP (B)` = nep/1e9, `Σ GAA (B)` = gaa/1e9, `Cumulative change (B)` = change/1e9) %>%
+  arrange(`Cumulative change (B)`)
+dt_table(aug_full, page = 10, money_cols = c("Σ NEP (B)","Σ GAA (B)","Cumulative change (B)"))
+```
+
+# Absorptive capacity {#absorption}
+
+## At the aggregate
+
+```{r fig-absorp-agg, fig.height=5}
+absorp_long <- osec_absorp %>% select(year, oblig_allot, disb_oblig, disb_allot) %>%
+  pivot_longer(-year, names_to = "ratio", values_to = "value") %>%
+  mutate(ratio = factor(ratio, levels = c("oblig_allot","disb_oblig","disb_allot"),
+    labels = c("Obligations / Adj. Allotment","Disbursements / Obligations","Disbursements / Adj. Allotment")))
+ggplot(absorp_long, aes(year, value, color = ratio, group = ratio)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 2) +
+  scale_color_manual(values = absorp_pal) +
+  scale_y_continuous(labels = percent_format(accuracy = 1), limits = c(0, 1.08), breaks = seq(0, 1, 0.2)) +
+  scale_x_continuous(breaks = 2018:2025) +
+  labs(title = "DENR-OSEC absorptive capacity, 2018–2025",
+       subtitle = "A solid absorber by Philippine standards — D/A held at 82–88% from 2019 onward; FY 2018 was the one weak year",
+       x = NULL, y = NULL) +
+  theme_denr() + guides(color = guide_legend(nrow = 1))
+```
+
+```{r tbl-absorp-agg}
+osec_absorp %>% transmute(Year = year, `Allotment (B)` = round(AdjAllot/1e9,1),
+            `Obligations (B)` = round(Obligations/1e9,1), `Disbursements (B)` = round(Disbursements/1e9,1),
+            `O/A` = scales::percent(oblig_allot, accuracy = 1), `D/O` = scales::percent(disb_oblig, accuracy = 1),
+            `D/A` = scales::percent(disb_allot, accuracy = 1)) %>%
+  kbl_clean(font = 13, align = "rrrrrrr")
+```
+
+Unlike the budget itself, absorption is sound — disbursement-to-allotment held at 82–88% from 2019 onward, with 2018 (74%) the one weak year. A frozen, increasingly personnel-weighted budget is, mechanically, easier to spend: salaries disburse almost fully, so as PS rose as a share of the total, aggregate absorption held up.
+
+## By expense class
+
+```{r fig-absorp-ec, fig.height=5}
+absorp_ec <- df_long_all %>% filter(agency == "Office of the Secretary",
+    metric %in% c("AdjAllot","Disbursements"), expense_class %in% c("1PS","2MOOE","6CO"), year %in% 2018:2025) %>%
+  group_by(year, metric, expense_class) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = amount) %>%
+  mutate(da = ifelse(AdjAllot > 1e8, Disbursements/AdjAllot, NA_real_),
+         expense_class = factor(expense_class, levels = c("1PS","2MOOE","6CO"),
+                                labels = c("Personnel Services (PS)","Maintenance & Other Op. Exp. (MOOE)","Capital Outlays (CO)")))
+ggplot(absorp_ec, aes(year, da, color = expense_class, group = expense_class)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 1.8) +
+  geom_text(aes(label = scales::percent(da, accuracy = 1)), vjust = -1.0, size = 2.8, show.legend = FALSE, color = "grey20") +
+  scale_color_manual(values = ec_pal) +
+  scale_y_continuous(labels = percent_format(accuracy = 1), limits = c(0, 1.12), breaks = seq(0, 1, 0.2)) +
+  scale_x_continuous(breaks = 2018:2025) +
+  labs(title = "Disbursement-to-Allotment by Expense Class, 2018–2025",
+       subtitle = "Personnel absorbs at 97–99% every year; MOOE and Capital Outlays both run 53–84%",
+       x = NULL, y = NULL) +
+  theme_denr() + guides(color = guide_legend(nrow = 1))
+```
+
+The aggregate hides the usual split: **Personnel Services disburses at 97–99%** every year, while **MOOE and Capital Outlays run 53–84%**. The remaining capital spending — what survives of the field works — is the hardest to convert into payments within the year, the same pattern seen across the infrastructure-heavy departments, just on a much smaller base.
+
+## Strongest and weakest absorbers (FY 2025)
+
+```{r tbl-absorb-build}
+abs_2025 <- osec_pap_year %>% filter(year == 2025, !is.na(AdjAllot), AdjAllot >= 1e8) %>%
+  mutate(`O/A` = Obligations/AdjAllot, `D/O` = Disbursements/Obligations, `D/A` = Disbursements/AdjAllot,
+         `Allotment (B)` = round(AdjAllot/1e9, 2))
+```
+
+::: {.takeaway}
+**Strongest absorbers, FY 2025** — land administration, legal, policy, and the forestry line all disburse at 89–94%.
+:::
+
+```{r tbl-top-absorb}
+abs_2025 %>% arrange(desc(`D/A`)) %>% slice_head(n = 6) %>%
+  transmute(`P/A/P` = str_trunc(pap, 54), `Allotment (B)`,
+            `O/A` = scales::percent(`O/A`, accuracy = 1), `D/O` = scales::percent(`D/O`, accuracy = 1),
+            `D/A` = scales::percent(`D/A`, accuracy = 1)) %>%
+  kbl_clean(font = 13, align = "lrrrr")
+```
+
+::: {.takeaway}
+**Weakest absorbers, FY 2025** — information systems (Data Management, 32%), enforcement, and research lines.
+:::
+
+```{r tbl-bot-absorb}
+abs_2025 %>% arrange(`D/A`) %>% slice_head(n = 6) %>%
+  transmute(`P/A/P` = str_trunc(pap, 54), `Allotment (B)`,
+            `O/A` = scales::percent(`O/A`, accuracy = 1), `D/O` = scales::percent(`D/O`, accuracy = 1),
+            `D/A` = scales::percent(`D/A`, accuracy = 1)) %>%
+  kbl_clean(font = 13, align = "lrrrr")
+```
+
+The standout laggard is **Data Management including Systems Development** at 32% — a ₱1.3B IT line that disbursed barely a third of its allotment, the kind of large under-spend that warrants a direct question about procurement and contracting.
+
+### Full absorption table, FY 2025 (interactive) {.unnumbered}
+
+```{r tbl-absorb-full}
+abs_full <- osec_pap_year %>% filter(year == 2025, !is.na(AdjAllot), AdjAllot > 0) %>%
+  transmute(`P/A/P` = pap, `Allotment (B)` = AdjAllot/1e9, `Obligations (B)` = Obligations/1e9,
+            `Disbursements (B)` = Disbursements/1e9, `O/A` = Obligations/AdjAllot,
+            `D/O` = ifelse(Obligations>0, Disbursements/Obligations, NA_real_), `D/A` = Disbursements/AdjAllot) %>%
+  arrange(`D/A`)
+dt_table(abs_full, page = 15, money_cols = c("Allotment (B)","Obligations (B)","Disbursements (B)"),
+         pct_cols = c("O/A","D/O","D/A"))
+```
+
+# Program deep-dives {#deep-dives}
+
+## Trajectories of the largest programs
+
+```{r fig-trend, fig.height=6.7}
+trend_paps <- c(
+  "General Management and Supervision",
+  "Forest Development, Rehabilitation, Maintenance and Protection",
+  "Protected areas development and management",
+  "Land Survey, Disposition and Records Management",
+  "Natural Resources management arrangement/agreement and permit issuance",
+  "Development, Updating and Implementation of the Operational Plan for the Manila Bay Coastal Management Strategy pursuant to SC Decision under GR No. 171947-48")
+trend_dat <- osec_pap_year %>% filter(pap %in% trend_paps) %>%
+  select(pap, year, GAA, AdjAllot, Disbursements) %>%
+  pivot_longer(c(GAA, AdjAllot, Disbursements), names_to = "metric", values_to = "amount") %>%
+  filter(!is.na(amount)) %>%
+  mutate(metric = factor(metric, levels = c("GAA","AdjAllot","Disbursements"),
+    labels = c("GAA (enacted)","Adj. Allotment","Disbursements")),
+    pap = factor(pap, levels = trend_paps,
+      labels = c("General Management & Supervision","Forest Development","Protected Areas",
+                 "Land Survey & Records","NR Management & Permitting","Manila Bay Rehabilitation")))
+trend_pal <- c("GAA (enacted)" = "#54278F","Adj. Allotment" = "#08519C","Disbursements" = "#31A354")
+ggplot(trend_dat, aes(year, amount, color = metric, group = metric)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 1.5) +
+  facet_wrap(~ pap, ncol = 3, scales = "free_y", labeller = label_wrap_gen(width = 24)) +
+  expand_limits(y = 0) +
+  scale_color_manual(values = trend_pal) +
+  scale_y_continuous(labels = php_b, breaks = pretty_breaks(4)) +
+  scale_x_continuous(breaks = c(2018, 2022, 2026)) +
+  labs(title = "How the six largest programs have evolved (2018–2026)",
+       subtitle = "Forestry falls; administration, protected areas, and the Manila Bay mandate hold or rise",
+       x = NULL, y = NULL) +
+  theme_denr() + guides(color = guide_legend(nrow = 1))
+```
+
+The panels capture the reallocation cleanly. **Forest Development** slopes down throughout. **Administration** is flat-to-rising and executes tightly. **Protected Areas**, **Land Survey**, and the court-mandated **Manila Bay** rehabilitation hold their ground or grow — the conservation-and-administration core that Congress has protected even as it cut reforestation.
+
+# Questions for discussion {#discussion}
+
+1. **A budget frozen for nine years.** DENR-OSEC has been flat in nominal pesos since 2018 — a real-terms cut of about 30% — even as climate, biodiversity, and pollution mandates expanded. Is this a deliberate prioritization, and what has the department had to forgo?
+2. **The retreat from reforestation.** Forest Development fell from ₱6.6B to ₱2.4B enacted, cut by both the Executive and Congress (−₱12.4B cumulative below NEP). Is the National Greening Program being wound down by design, and what replaces it?
+3. **Administration as the largest line.** General Management and Supervision is the single biggest item in the budget. Is the overhead share appropriate for a department whose field programs are shrinking?
+4. **Shedding capital for payroll.** Capital Outlays fell from 37% to 12% of the budget while Personnel Services rose to 45%. With the foreign-assisted field projects closed out, how much real on-the-ground capacity remains?
+5. **The information-systems under-spend.** Data Management disbursed only 32% of a ₱1.3B allotment in 2025. What is the binding constraint on the department's IT and systems modernization?
+
+---
+
+<p class="caption">
+Underlying data: DBM-published budget and execution data for the DENR Office of the Secretary (Current New Appropriations only), FY 2018–2026; attached bureaus are out of scope. Execution measures (Allotments, Obligations, Disbursements) cover FY 2018–2025. Real-terms figures are deflated by the PSA Consumer Price Index (2018 = 100), external to this dataset. Prepared as the long-form companion to the DENR-OSEC budget briefing.
+</p>

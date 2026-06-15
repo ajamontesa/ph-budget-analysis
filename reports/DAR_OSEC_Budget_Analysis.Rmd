@@ -1,0 +1,662 @@
+---
+title: "Department of Agrarian Reform — Office of the Secretary"
+subtitle: "Budget evolution and absorptive capacity, FY 2018–2026"
+date: "`r format(Sys.Date(), '%B %Y')`"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    toc_depth: 3
+    number_sections: true
+    code_folding: hide
+    self_contained: true
+    df_print: paged
+    fig_width: 10
+    fig_height: 5.5
+---
+
+```{css, echo=FALSE}
+:root { --ink:#1a1a1a; --muted:#6e6e6e; --accent:#08519C; --rule:#e6e6e6; }
+body, .main-container { font-family: Arial, Helvetica, "IBM Plex Sans", sans-serif; color: var(--ink); }
+.main-container { max-width: 980px; }
+h1, h2, h3, h4 { font-family: Arial, Helvetica, sans-serif; font-weight: 600; }
+h1.title { font-size: 30px; }
+h1 { font-size: 25px; margin-top: 1.6em; padding-top: .3em; border-top: 2px solid var(--rule); }
+h2 { font-size: 20px; margin-top: 1.4em; }
+h3 { font-size: 17px; color: #333; }
+.author, .date { color: var(--muted); }
+p, li { font-size: 15.5px; line-height: 1.62; }
+blockquote { border-left: 3px solid var(--accent); background: #f5f8fc; color: #25405e;
+  font-size: 14.5px; padding: .6em 1em; margin: 1.2em 0; }
+.lead { font-size: 16.5px; color: #2b2b2b; }
+.takeaway { background: #f7f9fb; border: 1px solid var(--rule); border-radius: 6px;
+  padding: .4em 1.1em; margin: 1.1em 0; }
+.takeaway p, .takeaway li { font-size: 14.5px; }
+.caption, .figcaption { color: var(--muted); font-size: 13px; }
+table.dataTable { font-size: 13px; }
+.kbl-note { color: var(--muted); font-size: 12.5px; margin-top: -.5em; }
+.toc-content { padding-left: 0; }
+hr { border-top: 1px solid var(--rule); }
+.home-link { font-size: 13.5px; }
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE, message = FALSE, warning = FALSE,
+  dpi = 150, fig.align = "center", out.width = "100%"
+)
+
+# ---- Self-contained setup: libraries, theme, palettes, table helpers -----
+options(knitr.kable.NA = "")
+library(readxl); library(dplyr); library(tidyr); library(stringr)
+library(ggplot2); library(scales); library(knitr); library(kableExtra); library(DT)
+
+# Robust data path (works whether knitting from reports/ or the repo root)
+.candidates <- c(
+  "../data/Compiled_-_NEP-GAA-SAAODB-ByPAPLabelled.xlsx",
+  "data/Compiled_-_NEP-GAA-SAAODB-ByPAPLabelled.xlsx",
+  "Compiled - NEP-GAA-SAAODB-ByPAPLabelled.xlsx",
+  "Compiled_-_NEP-GAA-SAAODB-ByPAPLabelled.xlsx"
+)
+file_path <- .candidates[file.exists(.candidates)][1]
+stopifnot(!is.na(file_path))
+
+# Minimalist ggplot theme (compact strip text so wrapped facet labels fit)
+theme_dar <- function(base_size = 12) {
+  theme_minimal(base_size = base_size, base_family = "sans") +
+    theme(
+      plot.title       = element_text(face = "bold", size = base_size + 2, color = "black"),
+      plot.subtitle    = element_text(color = "grey30", size = base_size),
+      plot.caption     = element_text(color = "grey40", size = base_size - 3, hjust = 0),
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_blank(),
+      axis.title       = element_text(size = base_size - 1, color = "grey20"),
+      axis.text        = element_text(color = "grey20"),
+      legend.position  = "bottom",
+      legend.title     = element_blank(),
+      legend.text      = element_text(size = base_size - 1),
+      strip.text       = element_text(face = "bold", size = base_size - 1.5, lineheight = 0.9)
+    )
+}
+
+exec_pal <- c(
+  "NEP (proposed)" = "#9E9AC8", "GAA (enacted)" = "#54278F",
+  "Adj. Appropriation" = "#3182BD", "Adj. Allotment" = "#08519C",
+  "Obligations" = "#E6550D", "Disbursements" = "#31A354"
+)
+absorp_pal <- c(
+  "Obligations / Adj. Allotment" = "#3182BD",
+  "Disbursements / Obligations" = "#E6550D",
+  "Disbursements / Adj. Allotment" = "#31A354"
+)
+ec_pal <- c(
+  "Personnel Services (PS)" = "#2CA02C",
+  "Maintenance & Other Op. Exp. (MOOE)" = "#FF7F0E",
+  "Capital Outlays (CO)" = "#9467BD"
+)
+bar_fill <- "#08519C"
+
+# Functional-category palette (DAR PREXC programs)
+cat_pal <- c(
+  "General Administration and Support"         = "#A6761D",
+  "Support to Operations"                      = "#E6AB02",
+  "Land Tenure Security Program"               = "#1B9E77",
+  "Agrarian Justice Delivery Program"          = "#7570B3",
+  "ARB Development and Sustainability Program" = "#D95F02"
+)
+
+# Formatters (operate on RAW peso amounts)
+peso       <- "PHP "
+php_b      <- function(x) paste0(peso, scales::comma(x / 1e9, accuracy = 0.1), "B")
+php_b_axis <- function(x) paste0(peso, scales::comma(x / 1e9, accuracy = 1), "B")
+
+# Interactive reference-table helper (sortable, searchable, exportable)
+dt_table <- function(df, caption = NULL, page = 10, money_cols = NULL,
+                     pct_cols = NULL, money_digits = 2) {
+  dt <- datatable(
+    df, rownames = FALSE, caption = caption, extensions = "Buttons",
+    options = list(
+      pageLength = page, lengthMenu = c(10, 20, 50, 100),
+      dom = "Bfrtip", buttons = c("copy", "csv"),
+      scrollX = TRUE, autoWidth = FALSE,
+      columnDefs = list(list(className = "dt-right",
+                             targets = which(sapply(df, is.numeric)) - 1))
+    ),
+    class = "stripe hover compact"
+  )
+  if (!is.null(money_cols)) {
+    mc <- which(names(df) %in% money_cols)
+    if (length(mc)) dt <- formatRound(dt, mc, digits = money_digits, mark = ",")
+  }
+  if (!is.null(pct_cols)) {
+    pc <- which(names(df) %in% pct_cols)
+    if (length(pc)) dt <- formatPercentage(dt, pc, digits = 0)
+  }
+  dt
+}
+
+# Static styled-kable helper for small curated tables
+kbl_clean <- function(x, font = 14, ...) {
+  x %>% kable(...) %>%
+    kable_styling(full_width = TRUE, font_size = font,
+                  bootstrap_options = c("condensed", "striped", "hover"))
+}
+
+# ---- Data load & processing (faithful to the deck, then extended) --------
+raw <- read_excel(file_path, sheet = "DAR") %>%
+  filter(UACS_AGY_DSC == "Office of the Secretary", !is.na(`P/A/P`))
+
+df_long_all <- raw %>%
+  pivot_longer(
+    cols = matches("^(NEP|GAA|AuthAppro|AdjAppro|AdjAllot|Obligations|Disbursements)_\\d{4}_EXP_(1PS|2MOOE|6CO|TOTAL)$"),
+    names_to = "var", values_to = "amount"
+  ) %>%
+  separate(var, into = c("metric", "year", "tag", "expense_class"), sep = "_") %>%
+  mutate(year = as.integer(year), amount = as.numeric(amount)) %>%
+  select(-tag) %>%
+  filter(year >= 2018) %>%
+  # tidy one obvious source typo in a P/A/P label
+  mutate(`P/A/P` = str_replace(`P/A/P`, "Landownders' Compensation", "Landowners' Compensation"))
+
+df_long <- df_long_all %>%
+  filter(expense_class == "TOTAL") %>%
+  select(-expense_class) %>%
+  rename(pap = `P/A/P`) %>%
+  mutate(category = case_when(
+    PREXC_PROG == 1000 ~ "General Administration and Support",
+    PREXC_PROG == 2000 ~ "Support to Operations",
+    PREXC_PROG == 3101 ~ "Land Tenure Security Program",
+    PREXC_PROG == 3201 ~ "Agrarian Justice Delivery Program",
+    PREXC_PROG == 3301 ~ "ARB Development and Sustainability Program",
+    TRUE               ~ "Other"
+  )) %>%
+  # flag foreign-assisted projects (loan-funded)
+  mutate(is_fap = str_detect(pap, "SPLIT|VISTA|CONVERGE|IPAC|IARCDSP|MINSAAD|IBRD|IFAD|Loan No|Italian Assistance"))
+
+pap_year <- df_long %>%
+  group_by(pap, year, metric) %>%
+  summarise(amount = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE),
+            .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = amount)
+
+totals_by_year <- df_long %>%
+  group_by(year, metric) %>%
+  summarise(total = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE),
+            .groups = "drop")
+
+# Execution data is complete for 2019-2025 (2018 SAAODB for foreign-assisted
+# projects not yet encoded), so absorption ratios cover 2019-2025 only.
+absorp_total <- totals_by_year %>%
+  pivot_wider(names_from = metric, values_from = total) %>%
+  filter(year %in% 2019:2025) %>%
+  mutate(
+    oblig_allot = Obligations   / AdjAllot,
+    disb_oblig  = Disbursements / Obligations,
+    disb_allot  = Disbursements / AdjAllot
+  )
+
+# 2018 execution mask for the evolution chart/table (partial 2018 SAAODB)
+mask_2018 <- function(df) {
+  df %>% mutate(total = ifelse(year == 2018 & metric %in% c("AdjAllot","Obligations","Disbursements"),
+                               NA_real_, total))
+}
+```
+
+<p class="home-link"><a href="index.html">← All agencies</a></p>
+
+# Overview {#overview .unnumbered}
+
+<p class="lead">
+This document tracks the budget of the **Department of Agrarian Reform – Office of the Secretary (DAR-OSEC)** across nine fiscal years, FY 2018 to FY 2026, following each peso from the Executive's proposal (NEP) to enactment (GAA), release (allotment), commitment (obligation), and final cash payment (disbursement).
+</p>
+
+It is the long-form companion to the DAR-OSEC briefing deck. Where the deck fits each point on a slide, this version keeps the full argument and adds reference tables — sortable, searchable, and exportable — so a reader can interrogate the figures directly.
+
+DAR is the smallest department in this series, and its budget tells a story the larger agencies do not. For eight straight years it was almost perfectly flat at ₱8–10B; then the 2026 proposal jumps 62% to ₱16.8B. Two features make DAR distinctive. First, **Congress has been a net *subtractor*** here — repeatedly trimming the Executive's proposal rather than augmenting it, the reverse of the pattern at health and social welfare. Second, the agency runs on two very different kinds of money: **routine, domestically-run programs that absorb beautifully (94–99%)**, and **foreign-assisted loan projects that absorb badly (19–38%)**. The 2026 surge is built almost entirely on the second kind — which means the budget is being loaded with precisely the program type DAR has the weakest record of spending.
+
+# Executive summary {#exec}
+
+**DAR is one of the smallest line departments.** The OSEC budget held at ₱8–10B for eight straight years (2018–2025), then jumps to a proposed ₱16.8B in 2026 — a 62% increase in a single year.
+
+**The 2026 surge is foreign-assisted.** Externally-funded loan projects rise from about 10% of the budget (2025) to **37% (2026)**, led by the World Bank-funded SPLIT land-titling project (₱0.7B → ₱5.1B), which becomes the single largest line in the entire department.
+
+**Congress repeatedly trims DAR's proposal.** Unusually for these reviews, in FY 2022 and FY 2023 the enacted GAA came in ₱2.4B and ₱4.5B *below* the Executive's NEP — almost entirely by cutting SPLIT. DAR is a department Congress shrinks, not enlarges.
+
+**The agency absorbs its core budget well** — aggregate disbursement-to-allotment held in a tight 79–98% band, and the core domestic programs (Land Acquisition and Distribution, agrarian legal assistance, social infrastructure) all disburse at 94–99%.
+
+**But foreign-assisted projects absorb poorly.** SPLIT disbursed only 31–38% of its allotment; the newer VISTA project just 19% in 2025. **The 2026 budget therefore loads the agency with the program type it has the weakest track record absorbing** — making project execution, not appropriation, the central delivery risk.
+
+> The DAR paradox in one line: the department spends its own programs almost perfectly and its borrowed-money projects barely at all — and the 2026 budget triples down on the latter.
+
+# A note on the data {#data-notes}
+
+**Period.** FY 2018 through FY 2026 for NEP and GAA. Execution data — Adjusted Appropriations, Adjusted Allotments, Obligations, Disbursements — is available for FY 2018–2025; FY 2026 reflects the proposed/enacted budget only.
+
+**One known data gap.** FY 2018 execution data for the foreign-assisted projects (SPLIT, IARCDSP, MINSAAD, CONVERGE, IPAC, VISTA) and two small building lines is not yet encoded. The 2018 aggregate execution totals therefore exclude those P/A/Ps — about ₱2B of GAA. To avoid presenting biased ratios, the **absorption charts cover FY 2019–2025 only**, and the 2018 execution figures are masked in the evolution chart and table. Subsequent years are complete.
+
+**Scope.** The DAR Office of the Secretary, which is the entire department as encoded here. **Current New Appropriations only**; nominal pesos.
+
+**PREXC structure.** General Administration and Support; Support to Operations; and three core programs — Land Tenure Security, Agrarian Justice Delivery, and ARB (Agrarian Reform Beneficiaries) Development and Sustainability.
+
+**Absorptive-capacity denominator.** Unless noted, ratios use **Adjusted Allotments**. The three ratios are **O/A** (Obligations ÷ Allotment), **D/O** (Disbursements ÷ Obligations), and **D/A** (Disbursements ÷ Allotment).
+
+# The aggregate budget {#aggregate}
+
+## A flat budget, then a 2026 jump
+
+```{r fig-evolution, fig.height=5.2}
+evo <- totals_by_year %>%
+  filter(metric %in% c("NEP","GAA","AdjAllot","Obligations","Disbursements")) %>%
+  mask_2018() %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA","AdjAllot","Obligations","Disbursements"),
+                         labels = c("NEP (proposed)","GAA (enacted)","Adj. Allotment","Obligations","Disbursements")))
+
+ggplot(evo, aes(year, total, color = metric, group = metric)) +
+  geom_line(linewidth = 1.0) + geom_point(size = 2) +
+  scale_color_manual(values = exec_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6),
+                     limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "DAR-OSEC budget, NEP through Disbursements (FY 2018–2026)",
+       subtitle = "A flat PHP 8–10B budget for eight years — then a sharp jump to a proposed PHP 16.8B",
+       x = NULL, y = NULL,
+       caption = "Execution lines start at FY 2019: 2018 foreign-assisted-project SAAODB not yet encoded. FY 2026 reflects NEP/GAA only.") +
+  theme_dar() + guides(color = guide_legend(nrow = 1))
+```
+
+The flat stretch from 2018 to 2025 is the most striking thing here — in nominal terms, DAR's budget barely moved for eight years while health, education, and social welfare grew steadily. The 2026 proposal breaks the pattern decisively. Notice too that in two years (2022 and 2023) the **NEP line sits well above the GAA line**: those are the years Congress cut the proposal, a reversal explored below. The table gives the figures (2018 execution masked, per the data note).
+
+```{r tbl-evolution}
+tbl_evo <- totals_by_year %>%
+  filter(metric %in% c("NEP","GAA","AdjAllot","Obligations","Disbursements")) %>%
+  mask_2018() %>%
+  mutate(value = total/1e9) %>% select(year, metric, value) %>%
+  pivot_wider(names_from = year, values_from = value) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA","AdjAllot","Obligations","Disbursements"),
+                         labels = c("NEP","GAA","Adj. Allotment","Obligations","Disbursements"))) %>%
+  arrange(metric) %>% rename(`PHP B` = metric)
+kbl_clean(tbl_evo, font = 13, digits = 1, format.args = list(big.mark = ","), na = "")
+```
+
+## Congress as a net subtractor
+
+The clearest break from the other agencies is the direction of Congressional adjustment. The table pairs each year's GAA growth with the net change against the Executive's NEP — and that change is *negative* in several years.
+
+```{r tbl-growth}
+wide_yr <- totals_by_year %>% pivot_wider(names_from = metric, values_from = total)
+growth <- wide_yr %>% arrange(year) %>%
+  transmute(year,
+            `GAA (B)` = round(GAA/1e9,1),
+            `Growth %` = scales::percent(GAA/lag(GAA) - 1, accuracy = 0.1),
+            `NEP (B)` = round(NEP/1e9,1),
+            `Net adj. GAA−NEP (B)` = round((GAA-NEP)/1e9,1))
+kbl_clean(growth, font = 13, align = "rrrrr", na = "")
+```
+
+In FY 2022 and FY 2023 the enacted GAA came in ₱2.4B and ₱4.5B below the Executive's proposal — almost entirely by cutting the SPLIT land-titling project. This is the opposite of the dynamic at DOH or DSWD, where Congress consistently *adds*. At DAR, the legislature has repeatedly judged the proposal too large to spend, and trimmed it.
+
+# Where the money goes {#composition}
+
+## By PREXC program
+
+DAR-OSEC's budget runs through five PREXC programs. The chart shows the enacted budget by program; the tables give pesos and shares.
+
+```{r fig-composition, fig.height=5.2}
+comp <- df_long %>%
+  filter(metric == "GAA", year <= 2026, !is.na(amount)) %>%
+  group_by(year, category) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(category = factor(category, levels = names(cat_pal)))
+
+ggplot(comp, aes(year, amount, fill = category)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = cat_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6),
+                     limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "Composition of the GAA by PREXC program, 2018–2026",
+       subtitle = "Land Tenure Security is the largest pillar — and the 2026 jump is concentrated there",
+       x = NULL, y = NULL) +
+  theme_dar() + guides(fill = guide_legend(nrow = 2, byrow = TRUE))
+```
+
+The **Land Tenure Security Program** — which houses both the core Land Acquisition and Distribution work and the SPLIT titling project — is the largest pillar, and the 2026 jump lands almost entirely there, because SPLIT sits inside it. The other programs (Agrarian Justice Delivery, ARB Development) are stable and comparatively small.
+
+```{r tbl-comp}
+comp_tbl <- comp %>% group_by(year) %>% mutate(share = amount/sum(amount)) %>% ungroup()
+comp_amt <- comp_tbl %>% mutate(amount = round(amount/1e9,2)) %>%
+  select(category, year, amount) %>% pivot_wider(names_from = year, values_from = amount)
+kbl_clean(comp_amt %>% rename(`Program (PHP B)` = category),
+          font = 12, digits = 2, format.args = list(big.mark=","), na = "")
+
+comp_pct <- comp_tbl %>% mutate(share = round(share*100,1)) %>%
+  select(category, year, share) %>% pivot_wider(names_from = year, values_from = share)
+```
+
+<p class="kbl-note">Share of each year's total budget:</p>
+
+```{r tbl-comp-pct}
+kbl_clean(comp_pct %>% rename(`Program (% of GAA)` = category), font = 12, digits = 1, na = "")
+```
+
+## By expense class
+
+The expense-class mix shifts noticeably over the period: Capital Outlay shrinks to almost nothing, and MOOE — which carries the loan-funded project spending — surges.
+
+```{r fig-comp-ec, fig.height=5.2}
+ec_levels <- c("Personnel Services (PS)","Maintenance & Other Op. Exp. (MOOE)","Capital Outlays (CO)")
+comp_ec <- df_long_all %>%
+  filter(metric == "GAA", year <= 2026, expense_class %in% c("1PS","2MOOE","6CO")) %>%
+  group_by(year, expense_class) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(expense_class = factor(expense_class, levels = c("1PS","2MOOE","6CO"), labels = ec_levels))
+
+ggplot(comp_ec, aes(year, amount, fill = expense_class)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = ec_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6),
+                     limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "GAA composition by Expense Class, 2018–2026",
+       subtitle = "Capital Outlays were 13% of GAA in 2018 but collapsed to under 5%; MOOE surges to 58% in 2026",
+       x = NULL, y = NULL) +
+  theme_dar() + guides(fill = guide_legend(nrow = 1))
+```
+
+Capital Outlay was 13% of the 2018 budget and has since collapsed to under 5%; MOOE rises to 58% of the 2026 GAA. The MOOE surge is the loan projects in disguise — SPLIT and the other foreign-assisted lines are largely classified as operating expenditure (surveys, contracted services, titling activities), so the expense-class shift is really the project shift seen from a different angle.
+
+```{r tbl-ec-share}
+ec_share <- comp_ec %>% group_by(year) %>% mutate(share = round(amount/sum(amount)*100,1)) %>% ungroup() %>%
+  select(expense_class, year, share) %>% pivot_wider(names_from = year, values_from = share)
+kbl_clean(ec_share %>% rename(`Expense class (% of GAA)` = expense_class), font = 12.5, digits = 1, na = "")
+```
+
+## The largest P/A/Ps
+
+```{r fig-top10, fig.height=5.4}
+top10 <- pap_year %>% filter(year == 2026, !is.na(GAA), GAA > 0) %>%
+  arrange(desc(GAA)) %>% slice_head(n = 10) %>% mutate(pap = factor(pap, levels = rev(pap)))
+
+ggplot(top10, aes(pap, GAA)) +
+  geom_col(fill = bar_fill, width = 0.75) +
+  geom_text(aes(label = php_b(GAA)), hjust = -0.1, size = 3.3, color = "grey20") +
+  coord_flip() +
+  scale_x_discrete(labels = function(x) str_wrap(x, 46)) +
+  scale_y_continuous(labels = php_b_axis, expand = expansion(mult = c(0, .20)), limits = c(0, NA)) +
+  labs(title = "Top 10 P/A/Ps by FY 2026 GAA",
+       subtitle = "The SPLIT land-titling project is now the single largest line — larger than core LAD",
+       x = NULL, y = NULL) +
+  theme_dar() +
+  theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"))
+```
+
+### Full P/A/P ranking (interactive) {.unnumbered}
+
+DAR is compact enough that the full list fits comfortably. Every P/A/P, ranked by 2026 GAA, with the 2026 NEP, the prior-year (2025) enacted figure, and the implied 2026 net Congressional change.
+
+```{r tbl-allpaps}
+all_paps_2026 <- pap_year %>% filter(year == 2026) %>%
+  transmute(`P/A/P` = pap, `NEP 2026 (B)` = NEP/1e9, `GAA 2026 (B)` = GAA/1e9) %>%
+  arrange(desc(`GAA 2026 (B)`))
+gaa25 <- pap_year %>% filter(year == 2025) %>% transmute(`P/A/P` = pap, g25 = GAA/1e9)
+all_paps_2026 <- all_paps_2026 %>% left_join(gaa25, by = "P/A/P") %>%
+  rename(`GAA 2025 (B)` = g25) %>%
+  mutate(`Net chg NEP to GAA 2026 (B)` = `GAA 2026 (B)` - `NEP 2026 (B)`)
+dt_table(all_paps_2026, page = 15,
+         money_cols = c("NEP 2026 (B)","GAA 2026 (B)","GAA 2025 (B)","Net chg NEP to GAA 2026 (B)"))
+```
+
+# Foreign-assisted projects and the 2026 surge {#fap}
+
+The single most important fact about the 2026 budget is *what kind* of money it adds. The chart below splits the GAA into domestically-funded core programs and foreign-assisted (loan-funded) projects.
+
+```{r fig-fap-share, fig.height=4.6}
+fap <- df_long %>%
+  filter(metric == "GAA", year <= 2026, !is.na(amount)) %>%
+  mutate(grp = ifelse(is_fap, "Foreign-assisted projects", "Core (domestically-funded)")) %>%
+  group_by(year, grp) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(grp = factor(grp, levels = c("Core (domestically-funded)", "Foreign-assisted projects")))
+
+ggplot(fap, aes(year, amount, fill = grp)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = c("Core (domestically-funded)" = "#1B9E77", "Foreign-assisted projects" = "#D95F02")) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6),
+                     limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "Core vs. foreign-assisted, GAA 2018–2026",
+       subtitle = "Loan-funded projects jump from ~10% of the budget (2025) to 37% (2026)",
+       x = NULL, y = NULL) +
+  theme_dar() + guides(fill = guide_legend(nrow = 1))
+```
+
+```{r tbl-fap-share}
+df_long %>% filter(metric == "GAA", !is.na(amount)) %>%
+  group_by(year) %>%
+  summarise(total = sum(amount, na.rm = TRUE), fap = sum(amount[is_fap], na.rm = TRUE), .groups = "drop") %>%
+  transmute(Year = year, `Total GAA (B)` = round(total/1e9,1),
+            `Foreign-assisted (B)` = round(fap/1e9,1),
+            `FAP share` = scales::percent(fap/total, accuracy = 1)) %>%
+  kbl_clean(font = 13, align = "rrrr", na = "")
+```
+
+For eight years the foreign-assisted share bounced between roughly 5% and 26%, never settling. In 2026 it leaps to 37% — and as the absorption section shows, these are exactly the lines DAR struggles most to spend. The next section looks at the largest of them.
+
+## SPLIT: a budget tug-of-war
+
+The Support to Parcelization of Lands for Individual Titling (SPLIT) project, a World Bank–financed land-titling effort, is the clearest illustration of every DAR theme at once: Executive ambition, Congressional skepticism, and weak disbursement.
+
+```{r fig-split, fig.height=4.6}
+split <- pap_year %>% filter(str_detect(pap, "SPLIT")) %>%
+  select(year, NEP, GAA, AdjAllot, Disbursements) %>%
+  pivot_longer(-year, names_to = "metric", values_to = "amount") %>% filter(!is.na(amount)) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA","AdjAllot","Disbursements"),
+                         labels = c("NEP (proposed)","GAA (enacted)","Adj. Allotment","Disbursements")))
+
+ggplot(split, aes(year, amount, color = metric, group = metric)) +
+  geom_line(linewidth = 1.0) + geom_point(size = 2.2) +
+  scale_color_manual(values = exec_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(5), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = c(2018, 2020, 2022, 2024, 2026)) +
+  labs(title = "SPLIT project: proposed, enacted, allotted, disbursed (2018–2026)",
+       subtitle = "The Executive proposes large; Congress trims; and what is released is only partly spent",
+       x = NULL, y = NULL) +
+  theme_dar() + guides(color = guide_legend(nrow = 1))
+```
+
+```{r tbl-split}
+pap_year %>% filter(str_detect(pap, "SPLIT"), year %in% 2020:2026) %>%
+  transmute(FY = year, `NEP (B)` = round(NEP/1e9,2), `GAA (B)` = round(GAA/1e9,2),
+            `Allotment (B)` = round(AdjAllot/1e9,2), `Disbursed (B)` = round(Disbursements/1e9,2),
+            `D/A` = ifelse(!is.na(AdjAllot) & AdjAllot > 0,
+                           scales::percent(Disbursements/AdjAllot, accuracy = 1), NA_character_)) %>%
+  arrange(FY) %>% kbl_clean(font = 13.5, align = "rrrrrr", na = "")
+```
+
+The pattern is unmistakable. The Executive proposed ₱4.6B (2022) and ₱6.1B (2023); Congress cut these to ₱2.6B and ₱1.6B. For 2026 the NEP and GAA finally agree at ₱5.1B — making SPLIT the single largest line in the budget. But the disbursement record is the catch: SPLIT's disbursement-to-allotment has run only 31–38%, and the newer VISTA project (IFAD-funded) disbursed just 19% in 2025. With foreign-assisted projects set to be 37% of the 2026 budget, **absorption is the central delivery risk** — the money is there, but the agency's record of converting loan allotments into titled parcels is poor.
+
+# Absorptive capacity {#absorption}
+
+## At the aggregate
+
+Across 2019–2025, DAR is a generally sound absorber: all three execution ratios sit in a tight 79–98% band, with FY 2022 the clear soft spot.
+
+```{r fig-absorp-agg, fig.height=5}
+absorp_long <- absorp_total %>% select(year, oblig_allot, disb_oblig, disb_allot) %>%
+  pivot_longer(-year, names_to = "ratio", values_to = "value") %>%
+  mutate(ratio = factor(ratio, levels = c("oblig_allot","disb_oblig","disb_allot"),
+    labels = c("Obligations / Adj. Allotment","Disbursements / Obligations","Disbursements / Adj. Allotment")))
+
+ggplot(absorp_long, aes(year, value, color = ratio, group = ratio)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 2) +
+  scale_color_manual(values = absorp_pal) +
+  scale_y_continuous(labels = percent_format(accuracy = 1), limits = c(0, 1.08), breaks = seq(0, 1, 0.2)) +
+  scale_x_continuous(breaks = 2019:2025) +
+  labs(title = "DAR-OSEC absorptive capacity, 2019–2025",
+       subtitle = "Generally a sound absorber — all three ratios sit in a tight 79–98% band; FY 2022 is the clear outlier",
+       x = NULL, y = NULL) +
+  theme_dar() + guides(color = guide_legend(nrow = 1))
+```
+
+```{r tbl-absorp-agg}
+absorp_total %>%
+  transmute(Year = year, `Allotment (B)` = round(AdjAllot/1e9,2),
+            `Obligations (B)` = round(Obligations/1e9,2), `Disbursements (B)` = round(Disbursements/1e9,2),
+            `O/A` = scales::percent(oblig_allot, accuracy = 1),
+            `D/O` = scales::percent(disb_oblig, accuracy = 1),
+            `D/A` = scales::percent(disb_allot, accuracy = 1)) %>%
+  kbl_clean(font = 13, align = "rrrrrrr", na = "")
+```
+
+But this aggregate hides the same core-versus-project split that runs through the whole budget. The soft years coincide with heavier foreign-assisted activity, and the agency-wide figure is a blend of near-perfect domestic execution and weak project execution — a blend the next tables pull apart.
+
+## By expense class
+
+Restricting to PS and MOOE (Capital Outlay's allotment base is too small — under ₱50M most years — for a meaningful ratio), personnel spending absorbs almost fully while operating expenditure is more variable.
+
+```{r fig-absorp-ec, fig.height=5}
+ec_levels2 <- c("Personnel Services (PS)","Maintenance & Other Op. Exp. (MOOE)")
+absorp_ec <- df_long_all %>%
+  filter(metric %in% c("AdjAllot","Disbursements"), expense_class %in% c("1PS","2MOOE"), year %in% 2019:2025) %>%
+  group_by(year, metric, expense_class) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = amount) %>%
+  mutate(da = ifelse(AdjAllot > 0, Disbursements/AdjAllot, NA_real_),
+         expense_class = factor(expense_class, levels = c("1PS","2MOOE"), labels = ec_levels2))
+
+ggplot(absorp_ec, aes(year, da, color = expense_class, group = expense_class)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 1.8) +
+  geom_text(aes(label = scales::percent(da, accuracy = 1)), vjust = -1.0, size = 2.9, show.legend = FALSE, color = "grey20") +
+  scale_color_manual(values = ec_pal) +
+  scale_y_continuous(labels = percent_format(accuracy = 1), limits = c(0, 1.08), breaks = seq(0, 1, 0.2)) +
+  scale_x_continuous(breaks = 2019:2025) +
+  labs(title = "Disbursement-to-Allotment by Expense Class, 2019–2025",
+       subtitle = "Personnel spending absorbs near-fully (~99%); operating expenditure runs 64–86%",
+       x = NULL, y = NULL,
+       caption = "Capital Outlays omitted — the allotment base is too small (< PHP 50M most years) to be meaningful.") +
+  theme_dar() + guides(color = guide_legend(nrow = 1))
+```
+
+## Strongest and weakest absorbers (FY 2025)
+
+The split is starkest at the P/A/P level. Both tables cover lines with a 2025 allotment of at least ₱0.1B.
+
+```{r tbl-absorb-build}
+abs_2025 <- pap_year %>% filter(year == 2025, !is.na(AdjAllot), AdjAllot >= 1e8) %>%
+  mutate(`O/A` = Obligations/AdjAllot, `D/O` = Disbursements/Obligations,
+         `D/A` = Disbursements/AdjAllot, `Allotment (B)` = round(AdjAllot/1e9, 2))
+```
+
+::: {.takeaway}
+**Strongest absorbers, FY 2025** — DAR's core domestic functions: land distribution, legal assistance, social infrastructure, personnel administration, all at 94–100%.
+:::
+
+```{r tbl-top-absorb}
+abs_2025 %>% arrange(desc(`D/A`)) %>% slice_head(n = 7) %>%
+  transmute(`P/A/P` = str_trunc(pap, 54), `Allotment (B)`,
+            `O/A` = scales::percent(`O/A`, accuracy = 1),
+            `D/O` = scales::percent(`D/O`, accuracy = 1),
+            `D/A` = scales::percent(`D/A`, accuracy = 1)) %>%
+  kbl_clean(font = 13, align = "lrrrr", na = "")
+```
+
+::: {.takeaway}
+**Weakest absorbers, FY 2025** — the foreign-assisted projects: VISTA (19%), SPLIT (33%). Policy Formulation (53%) is the one sizable domestic exception.
+:::
+
+```{r tbl-bot-absorb}
+abs_2025 %>% arrange(`D/A`) %>% slice_head(n = 7) %>%
+  transmute(`P/A/P` = str_trunc(pap, 54), `Allotment (B)`,
+            `O/A` = scales::percent(`O/A`, accuracy = 1),
+            `D/O` = scales::percent(`D/O`, accuracy = 1),
+            `D/A` = scales::percent(`D/A`, accuracy = 1)) %>%
+  kbl_clean(font = 13, align = "lrrrr", na = "")
+```
+
+The contrast is the whole story: where the work is routine and domestically run, disbursement reaches 94–100%; where it depends on loan drawdowns, surveys, and project management, it falls to a fifth or a third of what was released.
+
+### Full absorption table, FY 2025 (interactive) {.unnumbered}
+
+Every P/A/P with a 2025 allotment, all three ratios, sortable and searchable.
+
+```{r tbl-absorb-full}
+abs_full <- pap_year %>% filter(year == 2025, !is.na(AdjAllot), AdjAllot > 0) %>%
+  transmute(`P/A/P` = pap, `Allotment (B)` = AdjAllot/1e9, `Obligations (B)` = Obligations/1e9,
+            `Disbursements (B)` = Disbursements/1e9, `O/A` = Obligations/AdjAllot,
+            `D/O` = ifelse(Obligations>0, Disbursements/Obligations, NA_real_), `D/A` = Disbursements/AdjAllot) %>%
+  arrange(`D/A`)
+dt_table(abs_full, page = 15,
+         money_cols = c("Allotment (B)","Obligations (B)","Disbursements (B)"),
+         pct_cols = c("O/A","D/O","D/A"))
+```
+
+# Program deep-dives {#deep-dives}
+
+## Trajectories of the largest programs
+
+Six of the most consequential lines, each showing enacted budget, allotment, and disbursements together. Where the lines sit on top of one another, execution is clean; where disbursements fall away, money is released but unspent.
+
+```{r fig-trend, fig.height=6.7}
+trend_paps <- c(
+  "Support to Parcelization of Lands for Individual Titling (SPLIT) Project IBRD Loan No. 9141 - PH",
+  "Land Acquisition and Distribution (LAD)",
+  "General Management and Supervision",
+  "Policy Formulation, Monitoring and Evaluation, Information Management, and Systems Development",
+  "Social Infrastructure Building",
+  "Climate Resilient Farm Productivity Support")
+
+trend_dat <- pap_year %>% filter(pap %in% trend_paps) %>%
+  select(pap, year, GAA, AdjAllot, Disbursements) %>%
+  pivot_longer(c(GAA, AdjAllot, Disbursements), names_to = "metric", values_to = "amount") %>%
+  filter(!is.na(amount)) %>%
+  mutate(metric = factor(metric, levels = c("GAA","AdjAllot","Disbursements"),
+                         labels = c("GAA (enacted)","Adj. Allotment","Disbursements")),
+         pap = factor(pap, levels = trend_paps,
+                      labels = c("SPLIT Project (land titling)","Land Acquisition & Distribution",
+                                 "General Management & Supervision","Policy Formulation & M&E",
+                                 "Social Infrastructure Building","Climate-Resilient Farm Productivity")))
+trend_pal <- c("GAA (enacted)" = "#54278F","Adj. Allotment" = "#08519C","Disbursements" = "#31A354")
+
+ggplot(trend_dat, aes(year, amount, color = metric, group = metric)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 1.5) +
+  facet_wrap(~ pap, ncol = 3, scales = "free_y",
+             labeller = label_wrap_gen(width = 24)) + expand_limits(y = 0) +
+  scale_color_manual(values = trend_pal) +
+  scale_y_continuous(labels = php_b, breaks = pretty_breaks(4)) +
+  scale_x_continuous(breaks = c(2018, 2022, 2026)) +
+  labs(title = "How the six largest programs have evolved (2018–2026)",
+       subtitle = "Domestic programs track GAA closely; SPLIT shows wide gaps between enacted, allotted, and disbursed",
+       x = NULL, y = NULL) +
+  theme_dar() + guides(color = guide_legend(nrow = 1))
+```
+
+The five domestic panels are textbook clean execution — the disbursement line shadows the allotment, and **Land Acquisition and Distribution**, the agency's historic core function, tracks its budget closely throughout. **SPLIT** is the visible exception: a jagged line with wide gaps between what was enacted, what was released, and what was actually spent — the volatility that makes the 2026 scale-up a genuine risk rather than a routine expansion.
+
+# Line-item reference {#reference}
+
+Every P/A/P in the 2026 GAA, with the 2026 NEP and GAA, the prior-year (2025) enacted budget, and the most recent (2025) disbursement-to-allotment ratio as an execution indicator.
+
+```{r tbl-reference}
+ref <- pap_year %>% filter(year == 2026, !is.na(GAA), GAA > 0) %>%
+  arrange(desc(GAA)) %>%
+  transmute(pap, `NEP 2026 (B)` = NEP/1e9, `GAA 2026 (B)` = GAA/1e9)
+ctx_2025 <- pap_year %>% filter(year == 2025) %>%
+  transmute(pap, `GAA 2025 (B)` = GAA/1e9,
+            `D/A 2025` = ifelse(!is.na(AdjAllot) & AdjAllot > 0, Disbursements/AdjAllot, NA_real_))
+ref %>% left_join(ctx_2025, by = "pap") %>% rename(`P/A/P` = pap) %>%
+  dt_table(page = 25, money_cols = c("NEP 2026 (B)","GAA 2026 (B)","GAA 2025 (B)"), pct_cols = "D/A 2025")
+```
+
+<p class="kbl-note">2026 execution data is not yet available; the 2025 D/A column indicates how each line has most recently absorbed.</p>
+
+# Questions for discussion {#discussion}
+
+1. **The 2026 scale-up.** The budget rises 62% in one year, with foreign-assisted projects going from 10% to 37% of the total. Is the agency's project-management and disbursement capacity ready for a budget of this shape?
+2. **SPLIT absorption.** The land-titling project has disbursed only 31–38% of its allotments. What is the binding constraint — survey and titling throughput, LGU coordination, or loan-drawdown procedures?
+3. **The NEP-to-GAA cuts.** Congress trimmed DAR's proposal sharply in 2022–2023, mostly on SPLIT. Was this a judgment on absorptive capacity — and if so, what changed for the 2026 GAA to match the NEP again?
+4. **The core vs. project divide.** DAR's domestic programs absorb at 94–99% while its externally-funded projects lag badly. Should foreign-assisted project design borrow from what makes the core programs work?
+
+---
+
+<p class="caption">
+Underlying data: DBM-published budget and execution data for the DAR Office of the Secretary (Current New Appropriations only), FY 2018–2026. Execution measures (Allotments, Obligations, Disbursements) cover FY 2018–2025; FY 2018 SAAODB for foreign-assisted projects is pending encoding, so absorption analysis covers FY 2019–2025. Prepared as the long-form companion to the DAR-OSEC budget briefing.
+</p>

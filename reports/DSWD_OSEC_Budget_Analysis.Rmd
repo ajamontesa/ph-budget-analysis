@@ -1,0 +1,717 @@
+---
+title: "Department of Social Welfare and Development — Office of the Secretary"
+subtitle: "Budget evolution and absorptive capacity, FY 2018–2026"
+date: "`r format(Sys.Date(), '%B %Y')`"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    toc_depth: 3
+    number_sections: true
+    code_folding: hide
+    self_contained: true
+    df_print: paged
+    fig_width: 10
+    fig_height: 5.5
+---
+
+```{css, echo=FALSE}
+:root { --ink:#1a1a1a; --muted:#6e6e6e; --accent:#08519C; --rule:#e6e6e6; }
+body, .main-container { font-family: Arial, Helvetica, "IBM Plex Sans", sans-serif; color: var(--ink); }
+.main-container { max-width: 980px; }
+h1, h2, h3, h4 { font-family: Arial, Helvetica, sans-serif; font-weight: 600; }
+h1.title { font-size: 30px; }
+h1 { font-size: 25px; margin-top: 1.6em; padding-top: .3em; border-top: 2px solid var(--rule); }
+h2 { font-size: 20px; margin-top: 1.4em; }
+h3 { font-size: 17px; color: #333; }
+.author, .date { color: var(--muted); }
+p, li { font-size: 15.5px; line-height: 1.62; }
+blockquote { border-left: 3px solid var(--accent); background: #f5f8fc; color: #25405e;
+  font-size: 14.5px; padding: .6em 1em; margin: 1.2em 0; }
+.lead { font-size: 16.5px; color: #2b2b2b; }
+.takeaway { background: #f7f9fb; border: 1px solid var(--rule); border-radius: 6px;
+  padding: .4em 1.1em; margin: 1.1em 0; }
+.takeaway p, .takeaway li { font-size: 14.5px; }
+.caption, .figcaption { color: var(--muted); font-size: 13px; }
+table.dataTable { font-size: 13px; }
+.kbl-note { color: var(--muted); font-size: 12.5px; margin-top: -.5em; }
+.toc-content { padding-left: 0; }
+hr { border-top: 1px solid var(--rule); }
+.home-link { font-size: 13.5px; }
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE, message = FALSE, warning = FALSE,
+  dpi = 150, fig.align = "center", out.width = "100%"
+)
+
+# ---- Self-contained setup: libraries, theme, palettes, table helpers -----
+options(knitr.kable.NA = "")
+library(readxl); library(dplyr); library(tidyr); library(stringr)
+library(ggplot2); library(scales); library(knitr); library(kableExtra); library(DT)
+
+# Robust data path (works whether knitting from reports/ or the repo root)
+.candidates <- c(
+  "../data/Compiled_-_NEP-GAA-SAAODB-ByPAPLabelled.xlsx",
+  "data/Compiled_-_NEP-GAA-SAAODB-ByPAPLabelled.xlsx",
+  "Compiled - NEP-GAA-SAAODB-ByPAPLabelled.xlsx",
+  "Compiled_-_NEP-GAA-SAAODB-ByPAPLabelled.xlsx"
+)
+file_path <- .candidates[file.exists(.candidates)][1]
+stopifnot(!is.na(file_path))
+
+# Minimalist ggplot theme (compact strip text so wrapped facet labels fit)
+theme_dswd <- function(base_size = 12) {
+  theme_minimal(base_size = base_size, base_family = "sans") +
+    theme(
+      plot.title       = element_text(face = "bold", size = base_size + 2, color = "black"),
+      plot.subtitle    = element_text(color = "grey30", size = base_size),
+      plot.caption     = element_text(color = "grey40", size = base_size - 3, hjust = 0),
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_blank(),
+      axis.title       = element_text(size = base_size - 1, color = "grey20"),
+      axis.text        = element_text(color = "grey20"),
+      legend.position  = "bottom",
+      legend.title     = element_blank(),
+      legend.text      = element_text(size = base_size - 1),
+      strip.text       = element_text(face = "bold", size = base_size - 1.5, lineheight = 0.9)
+    )
+}
+
+# Palettes: execution stages, absorption ratios
+exec_pal <- c(
+  "NEP (proposed)" = "#9E9AC8", "GAA (enacted)" = "#54278F",
+  "Adj. Appropriation" = "#3182BD", "Adj. Allotment" = "#08519C",
+  "Obligations" = "#E6550D", "Disbursements" = "#31A354"
+)
+absorp_pal <- c(
+  "Obligations / Adj. Allotment" = "#3182BD",
+  "Disbursements / Obligations" = "#E6550D",
+  "Disbursements / Adj. Allotment" = "#31A354"
+)
+# Expense classes — DSWD has Financial Expenses in addition to PS/MOOE/CO
+ec_pal <- c(
+  "Personnel Services (PS)" = "#2CA02C",
+  "Maintenance & Other Op. Exp. (MOOE)" = "#FF7F0E",
+  "Financial Expenses (FE)" = "#1F77B4",
+  "Capital Outlays (CO)" = "#9467BD"
+)
+bar_fill <- "#08519C"
+
+# Functional-category palette (DSWD PREXC programs)
+cat_pal <- c(
+  "General Administration and Support"       = "#A6761D",
+  "Support to Operations"                    = "#E6AB02",
+  "Promotive Social Welfare Program"         = "#1B9E77",
+  "Protective Social Welfare Program"        = "#D95F02",
+  "Disaster Response and Management Program" = "#7570B3",
+  "Standards-setting and Compliance Program" = "#E7298A",
+  "Technical and Advisory Services Program"  = "#666666"
+)
+
+# Formatters (operate on RAW peso amounts)
+peso       <- "PHP "
+php_b      <- function(x) paste0(peso, scales::comma(x / 1e9, accuracy = 0.1), "B")
+php_b_axis <- function(x) paste0(peso, round(x / 1e9), "B")
+
+# Interactive reference-table helper (sortable, searchable, exportable)
+dt_table <- function(df, caption = NULL, page = 10, money_cols = NULL,
+                     pct_cols = NULL, money_digits = 2) {
+  dt <- datatable(
+    df, rownames = FALSE, caption = caption, extensions = "Buttons",
+    options = list(
+      pageLength = page, lengthMenu = c(10, 20, 50, 100),
+      dom = "Bfrtip", buttons = c("copy", "csv"),
+      scrollX = TRUE, autoWidth = FALSE,
+      columnDefs = list(list(className = "dt-right",
+                             targets = which(sapply(df, is.numeric)) - 1))
+    ),
+    class = "stripe hover compact"
+  )
+  if (!is.null(money_cols)) {
+    mc <- which(names(df) %in% money_cols)
+    if (length(mc)) dt <- formatRound(dt, mc, digits = money_digits, mark = ",")
+  }
+  if (!is.null(pct_cols)) {
+    pc <- which(names(df) %in% pct_cols)
+    if (length(pc)) dt <- formatPercentage(dt, pc, digits = 0)
+  }
+  dt
+}
+
+# Static styled-kable helper for small curated tables
+kbl_clean <- function(x, font = 14, ...) {
+  x %>% kable(...) %>%
+    kable_styling(full_width = TRUE, font_size = font,
+                  bootstrap_options = c("condensed", "striped", "hover"))
+}
+
+# ---- Data load & processing (faithful to the deck, then extended) --------
+raw <- read_excel(file_path, sheet = "DSWD") %>%
+  filter(UACS_AGY_DSC == "Office of the Secretary", !is.na(`P/A/P`))
+
+df_long_all <- raw %>%
+  pivot_longer(
+    cols = matches("^(NEP|GAA|AuthAppro|AdjAppro|AdjAllot|Obligations|Disbursements)_\\d{4}_EXP_(1PS|2MOOE|3FE|6CO|TOTAL)$"),
+    names_to = "var", values_to = "amount"
+  ) %>%
+  separate(var, into = c("metric", "year", "tag", "expense_class"), sep = "_") %>%
+  mutate(year = as.integer(year), amount = as.numeric(amount)) %>%
+  select(-tag)
+
+df_long <- df_long_all %>%
+  filter(expense_class == "TOTAL") %>%
+  select(-expense_class) %>%
+  rename(pap = `P/A/P`) %>%
+  mutate(category = case_when(
+    PREXC_PROG == 1000 ~ "General Administration and Support",
+    PREXC_PROG == 2000 ~ "Support to Operations",
+    PREXC_PROG == 3101 ~ "Promotive Social Welfare Program",
+    PREXC_PROG == 3201 ~ "Protective Social Welfare Program",
+    PREXC_PROG == 3301 ~ "Disaster Response and Management Program",
+    PREXC_PROG == 3401 ~ "Standards-setting and Compliance Program",
+    PREXC_PROG == 3501 ~ "Technical and Advisory Services Program",
+    TRUE               ~ "Other"
+  ))
+
+pap_year <- df_long %>%
+  group_by(pap, year, metric) %>%
+  summarise(amount = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE),
+            .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = amount)
+
+totals_by_year <- df_long %>%
+  group_by(year, metric) %>%
+  summarise(total = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE),
+            .groups = "drop")
+
+absorp_total <- totals_by_year %>%
+  pivot_wider(names_from = metric, values_from = total) %>%
+  filter(year %in% 2018:2025) %>%
+  mutate(
+    oblig_allot = Obligations   / AdjAllot,
+    disb_oblig  = Disbursements / Obligations,
+    disb_allot  = Disbursements / AdjAllot
+  )
+
+# Canonical labels for the three flagship cash-transfer lines
+PANTAWID <- "Pantawid Pamilyang Pilipino Program (Implementation of Conditional Cash Transfer)"
+PROTECTIVE <- "Protective Services for Individuals and Families in Difficult Circumstances"
+SOCPEN <- "Social Pension for Indigent Senior Citizens"
+```
+
+<p class="home-link"><a href="index.html">← All agencies</a></p>
+
+# Overview {#overview .unnumbered}
+
+<p class="lead">
+This document tracks the budget of the **Department of Social Welfare and Development – Office of the Secretary (DSWD-OSEC)** across nine fiscal years, FY 2018 to FY 2026, following each peso from the Executive's proposal (NEP) to enactment (GAA), release (allotment), commitment (obligation), and final cash payment (disbursement).
+</p>
+
+It is the long-form companion to the DSWD-OSEC briefing deck. Where the deck fits each point on a slide, this version keeps the full argument and adds reference tables — most sortable, searchable, and exportable — so a reader can interrogate the figures directly. Every table can be copied or downloaded from its toolbar.
+
+DSWD is the simplest of the agencies to characterize and, in some ways, the most politically charged. It is overwhelmingly a **cash-transfer machine**: three programs — Pantawid Pamilyang Pilipino (4Ps), Protective Services, and the Social Pension — carry the great majority of the budget, and because cash assistance classifies as Maintenance and Other Operating Expenses, the agency is almost entirely MOOE. Two threads run through what follows. First, **execution has steadily improved** — unlike the capital-outlay bottlenecks that dog other departments, DSWD's money increasingly gets paid out, reaching 96% of allotments in 2025. Second, **Congress does not so much enlarge the DSWD budget as re-shape it from within**, trimming the flagship 4Ps while building up Protective Services and inventing an entirely new program, AKAP, that never appeared in any Presidential proposal.
+
+# Executive summary {#exec}
+
+**DSWD is overwhelmingly a cash-transfer agency.** Three programs — 4Ps, Protective Services, and the Social Pension — account for **74–88% of the OSEC budget every year**, and ₱229B of the proposed ₱264B 2026 budget. 4Ps alone is ₱113B in 2026, 43% of the office.
+
+**The OSEC budget has nearly doubled**, from ₱141B (2018 GAA) to a proposed ₱264B (2026 GAA), with the single biggest year-on-year jump being the proposed FY 2026 (+₱22B over the 2025 GAA, after a 2025 contraction).
+
+**The agency is almost entirely MOOE.** Maintenance and Other Operating Expenses run **93–95% of every year's GAA**, because cash transfers and subsidies classify as MOOE. Personnel Services is a thin sliver, and Financial Expenses and Capital Outlays are each under 1% of the budget.
+
+**Absorption has improved steadily.** Disbursement-to-allotment held at 71–84% through 2018–2023, then jumped to **90% (2024) and 96% (2025)** — the strongest readings on record, and a marked contrast to the capital-outlay struggles seen at health and education.
+
+**Congress consistently augments DSWD, but redirects within the agency.** The enacted GAA exceeded the Executive's NEP in eight of nine years. But the headline net change conceals a large internal reshuffle: the biggest cumulative *add* is to **Protective Services (+₱116B)**, the biggest cumulative *trim* is to **4Ps (−₱83B)**, and Congress created **AKAP** — now ₱26B a year — entirely outside the President's budget, a cumulative +₱53B that never had a matching NEP line.
+
+**The 2026 NEP-to-GAA delta (+₱43B) is concentrated in Protective Services** (+₱37B alone), extending an eleven-fold scale-up of that program since 2018 — from ₱5.7B (2018) to a proposed ₱63.9B (2026).
+
+> The defining DSWD question is not whether the money is spent — increasingly it is — but how Congress is steadily rewriting the social-protection portfolio from the floor of the legislature: shrinking the conditional-cash flagship, enlarging a broad discretionary assistance line, and standing up a new program by appropriation alone.
+
+# A note on the data {#data-notes}
+
+**Period.** FY 2018 through FY 2026 for NEP and GAA. Execution data — Adjusted Appropriations, Adjusted Allotments, Obligations, Disbursements — is available at the P/A/P level for every year FY 2018–2025; FY 2026 reflects the proposed/enacted budget only.
+
+**Scope.** DSWD **Office of the Secretary only** — excludes attached agencies (the National Commission on Indigenous Peoples, the National Anti-Poverty Commission, the Council for the Welfare of Children, and others). **Current New Appropriations only**; nominal pesos.
+
+**Expense classes.** DSWD uses four: Personnel Services (PS), Maintenance & Other Operating Expenses (MOOE), Financial Expenses (FE), and Capital Outlays (CO). MOOE dominates because cash transfers classify under MOOE; FE and CO are each under 1% of the budget, so the expense-class absorption analysis below reports only PS and MOOE.
+
+**Absorptive-capacity denominator.** Unless noted, ratios use **Adjusted Allotments**. The three ratios are **O/A** (Obligations ÷ Allotment), **D/O** (Disbursements ÷ Obligations), and **D/A** (Disbursements ÷ Allotment).
+
+# The aggregate budget {#aggregate}
+
+## The budget keeps growing
+
+```{r fig-evolution, fig.height=5.2}
+evo <- totals_by_year %>%
+  filter(metric %in% c("NEP","GAA","AdjAllot","Obligations","Disbursements")) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA","AdjAllot","Obligations","Disbursements"),
+                         labels = c("NEP (proposed)","GAA (enacted)","Adj. Allotment","Obligations","Disbursements")))
+
+ggplot(evo, aes(year, total, color = metric, group = metric)) +
+  geom_line(linewidth = 1.0) + geom_point(size = 2) +
+  scale_color_manual(values = exec_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6),
+                     limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "DSWD-OSEC budget, NEP through Disbursements (FY 2018–2026)",
+       subtitle = "The budget nearly doubled; disbursements have steadily caught up to allotments",
+       x = NULL, y = NULL, caption = "FY 2026 reflects NEP/GAA only; execution data not yet available.") +
+  theme_dswd() + guides(color = guide_legend(nrow = 1))
+```
+
+The defining feature of this chart, in contrast to health and education, is how **tightly the disbursement line now hugs the allotment line** at the right-hand end. Through the middle years there is a visible gap; by 2024–2025 it has nearly closed. The budget itself roughly doubled over the period, dipping in 2025 before the large 2026 proposal. The table gives the underlying figures.
+
+```{r tbl-evolution}
+tbl_evo <- totals_by_year %>%
+  filter(metric %in% c("NEP","GAA","AdjAllot","Obligations","Disbursements")) %>%
+  mutate(value = total/1e9) %>% select(year, metric, value) %>%
+  pivot_wider(names_from = year, values_from = value) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA","AdjAllot","Obligations","Disbursements"),
+                         labels = c("NEP","GAA","Adj. Allotment","Obligations","Disbursements"))) %>%
+  arrange(metric) %>% rename(`PHP B` = metric)
+kbl_clean(tbl_evo, font = 13, digits = 1, format.args = list(big.mark = ","), na = "")
+```
+
+## Year-on-year growth, and the annual augmentation
+
+The enacted GAA exceeded the Executive's NEP in eight of nine years; the exception is FY 2025, when Congress trimmed about ₱11B. The 2024 GAA jumped ₱38B over the NEP, largely to launch AKAP and scale up Protective Services. The table pairs each year's GAA growth with the size of the net Congressional adjustment.
+
+```{r tbl-growth}
+wide_yr <- totals_by_year %>% pivot_wider(names_from = metric, values_from = total)
+growth <- wide_yr %>% arrange(year) %>%
+  transmute(year,
+            `GAA (B)` = round(GAA/1e9,1),
+            `Growth %` = scales::percent(GAA/lag(GAA) - 1, accuracy = 0.1),
+            `NEP (B)` = round(NEP/1e9,1),
+            `Net adj. GAA−NEP (B)` = round((GAA-NEP)/1e9,1))
+kbl_clean(growth, font = 13, align = "rrrrr", na = "")
+```
+
+<p class="kbl-note">The net adjustment is positive in every year except FY 2025. As later sections show, even these net figures hide much larger offsetting moves between programs.</p>
+
+# Where the money goes {#composition}
+
+## By PREXC program
+
+DSWD-OSEC's budget is organized into seven PREXC programs. The chart shows how the enacted budget divides among them; the tables give pesos and shares.
+
+```{r fig-composition, fig.height=5.2}
+comp <- df_long %>%
+  filter(metric == "GAA", year <= 2026, !is.na(amount)) %>%
+  group_by(year, category) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(category = factor(category, levels = names(cat_pal)))
+
+ggplot(comp, aes(year, amount, fill = category)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = cat_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6),
+                     limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "Composition of the GAA by PREXC program, 2018–2026",
+       subtitle = "The Protective and Promotive Social Welfare programs together carry the budget",
+       x = NULL, y = NULL) +
+  theme_dswd() + guides(fill = guide_legend(nrow = 4, byrow = TRUE))
+```
+
+Two programs carry almost everything. The **Promotive Social Welfare Program** houses 4Ps and the Social Pension; the **Protective Social Welfare Program** houses Protective Services and AKAP. Together they are the bulk of the budget, and the relative weight has been shifting toward the Protective side as Congress builds it up — a structural change the composition chart makes visible.
+
+```{r tbl-comp}
+comp_tbl <- comp %>% group_by(year) %>% mutate(share = amount/sum(amount)) %>% ungroup()
+comp_amt <- comp_tbl %>% mutate(amount = round(amount/1e9,1)) %>%
+  select(category, year, amount) %>% pivot_wider(names_from = year, values_from = amount)
+kbl_clean(comp_amt %>% rename(`Program (PHP B)` = category),
+          font = 12, digits = 1, format.args = list(big.mark=","), na = "")
+
+comp_pct <- comp_tbl %>% mutate(share = round(share*100,1)) %>%
+  select(category, year, share) %>% pivot_wider(names_from = year, values_from = share)
+```
+
+<p class="kbl-note">Share of each year's total budget:</p>
+
+```{r tbl-comp-pct}
+kbl_clean(comp_pct %>% rename(`Program (% of GAA)` = category), font = 12, digits = 1, na = "")
+```
+
+## By expense class
+
+DSWD's expense-class profile is the most lopsided of any agency in this series: it is a MOOE department, because cash assistance is classified as an operating expense.
+
+```{r fig-comp-ec, fig.height=5.2}
+ec_levels <- c("Personnel Services (PS)","Maintenance & Other Op. Exp. (MOOE)",
+               "Financial Expenses (FE)","Capital Outlays (CO)")
+comp_ec <- df_long_all %>%
+  filter(metric == "GAA", year <= 2026, expense_class %in% c("1PS","2MOOE","3FE","6CO")) %>%
+  group_by(year, expense_class) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(expense_class = factor(expense_class, levels = c("1PS","2MOOE","3FE","6CO"), labels = ec_levels))
+
+ggplot(comp_ec, aes(year, amount, fill = expense_class)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = ec_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6),
+                     limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "GAA composition by Expense Class, 2018–2026",
+       subtitle = "Maintenance & Operating Expenses are 93–95% of the budget every year",
+       x = NULL, y = NULL) +
+  theme_dswd() + guides(fill = guide_legend(nrow = 1))
+```
+
+MOOE has held between 93% and 95% of the GAA every single year. This is not a sign of an under-resourced bureaucracy; it is what a social-protection agency *looks like* in expense-class terms — the "operating expense" is the assistance itself. The corollary is that the usual expense-class lens (is it salaries, operations, or infrastructure?) tells you very little here. What matters at DSWD is *which programs* the MOOE flows through, which is why the rest of this report works mostly at the program and P/A/P level.
+
+```{r tbl-ec-share}
+ec_share <- comp_ec %>% group_by(year) %>% mutate(share = round(amount/sum(amount)*100,1)) %>% ungroup() %>%
+  select(expense_class, year, share) %>% pivot_wider(names_from = year, values_from = share)
+kbl_clean(ec_share %>% rename(`Expense class (% of GAA)` = expense_class), font = 12.5, digits = 1, na = "")
+```
+
+## The ten largest P/A/Ps
+
+```{r fig-top10, fig.height=5.4}
+top10 <- pap_year %>% filter(year == 2026, !is.na(GAA), GAA > 0) %>%
+  arrange(desc(GAA)) %>% slice_head(n = 10) %>% mutate(pap = factor(pap, levels = rev(pap)))
+
+ggplot(top10, aes(pap, GAA)) +
+  geom_col(fill = bar_fill, width = 0.75) +
+  geom_text(aes(label = php_b(GAA)), hjust = -0.1, size = 3.3, color = "grey20") +
+  coord_flip() +
+  scale_x_discrete(labels = function(x) str_wrap(x, 46)) +
+  scale_y_continuous(labels = php_b_axis, expand = expansion(mult = c(0, .20)), limits = c(0, NA)) +
+  labs(title = "Top 10 P/A/Ps by FY 2026 GAA",
+       subtitle = "4Ps alone is PHP 113B — 43% of the entire OSEC budget",
+       x = NULL, y = NULL) +
+  theme_dswd() +
+  theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"))
+```
+
+### Full P/A/P ranking (interactive) {.unnumbered}
+
+Every P/A/P, ranked by 2026 GAA, with the 2026 NEP, the prior-year (2025) enacted figure, and the implied 2026 net Congressional change. Sort, search, or export.
+
+```{r tbl-allpaps}
+all_paps_2026 <- pap_year %>% filter(year == 2026) %>%
+  transmute(`P/A/P` = pap, `NEP 2026 (B)` = NEP/1e9, `GAA 2026 (B)` = GAA/1e9) %>%
+  arrange(desc(`GAA 2026 (B)`))
+gaa25 <- pap_year %>% filter(year == 2025) %>% transmute(`P/A/P` = pap, g25 = GAA/1e9)
+all_paps_2026 <- all_paps_2026 %>% left_join(gaa25, by = "P/A/P") %>%
+  rename(`GAA 2025 (B)` = g25) %>%
+  mutate(`Net chg NEP to GAA 2026 (B)` = `GAA 2026 (B)` - `NEP 2026 (B)`)
+dt_table(all_paps_2026, page = 15,
+         money_cols = c("NEP 2026 (B)","GAA 2026 (B)","GAA 2025 (B)","Net chg NEP to GAA 2026 (B)"))
+```
+
+## Three cash-transfer programs carry the budget
+
+Collapsing the budget to the three flagship cash-transfer lines against everything else shows how concentrated DSWD is.
+
+```{r fig-cashtransfer, fig.height=4.8}
+share <- df_long %>%
+  filter(metric == "GAA", year <= 2026, !is.na(amount)) %>%
+  mutate(grp = case_when(
+    pap == PANTAWID   ~ "Pantawid Pamilyang (4Ps)",
+    pap == PROTECTIVE ~ "Protective Services",
+    pap == SOCPEN     ~ "Social Pension",
+    TRUE              ~ "All other P/A/Ps")) %>%
+  group_by(year, grp) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(grp = factor(grp, levels = c("Pantawid Pamilyang (4Ps)","Protective Services",
+                                      "Social Pension","All other P/A/Ps")))
+ct_pal <- c("Pantawid Pamilyang (4Ps)" = "#08519C","Protective Services" = "#3182BD",
+            "Social Pension" = "#9ECAE1","All other P/A/Ps" = "#D9D9D9")
+
+ggplot(share, aes(year, amount, fill = grp)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = ct_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6),
+                     limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "Three cash-transfer programs vs. everything else, GAA 2018–2026",
+       subtitle = "4Ps + Protective Services + Social Pension = 74–88% of OSEC GAA every year",
+       x = NULL, y = NULL) +
+  theme_dswd() + guides(fill = guide_legend(nrow = 2, byrow = TRUE))
+```
+
+The three lines together are 74–88% of the OSEC budget in every year, and ₱229B of the ₱264B 2026 proposal. The internal mix is shifting, though: **4Ps** is being held flat-to-down while **Protective Services** climbs steeply, so the blue and mid-blue bands are trading places over the period. For anyone interested in how social protection actually reaches Filipino households, almost the entire story lives in these three lines — and increasingly in the second of them.
+
+# Congressional action: NEP → GAA {#augmentation}
+
+DSWD's net augmentation is modest, but that masks a large internal reshuffle. The chart below shows the cumulative NEP-to-GAA change for the most-adjusted P/A/Ps over 2018–2026 — additions in green, cuts in orange.
+
+```{r fig-augmentation, fig.height=4.8}
+aug <- pap_year %>% group_by(pap) %>%
+  summarise(nep = sum(NEP, na.rm = TRUE), gaa = sum(GAA, na.rm = TRUE), .groups = "drop") %>%
+  mutate(change = gaa - nep) %>% filter(abs(change) >= 5e8)
+
+aug_plot <- bind_rows(
+  aug %>% arrange(desc(change)) %>% slice_head(n = 8),
+  aug %>% arrange(change) %>% slice_head(n = 8)) %>%
+  distinct() %>%
+  mutate(direction = ifelse(change >= 0, "Net increase (GAA > NEP)", "Net decrease (GAA < NEP)"),
+         hj = ifelse(change >= 0, -0.12, 1.12),
+         pap = factor(pap, levels = pap[order(change)]))
+
+ggplot(aug_plot, aes(pap, change/1e9, fill = direction)) +
+  geom_col(width = 0.7) +
+  geom_text(aes(label = sprintf("%+.1fB", change/1e9), hjust = hj), size = 2.9, color = "grey20") +
+  coord_flip() +
+  scale_fill_manual(values = c("Net increase (GAA > NEP)" = "#1B9E77", "Net decrease (GAA < NEP)" = "#D95F02")) +
+  scale_x_discrete(labels = function(x) str_trunc(x, 44)) +
+  scale_y_continuous(labels = function(v) paste0(peso, v, "B"), expand = expansion(mult = c(0.22, 0.22))) +
+  labs(title = "Cumulative NEP-to-GAA change by P/A/P, 2018–2026",
+       subtitle = "Congress redirects: builds up Protective Services (+PHP 116B); trims 4Ps (−PHP 83B)",
+       x = NULL, y = NULL) +
+  theme_dswd() +
+  theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85")) +
+  guides(fill = guide_legend(nrow = 1))
+```
+
+<div class="takeaway">
+This is the most distinctive pattern at DSWD. Congress does not simply add money — it **reallocates between the agency's two biggest instruments**. The largest cumulative addition is to **Protective Services (+₱116B)**, a broad discretionary-assistance program; the largest cumulative cut is to the conditional-cash flagship **4Ps (−₱83B)**. The net effect on the agency total is comparatively small, but the *composition* of social protection has been substantially rewritten on the floor of Congress.
+</div>
+
+The full cumulative table lists every P/A/P with a material (≥₱0.5B) net change over the nine years.
+
+```{r tbl-aug-full}
+aug_full <- pap_year %>% group_by(pap) %>%
+  summarise(nep = sum(NEP, na.rm = TRUE), gaa = sum(GAA, na.rm = TRUE), .groups = "drop") %>%
+  mutate(change = gaa - nep) %>% filter(abs(change) >= 5e8) %>%
+  transmute(`P/A/P` = pap, `Σ NEP 2018–26 (B)` = nep/1e9, `Σ GAA 2018–26 (B)` = gaa/1e9,
+            `Cumulative change (B)` = change/1e9) %>%
+  arrange(desc(`Cumulative change (B)`))
+dt_table(aug_full, page = 10,
+         money_cols = c("Σ NEP 2018–26 (B)","Σ GAA 2018–26 (B)","Cumulative change (B)"))
+```
+
+## AKAP: a program created by appropriation
+
+The starkest case of Congressional initiative is the Ayuda sa Kapos ang Kita Program (AKAP). It is a cash-assistance line for low-income earners — and it has **never appeared in a Presidential NEP**. Congress inserted it directly into the GAA.
+
+```{r tbl-akap}
+pap_year %>% filter(str_detect(pap, "AKAP")) %>%
+  transmute(FY = year, `NEP (B)` = round(NEP/1e9, 2), `GAA (B)` = round(GAA/1e9, 2),
+            `Allotment (B)` = round(AdjAllot/1e9, 2), `Disbursed (B)` = round(Disbursements/1e9, 2),
+            `D/A` = ifelse(!is.na(AdjAllot) & AdjAllot > 0,
+                           scales::percent(Disbursements/AdjAllot, accuracy = 1), NA_character_)) %>%
+  arrange(FY) %>% kbl_clean(font = 13.5, align = "rrrrrr", na = "")
+```
+
+AKAP first appears in the 2024 GAA at ₱26.7B and again in 2025 at ₱26.2B, with **no NEP line in any year** — a cumulative ₱53B inserted by the legislature. Whatever its policy merits, AKAP is a clean example of Congress not merely augmenting the Executive's program but **authoring a new one**, with the design, targeting, and audit arrangements established after the money rather than before it.
+
+# Protective Services: an eleven-fold scale-up {#protective}
+
+Protective Services for Individuals and Families in Difficult Circumstances is now the second-largest DSWD line, behind only 4Ps — and it is the clearest beneficiary of the Congressional reallocation. It bundles a wide range of assistance (AICS, emergency shelter, OFW services, anti-trafficking, and more).
+
+```{r fig-protective, fig.height=4.6}
+prot <- pap_year %>% filter(str_starts(pap, "Protective Services")) %>%
+  select(year, NEP, GAA, AdjAllot, Disbursements) %>%
+  pivot_longer(-year, names_to = "metric", values_to = "amount") %>% filter(!is.na(amount)) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA","AdjAllot","Disbursements"),
+                         labels = c("NEP (proposed)","GAA (enacted)","Adj. Allotment","Disbursements")))
+
+ggplot(prot, aes(year, amount, color = metric, group = metric)) +
+  geom_line(linewidth = 1.0) + geom_point(size = 2.2) +
+  scale_color_manual(values = exec_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(5), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = 2018:2026) +
+  labs(title = "Protective Services for Individuals and Families: 2018–2026",
+       subtitle = "From PHP 5.7B in 2018 to a proposed PHP 63.9B in 2026 — driven by Congressional augmentation",
+       x = NULL, y = NULL) +
+  theme_dswd() + guides(color = guide_legend(nrow = 1))
+```
+
+```{r tbl-protective}
+pap_year %>% filter(str_starts(pap, "Protective Services"), year %in% 2018:2025) %>%
+  transmute(FY = year, `NEP (B)` = round(NEP/1e9,1), `GAA (B)` = round(GAA/1e9,1),
+            `Allotment (B)` = round(AdjAllot/1e9,1), `Disbursed (B)` = round(Disbursements/1e9,1),
+            `D/A` = scales::percent(Disbursements/AdjAllot, accuracy = 1)) %>%
+  kbl_clean(font = 13.5, align = "rrrrrr", na = "")
+```
+
+The program has grown roughly eleven-fold, from ₱5.7B (2018 GAA) to a proposed ₱63.9B (2026), and its **cumulative NEP-to-GAA augmentation since 2018 is +₱116B** — the largest of any DSWD line. The 2026 jump is concentrated here: a +₱37B add over the NEP lifts it to ₱63.9B. Encouragingly, recent absorption is strong (D/A 97–99% in 2023–2025). The open question is whether that track record holds at this much larger scale, spread across many disparate sub-lines — when a single P/A/P quietly becomes a ₱60B umbrella for a dozen distinct assistance schemes, the aggregate disbursement rate can hide a great deal.
+
+# Absorptive capacity {#absorption}
+
+## At the aggregate
+
+DSWD's absorption story is one of steady improvement — the opposite of the deteriorating capital-outlay pictures at health and education.
+
+```{r fig-absorp-agg, fig.height=5}
+absorp_long <- absorp_total %>% select(year, oblig_allot, disb_oblig, disb_allot) %>%
+  pivot_longer(-year, names_to = "ratio", values_to = "value") %>%
+  mutate(ratio = factor(ratio, levels = c("oblig_allot","disb_oblig","disb_allot"),
+    labels = c("Obligations / Adj. Allotment","Disbursements / Obligations","Disbursements / Adj. Allotment")))
+
+ggplot(absorp_long, aes(year, value, color = ratio, group = ratio)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 2) +
+  geom_text(aes(label = scales::percent(value, accuracy = 1)), vjust = -1.0, size = 3.0, show.legend = FALSE, color = "grey20") +
+  scale_color_manual(values = absorp_pal) +
+  scale_y_continuous(labels = percent_format(accuracy = 1), limits = c(0, 1.08), breaks = seq(0, 1, 0.2)) +
+  scale_x_continuous(breaks = 2018:2025) +
+  labs(title = "DSWD-OSEC absorptive capacity, 2018–2025",
+       subtitle = "Disbursement-to-allotment has improved steadily, reaching 96% in 2025 from a 71% low in 2020",
+       x = NULL, y = NULL) +
+  theme_dswd() + guides(color = guide_legend(nrow = 1))
+```
+
+```{r tbl-absorp-agg}
+absorp_total %>%
+  transmute(Year = year, `Allotment (B)` = round(AdjAllot/1e9,1),
+            `Obligations (B)` = round(Obligations/1e9,1), `Disbursements (B)` = round(Disbursements/1e9,1),
+            `O/A` = scales::percent(oblig_allot, accuracy = 1),
+            `D/O` = scales::percent(disb_oblig, accuracy = 1),
+            `D/A` = scales::percent(disb_allot, accuracy = 1)) %>%
+  kbl_clean(font = 13, align = "rrrrrrr", na = "")
+```
+
+Obligation rates have stayed high throughout (87–98%), so the binding issue was never *committing* the money but *paying it out* — and that gap has now largely closed. The improvement from a 71% disbursement low in 2020 to 96% in 2025 coincides with the maturing of the large cash-transfer programs, which disburse cleanly once their payment systems are running.
+
+## By expense class
+
+Restricting to the two material classes (PS and MOOE; FE and CO are each under 1% of the budget), the picture is reassuring: personnel spending absorbs near-fully, and MOOE — which *is* the budget — has climbed steadily.
+
+```{r fig-absorp-ec, fig.height=5}
+ec_levels2 <- c("Personnel Services (PS)","Maintenance & Other Op. Exp. (MOOE)")
+absorp_ec <- df_long_all %>%
+  filter(metric %in% c("AdjAllot","Disbursements"), expense_class %in% c("1PS","2MOOE"), year %in% 2018:2025) %>%
+  group_by(year, metric, expense_class) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = amount) %>%
+  mutate(da = ifelse(AdjAllot > 0, Disbursements/AdjAllot, NA_real_),
+         expense_class = factor(expense_class, levels = c("1PS","2MOOE"), labels = ec_levels2))
+
+ggplot(absorp_ec, aes(year, da, color = expense_class, group = expense_class)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 1.8) +
+  geom_text(aes(label = scales::percent(da, accuracy = 1)), vjust = -1.0, size = 2.9, show.legend = FALSE, color = "grey20") +
+  scale_color_manual(values = ec_pal) +
+  scale_y_continuous(labels = percent_format(accuracy = 1), limits = c(0, 1.08), breaks = seq(0, 1, 0.2)) +
+  scale_x_continuous(breaks = 2018:2025) +
+  labs(title = "Disbursement-to-Allotment by Expense Class, 2018–2025",
+       subtitle = "Personnel spending absorbs near-fully; MOOE climbed steadily from 70% (2020) to 96% (2025)",
+       x = NULL, y = NULL,
+       caption = "Financial Expenses and Capital Outlays each <1% of the budget; absorption ratios omitted due to small base.") +
+  theme_dswd() + guides(color = guide_legend(nrow = 1))
+```
+
+Because MOOE is 93–95% of the budget, the MOOE line here is essentially the aggregate line — the agency-wide absorption rate *is* the MOOE absorption rate. That is the mirror image of education and health, where the aggregate was dominated by a near-perfect Personnel Services block that masked weaker non-salary execution. At DSWD there is no large salary block to flatter the average; the headline number reflects how well the cash actually goes out the door.
+
+## Strongest and weakest absorbers (FY 2025)
+
+Both tables cover P/A/Ps with a 2025 allotment of at least ₱1B.
+
+```{r tbl-absorb-build}
+abs_2025 <- pap_year %>% filter(year == 2025, !is.na(AdjAllot), AdjAllot >= 1e9) %>%
+  mutate(`O/A` = Obligations/AdjAllot, `D/O` = Disbursements/Obligations,
+         `D/A` = Disbursements/AdjAllot, `Allotment (B)` = round(AdjAllot/1e9, 2))
+```
+
+::: {.takeaway}
+**Strongest absorbers, FY 2025** — the flagship cash-transfer programs disburse at 98–99%.
+:::
+
+```{r tbl-top-absorb}
+abs_2025 %>% arrange(desc(`D/A`)) %>% slice_head(n = 8) %>%
+  transmute(`P/A/P` = str_trunc(pap, 54), `Allotment (B)`,
+            `O/A` = scales::percent(`O/A`, accuracy = 1),
+            `D/O` = scales::percent(`D/O`, accuracy = 1),
+            `D/A` = scales::percent(`D/A`, accuracy = 1)) %>%
+  kbl_clean(font = 13, align = "lrrrr", na = "")
+```
+
+::: {.takeaway}
+**Weakest absorbers, FY 2025** — smaller operational and special-purpose lines: PAMANA, General Management, ICT.
+:::
+
+```{r tbl-bot-absorb}
+abs_2025 %>% arrange(`D/A`) %>% slice_head(n = 8) %>%
+  transmute(`P/A/P` = str_trunc(pap, 54), `Allotment (B)`,
+            `O/A` = scales::percent(`O/A`, accuracy = 1),
+            `D/O` = scales::percent(`D/O`, accuracy = 1),
+            `D/A` = scales::percent(`D/A`, accuracy = 1)) %>%
+  kbl_clean(font = 13, align = "lrrrr", na = "")
+```
+
+The pattern echoes the other agencies: routine cash-transfer execution runs cleanly, while administrative and project-type lines lag. But the spread is far narrower than at health or education — the weakest material absorbers here sit around 40–57%, not the single digits seen elsewhere.
+
+### Full absorption table, FY 2025 (interactive) {.unnumbered}
+
+Every P/A/P with a 2025 allotment, all three ratios, sortable and searchable.
+
+```{r tbl-absorb-full}
+abs_full <- pap_year %>% filter(year == 2025, !is.na(AdjAllot), AdjAllot > 0) %>%
+  transmute(`P/A/P` = pap, `Allotment (B)` = AdjAllot/1e9, `Obligations (B)` = Obligations/1e9,
+            `Disbursements (B)` = Disbursements/1e9, `O/A` = Obligations/AdjAllot,
+            `D/O` = ifelse(Obligations>0, Disbursements/Obligations, NA_real_), `D/A` = Disbursements/AdjAllot) %>%
+  arrange(`D/A`)
+dt_table(abs_full, page = 15,
+         money_cols = c("Allotment (B)","Obligations (B)","Disbursements (B)"),
+         pct_cols = c("O/A","D/O","D/A"))
+```
+
+# Program deep-dives {#deep-dives}
+
+## Trajectories of the largest programs
+
+Six of the most consequential programs, each showing enacted budget, allotment, and disbursements together. Where the lines sit on top of one another, execution is clean; where disbursements fall away, money is released but unspent.
+
+```{r fig-trend, fig.height=6.7}
+trend_paps <- c(PANTAWID, PROTECTIVE, SOCPEN,
+  "Supplementary Feeding Program", "Sustainable Livelihood Program",
+  "Ayuda sa Kapos ang Kita Program (AKAP)")
+
+trend_dat <- pap_year %>% filter(pap %in% trend_paps) %>%
+  select(pap, year, GAA, AdjAllot, Disbursements) %>%
+  pivot_longer(c(GAA, AdjAllot, Disbursements), names_to = "metric", values_to = "amount") %>%
+  filter(!is.na(amount)) %>%
+  mutate(metric = factor(metric, levels = c("GAA","AdjAllot","Disbursements"),
+                         labels = c("GAA (enacted)","Adj. Allotment","Disbursements")),
+         pap = factor(pap, levels = trend_paps,
+                      labels = c("Pantawid Pamilyang (4Ps)","Protective Services","Social Pension",
+                                 "Supplementary Feeding","Sustainable Livelihood","AKAP")))
+trend_pal <- c("GAA (enacted)" = "#54278F","Adj. Allotment" = "#08519C","Disbursements" = "#31A354")
+
+ggplot(trend_dat, aes(year, amount, color = metric, group = metric)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 1.5) +
+  facet_wrap(~ pap, ncol = 3, scales = "free_y",
+             labeller = label_wrap_gen(width = 24)) + expand_limits(y = 0) +
+  scale_color_manual(values = trend_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(4)) +
+  scale_x_continuous(breaks = c(2018, 2022, 2026)) +
+  labs(title = "How the six largest cash-transfer programs have evolved (2018–2026)",
+       subtitle = "All six absorb well in their most recent year; 4Ps shows a persistent GAA-vs-disbursement gap",
+       x = NULL, y = NULL) +
+  theme_dswd() + guides(color = guide_legend(nrow = 1))
+```
+
+The **4Ps** panel is the one to watch: even as the enacted budget is held roughly flat, a visible gap persists between the GAA and disbursements — the conditional-cash flagship is the only one of the six with a consistent shortfall. **Protective Services** and **AKAP** show the steep recent climbs discussed above, both absorbing well so far. **Social Pension**, **Supplementary Feeding**, and **Sustainable Livelihood** are steadier, smaller lines that track their allotments closely.
+
+# Line-item reference {#reference}
+
+The top 20 P/A/Ps by 2026 GAA, with the 2026 NEP and GAA, the prior-year (2025) enacted budget, and the most recent (2025) disbursement-to-allotment ratio. The full unabridged list is in [the ranking section above](#full-p-a-p-ranking-interactive).
+
+```{r tbl-reference}
+ref <- pap_year %>% filter(year == 2026, !is.na(GAA), GAA > 0) %>%
+  arrange(desc(GAA)) %>% slice_head(n = 20) %>%
+  transmute(pap, `NEP 2026 (B)` = NEP/1e9, `GAA 2026 (B)` = GAA/1e9)
+ctx_2025 <- pap_year %>% filter(year == 2025) %>%
+  transmute(pap, `GAA 2025 (B)` = GAA/1e9,
+            `D/A 2025` = ifelse(!is.na(AdjAllot) & AdjAllot > 0, Disbursements/AdjAllot, NA_real_))
+ref %>% left_join(ctx_2025, by = "pap") %>% rename(`P/A/P` = pap) %>%
+  dt_table(page = 20, money_cols = c("NEP 2026 (B)","GAA 2026 (B)","GAA 2025 (B)"), pct_cols = "D/A 2025")
+```
+
+<p class="kbl-note">2026 execution data is not yet available; the 2025 D/A column indicates how each line has most recently absorbed.</p>
+
+# Questions for discussion {#discussion}
+
+1. **The 4Ps trim, year after year.** Congress has cut the conditional-cash flagship by ₱83B cumulatively against the Executive's NEPs. Is this a judgment on absorptive capacity, on beneficiary targeting, or a shift in policy priorities away from conditional transfers?
+2. **AKAP without an NEP line.** Congress created AKAP in 2024 entirely outside the President's budget, with ₱26B a year now running through it. How is the program being designed, targeted, and audited — and what does budgeting-by-insertion imply for accountability?
+3. **The Protective Services scale-up.** The program rises from ₱44.7B (2025) to a proposed ₱63.9B (2026), Congress adding ₱37B over the NEP. Given it now bundles many disparate sub-lines (AICS, ESC, OFW services, anti-trafficking), is the strong aggregate absorption robust at this larger scale, or does it mask uneven sub-line execution?
+4. **MOOE-heavy delivery.** With 93–95% of the budget classified as MOOE, does the standard expense-class reporting illuminate or obscure how social-protection money actually reaches beneficiaries — and would program-type reporting serve oversight better?
+
+---
+
+<p class="caption">
+Underlying data: DBM-published budget and execution data for the DSWD Office of the Secretary (Current New Appropriations only), FY 2018–2026. Execution measures (Allotments, Obligations, Disbursements) cover FY 2018–2025. Prepared as the long-form companion to the DSWD-OSEC budget briefing.
+</p>

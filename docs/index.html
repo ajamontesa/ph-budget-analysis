@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Philippine Departmental Budget Reviews</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+
+
+
+<!--
+============================================================================
+  HOME / INDEX PAGE  ->  knit this file to produce  index.html
+============================================================================
+  To update the landing page you only edit the chunk directly below:
+
+    * site_title / site_subtitle / site_intro / source_note  -> page text
+    * the `agencies` table                                   -> one row per agency
+
+  For each agency row:
+    short      short label shown in the badge (e.g. "DepEd")
+    name       full department name
+    unit       sub-unit line (e.g. "Office of the Secretary"); "" for none
+    output     the knitted report's HTML filename in docs/ (the link target)
+    status     "published"  -> clickable card
+               "planned"    -> greyed-out "coming soon" card
+    blurb      one-sentence description (used only when published)
+    highlights up to a few short stats, separated by "  |  "
+               (used only when published; leave "" otherwise)
+
+  After editing, knit to index.html and place it in docs/ alongside the
+  report HTML files. No data file or other scripts are required.
+============================================================================
+-->
+<style type="text/css">
+:root { --ink:#1a1a1a; --muted:#6e6e6e; --accent:#08519C; --rule:#e6e6e6; --bg:#fbfbfc; }
+body { margin:0; font-family:Arial,Helvetica,"IBM Plex Sans",sans-serif;
+color:var(--ink); background:var(--bg); line-height:1.6; }
+.wrap { max-width:980px; margin:0 auto; padding:0 40px; }
+.site-header { border-bottom:2px solid var(--rule); background:#fff; margin:0 -40px 0; }
+.site-header .inner { max-width:980px; margin:0 auto; padding:38px 40px 28px; }
+.site-header h1 { font-size:30px; font-weight:600; margin:0 0 6px; }
+.site-header .sub { font-size:17px; color:#3a3a3a; margin:0 0 16px; }
+.site-header .intro { font-size:15px; color:#333; max-width:760px; margin:0; }
+.sec-label { font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+color:var(--muted); margin:26px 0 12px; font-weight:600; }
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; }
+.card { display:block; background:#fff; border:1px solid var(--rule); border-radius:8px;
+padding:18px 18px 16px; text-decoration:none; color:inherit;
+transition:box-shadow .15s, transform .15s, border-color .15s; }
+.card.pub { border-left:4px solid var(--accent); }
+.card.pub:hover { box-shadow:0 6px 20px rgba(8,81,156,.10); transform:translateY(-2px); border-color:#cfd8e3; }
+.card.planned { border-style:dashed; background:#fcfcfd; }
+.card-head { display:flex; gap:12px; align-items:flex-start; margin-bottom:10px; }
+.badge { flex:none; display:inline-block; min-width:54px; text-align:center; background:var(--accent);
+color:#fff; font-weight:700; font-size:13px; padding:5px 9px; border-radius:5px; }
+.badge.muted { background:#c7ccd1; }
+.dept { font-size:15.5px; font-weight:600; line-height:1.3; }
+.unit { font-size:12.5px; color:var(--muted); }
+.blurb { font-size:13.5px; color:#333; margin:0 0 10px; }
+.hl { margin:0 0 12px; padding-left:18px; }
+.hl li { font-size:12.5px; color:#444; margin-bottom:3px; }
+.cta { font-size:13.5px; font-weight:600; color:var(--accent); }
+.muted-txt { color:var(--muted); }
+.site-footer { border-top:1px solid var(--rule); margin:26px -40px 0; background:#fff; }
+.site-footer .inner { max-width:980px; margin:0 auto; padding:20px 40px 40px; }
+.site-footer p { font-size:12.5px; color:var(--muted); margin:4px 0; }
+.count { font-size:13px; color:var(--muted); text-transform:none; letter-spacing:0; }
+</style>
+<div class="site-header">
+<div class="inner">
+<h1>
+Philippine Departmental Budget Reviews
+</h1>
+<p class="sub">
+Budget evolution and absorptive capacity, FY 2018-2026
+</p>
+<p class="intro">
+Long-form analyses of selected Philippine departments and agencies,
+tracing each peso of the budget from the Executive’s proposal (NEP)
+through enactment (GAA), release (allotment), commitment (obligation),
+and final cash payment (disbursement). Most reports cover the Office of
+the Secretary and current-year New Appropriations; all pair data
+visualizations with sortable, exportable reference tables. Coverage and
+scope vary by agency — see each report’s data note.
+</p>
+</div>
+</div>
+<div class="sec-label">
+Published reports · <span class="count">7 available</span>
+</div>
+<div class="grid">
+<a class="card pub" href="dar-osec.html">
+<div class="card-head">
+<span class="badge">DAR</span>
+<div>
+<div class="dept">
+Department of Agrarian Reform
+</div>
+<div class="unit">
+Office of the Secretary
+</div>
+</div>
+</div>
+<p class="blurb">
+The smallest department, and the one Congress trims rather than
+augments. A flat ₱8–10B budget for eight years jumps 62% in 2026 — built
+almost entirely on foreign-assisted loan projects that are the agency’s
+weakest absorbers.
+</p>
+<ul class="hl">
+<li>
+Flat ₱8–10B for 8 years → ₱16.8B in 2026 (+62%)
+</li>
+<li>
+Congress is a net subtractor: −₱2.4B (2022), −₱4.5B (2023)
+</li>
+<li>
+Foreign-assisted projects 10% → 37% of budget, but disburse just 19–38%
+</li>
+</ul>
+<div class="cta">
+Read the analysis →
+</div>
+</a> <a class="card pub" href="da-osec.html">
+<div class="card-head">
+<span class="badge">DA</span>
+<div>
+<div class="dept">
+Department of Agriculture
+</div>
+<div class="unit">
+OSEC + 9 attached agencies
+</div>
+</div>
+</div>
+<p class="blurb">
+The clearest case of appropriation outrunning execution. The OSEC budget
+nearly quadrupled, but disbursement fell to 69% — with two giant lines
+(FMR, which DA never executes, and the LFP/FAP black box) crowding out a
+rice-dominated operational core. Adds deep-dives by service type and by
+commodity.
+</p>
+<ul class="hl">
+<li>
+OSEC GAA ₱43.9B (2018) → ₱165.5B (2026), 3.8×; D/A fell to 69%
+</li>
+<li>
+FMR ₱33B (zero DA execution) + LFP/FAP ₱72B = 63% of 2026 OSEC
+</li>
+<li>
+Operational core ~75% PSS, ~63% rice; equipment &amp; livestock absorb
+worst (33–41%)
+</li>
+</ul>
+<div class="cta">
+Read the analysis →
+</div>
+</a> <a class="card pub" href="deped-osec.html">
+<div class="card-head">
+<span class="badge">DepEd</span>
+<div>
+<div class="dept">
+Department of Education
+</div>
+<div class="unit">
+Office of the Secretary
+</div>
+</div>
+</div>
+<p class="blurb">
+A payroll-dominated budget whose strong headline absorption masks
+chronic under-spending in the non-salary tail — textbooks, facilities,
+and the collapsing GASTPE subsidies.
+</p>
+<ul class="hl">
+<li>
+GAA grew 1.7×: ₱552B (2018) → ₱959B (2026)
+</li>
+<li>
+Record ₱86B Congressional augmentation in 2026
+</li>
+<li>
+Textbooks disbursed just 2–17% of allotment every year
+</li>
+</ul>
+<div class="cta">
+Read the analysis →
+</div>
+</a>
+<div class="card planned">
+<div class="card-head">
+<span class="badge muted">DOE</span>
+<div>
+<div class="dept">
+Department of Energy
+</div>
+<div class="unit">
+Office of the Secretary
+</div>
+</div>
+</div>
+<p class="blurb muted-txt">
+Report in preparation.
+</p>
+<div class="cta muted-txt">
+Coming soon
+</div>
+</div>
+<a class="card pub" href="denr-osec.html">
+<div class="card-head">
+<span class="badge">DENR</span>
+<div>
+<div class="dept">
+Department of Environment and Natural Resources
+</div>
+<div class="unit">
+Office of the Secretary
+</div>
+</div>
+</div>
+<p class="blurb">
+The one department whose budget has been frozen. Held flat at ₱16–20B
+for nine years — a ~30% real-terms cut — while Congress trims the
+proposal and guts the reforestation line, and the department shifts from
+capital works toward payroll.
+</p>
+<ul class="hl">
+<li>
+Flat ~₱19B for 9 years — ≈₱13.6B in 2018 pesos (~30% real cut)
+</li>
+<li>
+Congress trims; Forest Development cut ₱6.6B→₱2.4B
+</li>
+<li>
+Capital Outlays fell 37%→12%; administration is the largest line (21%)
+</li>
+</ul>
+<div class="cta">
+Read the analysis →
+</div>
+</a> <a class="card pub" href="doh-osec.html">
+<div class="card-head">
+<span class="badge">DOH</span>
+<div>
+<div class="dept">
+Department of Health
+</div>
+<div class="unit">
+Office of the Secretary
+</div>
+</div>
+</div>
+<p class="blurb">
+An aggressively Congress-augmented budget where the binding constraint
+is a capital-outlay bottleneck — the infrastructure pipeline (HFEP)
+cannot disburse what it is given.
+</p>
+<ul class="hl">
+<li>
+GAA nearly tripled: ₱107B (2018) → ₱298B (2026)
+</li>
+<li>
+₱210B cumulative plus-ups; MAIFIP + HFEP = 73%
+</li>
+<li>
+Capital Outlays disburse at only 14–37% and falling
+</li>
+</ul>
+<div class="cta">
+Read the analysis →
+</div>
+</a> <a class="card pub" href="dswd-osec.html">
+<div class="card-head">
+<span class="badge">DSWD</span>
+<div>
+<div class="dept">
+Department of Social Welfare and Development
+</div>
+<div class="unit">
+Office of the Secretary
+</div>
+</div>
+</div>
+<p class="blurb">
+An almost pure cash-transfer budget — 4Ps, Protective Services, and the
+Social Pension — where Congress reshapes the portfolio from within:
+trimming 4Ps, scaling up Protective Services, and inventing AKAP by
+appropriation alone.
+</p>
+<ul class="hl">
+<li>
+GAA nearly doubled: ₱141B (2018) → ₱264B (2026)
+</li>
+<li>
+Three cash programs = 74–88% of the budget; 93–95% MOOE
+</li>
+<li>
+Congress redirects: Protective Services +₱116B, 4Ps −₱83B
+</li>
+</ul>
+<div class="cta">
+Read the analysis →
+</div>
+</a> <a class="card pub" href="dpwh.html">
+<div class="card-head">
+<span class="badge">DPWH</span>
+<div>
+<div class="dept">
+Department of Public Works and Highways
+</div>
+<div class="unit">
+Whole department + operating units
+</div>
+</div>
+</div>
+<p class="blurb">
+A different angle: with no P/A/P-level execution data, this review
+traces DPWH’s budget back to 1988 and maps how Congress redirects money
+— every year — from the Central Office toward named district engineering
+offices.
+</p>
+<ul class="hl">
+<li>
+Footprint doubled to a mid-teens budget share; 2026 GAA collapses below
+8%
+</li>
+<li>
+2019 line-item veto: ₱95.4B struck, ₱74B from the Central Office
+</li>
+<li>
+A four-signal screen flags Batangas 4th, Sorsogon, Abra &amp; Bulacan
+1st
+</li>
+</ul>
+<div class="cta">
+Read the analysis →
+</div>
+</a>
+<div class="card planned">
+<div class="card-head">
+<span class="badge muted">TESDA</span>
+<div>
+<div class="dept">
+Technical Education and Skills Development Authority
+</div>
+</div>
+</div>
+<p class="blurb muted-txt">
+Report in preparation.
+</p>
+<div class="cta muted-txt">
+Coming soon
+</div>
+</div>
+</div>
+<div class="site-footer">
+<div class="inner">
+<p>
+Underlying data: DBM-published budget and execution data (Current New
+Appropriations only). NEP/GAA cover FY 2018-2026; execution measures
+(Allotments, Obligations, Disbursements) cover FY 2018-2025. Coverage
+varies by agency; the DPWH review instead traces appropriations to 1988.
+</p>
+<p>
+Last updated June 2026.
+</p>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+
+</body>
+</html>

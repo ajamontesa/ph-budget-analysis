@@ -1,0 +1,785 @@
+---
+title: "Department of Health — Office of the Secretary"
+subtitle: "Budget evolution and absorptive capacity, FY 2018–2026"
+date: "`r format(Sys.Date(), '%B %Y')`"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    toc_depth: 3
+    number_sections: true
+    code_folding: hide
+    self_contained: true
+    df_print: paged
+    fig_width: 10
+    fig_height: 5.5
+---
+
+
+```{css, echo=FALSE}
+:root { --ink:#1a1a1a; --muted:#6e6e6e; --accent:#08519C; --rule:#e6e6e6; }
+
+body, .main-container {
+  font-family: Arial, Helvetica, "IBM Plex Sans", sans-serif;
+  color: var(--ink);
+}
+.main-container { max-width: 980px; }
+h1, h2, h3, h4 { font-family: Arial, Helvetica, sans-serif; font-weight: 600; }
+h1.title { font-size: 30px; }
+h1 { font-size: 25px; margin-top: 1.6em; padding-top: .3em; border-top: 2px solid var(--rule); }
+h2 { font-size: 20px; margin-top: 1.4em; }
+h3 { font-size: 17px; color: #333; }
+.author, .date { color: var(--muted); }
+p, li { font-size: 15.5px; line-height: 1.62; }
+blockquote {
+  border-left: 3px solid var(--accent); background: #f5f8fc;
+  color: #25405e; font-size: 14.5px; padding: .6em 1em; margin: 1.2em 0;
+}
+.lead { font-size: 16.5px; color: #2b2b2b; }
+.takeaway {
+  background: #f7f9fb; border: 1px solid var(--rule); border-radius: 6px;
+  padding: .4em 1.1em; margin: 1.1em 0;
+}
+.takeaway p, .takeaway li { font-size: 14.5px; }
+.caption, .figcaption { color: var(--muted); font-size: 13px; }
+table.dataTable { font-size: 13px; }
+.kbl-note { color: var(--muted); font-size: 12.5px; margin-top: -.5em; }
+.toc-content { padding-left: 0; }
+hr { border-top: 1px solid var(--rule); }
+.home-link { font-size: 13.5px; }
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE, message = FALSE, warning = FALSE,
+  dpi = 150, fig.align = "center", out.width = "100%"
+)
+
+# ---- Self-contained setup: libraries, theme, palettes, table helpers -----
+options(knitr.kable.NA = "")
+library(readxl); library(dplyr); library(tidyr); library(stringr)
+library(ggplot2); library(scales); library(knitr); library(kableExtra); library(DT)
+
+# Robust data path (works whether knitting from reports/ or the repo root)
+.candidates <- c(
+  "../data/Compiled_-_NEP-GAA-SAAODB-ByPAPLabelled.xlsx",
+  "data/Compiled_-_NEP-GAA-SAAODB-ByPAPLabelled.xlsx",
+  "Compiled - NEP-GAA-SAAODB-ByPAPLabelled.xlsx",
+  "Compiled_-_NEP-GAA-SAAODB-ByPAPLabelled.xlsx"
+)
+file_path <- .candidates[file.exists(.candidates)][1]
+stopifnot(!is.na(file_path))
+
+# Minimalist ggplot theme
+theme_doh <- function(base_size = 12) {
+  theme_minimal(base_size = base_size, base_family = "sans") +
+    theme(
+      plot.title       = element_text(face = "bold", size = base_size + 2, color = "black"),
+      plot.subtitle    = element_text(color = "grey30", size = base_size),
+      plot.caption     = element_text(color = "grey40", size = base_size - 3, hjust = 0),
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_blank(),
+      axis.title       = element_text(size = base_size - 1, color = "grey20"),
+      axis.text        = element_text(color = "grey20"),
+      legend.position  = "bottom",
+      legend.title     = element_blank(),
+      legend.text      = element_text(size = base_size - 1),
+      strip.text       = element_text(face = "bold", size = base_size - 1.5, lineheight = 0.9)
+    )
+}
+
+# Palettes: execution stages, absorption ratios, expense class
+exec_pal <- c(
+  "NEP (proposed)" = "#9E9AC8", "GAA (enacted)" = "#54278F",
+  "Adj. Appropriation" = "#3182BD", "Adj. Allotment" = "#08519C",
+  "Obligations" = "#E6550D", "Disbursements" = "#31A354"
+)
+absorp_pal <- c(
+  "Obligations / Adj. Allotment" = "#3182BD",
+  "Disbursements / Obligations" = "#E6550D",
+  "Disbursements / Adj. Allotment" = "#31A354"
+)
+ec_pal <- c(
+  "Personnel Services (PS)" = "#2CA02C",
+  "Maintenance & Other Op. Exp. (MOOE)" = "#FF7F0E",
+  "Capital Outlays (CO)" = "#9467BD"
+)
+bar_fill <- "#08519C"
+
+# Formatters (operate on RAW peso amounts)
+peso       <- "PHP "
+php_b      <- function(x) paste0(peso, scales::comma(x / 1e9, accuracy = 0.1), "B")
+php_b_axis <- function(x) paste0(peso, round(x / 1e9), "B")
+
+# Interactive reference-table helper (sortable, searchable, exportable)
+dt_table <- function(df, caption = NULL, page = 10, money_cols = NULL,
+                     pct_cols = NULL, money_digits = 2) {
+  dt <- datatable(
+    df, rownames = FALSE, caption = caption, extensions = "Buttons",
+    options = list(
+      pageLength = page, lengthMenu = c(10, 20, 50, 100),
+      dom = "Bfrtip", buttons = c("copy", "csv"),
+      scrollX = TRUE, autoWidth = FALSE,
+      columnDefs = list(list(className = "dt-right",
+                             targets = which(sapply(df, is.numeric)) - 1))
+    ),
+    class = "stripe hover compact"
+  )
+  if (!is.null(money_cols)) {
+    mc <- which(names(df) %in% money_cols)
+    if (length(mc)) dt <- formatRound(dt, mc, digits = money_digits, mark = ",")
+  }
+  if (!is.null(pct_cols)) {
+    pc <- which(names(df) %in% pct_cols)
+    if (length(pc)) dt <- formatPercentage(dt, pc, digits = 0)
+  }
+  dt
+}
+
+# Static styled-kable helper for small curated tables
+kbl_clean <- function(x, font = 14, ...) {
+  x %>% kable(...) %>%
+    kable_styling(full_width = TRUE, font_size = font,
+                  bootstrap_options = c("condensed", "striped", "hover"))
+}
+
+# Agency-specific functional-category palette (DOH; consolidated for the
+# 2025 PREXC reorganization).
+cat_pal <- c(
+  "General Admin & Support"                 = "#A6761D",
+  "Support to Operations"                   = "#E6AB02",
+  "Health Policy, Public Health & Programs" = "#7570B3",
+  "Hospital Operations"                     = "#66A61E",
+  "Health Regulation"                       = "#E7298A",
+  "Social Health Protection (incl. MAIFIP)" = "#D95F02"
+)
+
+# ---- Data load & processing (faithful to the deck, then extended) --------
+raw <- read_excel(file_path, sheet = "DOH")
+
+df_long_all <- raw %>%
+  pivot_longer(
+    cols = matches("^(NEP|GAA|AuthAppro|AdjAppro|AdjAllot|Obligations|Disbursements)_\\d{4}_EXP_(1PS|2MOOE|6CO|TOTAL)$"),
+    names_to = "var", values_to = "amount"
+  ) %>%
+  separate(var, into = c("metric", "year", "tag", "expense_class"), sep = "_") %>%
+  mutate(year = as.integer(year), amount = as.numeric(amount)) %>%
+  select(-tag)
+
+df_long <- df_long_all %>%
+  filter(expense_class == "TOTAL") %>%
+  select(-expense_class) %>%
+  # MAIFIP unification (old long name + current label) and HRH Deployment ->
+  # NHWSS (re-coded/renamed 2022). Each treated as one continuous program.
+  mutate(pap = case_when(
+    str_starts(`P/A/P`, "Assistance to Indigent Patients either Confined") ~
+      "Medical Assistance to Indigent and Financially-Incapacitated Patients (MAIFIP)",
+    str_detect(`P/A/P`, "MAIFIP") ~
+      "Medical Assistance to Indigent and Financially-Incapacitated Patients (MAIFIP)",
+    `P/A/P` == "Human Resources for Health (HRH) Deployment" ~
+      "National Health Workforce Support System (NHWSS)",
+    TRUE ~ `P/A/P`
+  )) %>%
+  # 2025 reorg: roll old and new PREXC codes into one functional bucket.
+  mutate(category = case_when(
+    PREXC_PROG == 1000                                          ~ "General Admin & Support",
+    PREXC_PROG == 2000                                          ~ "Support to Operations",
+    PREXC_PROG %in% c(3101, 3102, 3103, 3104, 3105, 3501, 3502) ~ "Health Policy, Public Health & Programs",
+    PREXC_PROG %in% c(3201, 3601)                               ~ "Hospital Operations",
+    PREXC_PROG %in% c(3301, 3701)                               ~ "Health Regulation",
+    PREXC_PROG %in% c(3401, 3801)                               ~ "Social Health Protection (incl. MAIFIP)",
+    TRUE                                                        ~ "Other"
+  ))
+
+totals_by_year <- df_long %>%
+  group_by(year, metric) %>%
+  summarise(total = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE),
+            .groups = "drop")
+
+pap_year <- df_long %>%
+  group_by(pap, year, metric) %>%
+  summarise(amount = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE),
+            .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = amount)
+
+absorp_total <- totals_by_year %>%
+  pivot_wider(names_from = metric, values_from = total) %>%
+  filter(year %in% 2018:2025) %>%
+  mutate(
+    oblig_allot = Obligations   / AdjAllot,
+    disb_oblig  = Disbursements / Obligations,
+    disb_allot  = Disbursements / AdjAllot
+  )
+
+MAIFIP_LAB <- "Medical Assistance to Indigent and Financially-Incapacitated Patients (MAIFIP)"
+```
+
+<p class="home-link"><a href="index.html">← All agencies</a></p>
+
+# Overview {#overview .unnumbered}
+
+<p class="lead">
+This document tracks the budget of the **Department of Health – Office of the Secretary (DOH-OSEC)** across nine fiscal years, FY 2018 to FY 2026, following each peso from proposal (NEP) to enactment (GAA) to release (allotment), commitment (obligation), and final cash payment (disbursement).
+</p>
+
+It is the long-form companion to the DOH-OSEC briefing deck. Where the deck fits each point on a slide, this version keeps the full argument and adds reference tables — most sortable, searchable, and exportable — so a reader can interrogate the figures directly. Every table can be copied or downloaded from its toolbar.
+
+DOH-OSEC tells a different story from a payroll-dominated agency like education. Two forces shape it. The first is **Congress**: unlike most departments, DOH has its budget enlarged by the legislature in every single year of this period, cumulatively by more than ₱210B, and those additions are heavily concentrated in a handful of flagship lines. The second is **absorption**, and specifically a capital-outlay bottleneck — the agency reliably spends its salaries and operating money but struggles to disburse its infrastructure budget, year after year. Most of what follows examines how those two forces interact: money is appropriated faster than the agency's procurement and construction pipeline can spend it.
+
+# Executive summary {#exec}
+
+The DOH-OSEC budget has **nearly tripled in nominal terms**, from a ₱107B enacted budget in 2018 to a proposed ₱298B in the 2026 GAA. Growth has been steady since the 2019 dip, with the largest single-year jumps in 2022 and 2026.
+
+**Congress augments DOH every year.** The enacted GAA has exceeded the Executive's NEP in every year of the period — by as little as ₱2B (2018) and as much as ₱44B (2026). Cumulatively, Congress has added about ₱210B on top of Executive proposals over 2018–2026. These additions are **highly concentrated**: MAIFIP alone absorbed ₱97B of cumulative plus-ups and the Health Facilities Enhancement Program (HFEP) another ₱56B — together over 70% of all Congressional augmentation to DOH-OSEC since 2018.
+
+**MAIFIP is the clearest case.** Medical Assistance to Indigent and Financially-Incapacitated Patients grew roughly twelve-fold in the GAA, from ₱4.9B in 2018 to ₱58.1B in 2024, with Congressional plus-ups of ₱20–36B a year accounting for most of the increase. But disbursement lags: in 2024 MAIFIP obligated 85% of its allotment yet paid out only 55%.
+
+**The absorption problem is mostly a Capital Outlay problem.** Personnel Services disburses at ~98% every year and MOOE at 50–70%, but Capital Outlays disburse at only 14–37% — and CO disbursement has been *deteriorating* since 2021. HFEP, which is almost entirely capital outlay, has never disbursed more than 32% of its allotment in any year on record; its cumulative unspent allotment over 2018–2025 is roughly ₱109B.
+
+The **portfolio is rebalancing toward MOOE**: the MOOE share of the GAA rose from 39% in 2018 to 53% in 2026, while the Capital Outlay share fell from 29% to 13%. Congressional augmentation is overwhelmingly MOOE-bound (about ₱125B of the ₱210B cumulative plus-up). And **hospital operations dominate** the functional composition and are growing fastest in absolute terms; the **2025 PREXC reorganization** split the public-health side into a policy/strategy program (`3501`) and a local-health-system-support program (`3502`).
+
+> The recurring tension: Congress routes its largest additions into MOOE and into capital-heavy flagships like HFEP, but the agency's binding constraint is its ability to *disburse* — especially on infrastructure. Appropriating more does not, on this record, translate one-for-one into spending.
+
+# A note on the data {#data-notes}
+
+**Period.** FY 2018 through FY 2026 for NEP and GAA. Execution data — Adjusted Appropriations, Adjusted Allotments, Obligations, Disbursements — is available at the P/A/P level for every year FY 2018–2025; FY 2026 reflects the proposed/enacted budget only.
+
+**Scope.** **Current New Appropriations only** — excludes Continuing Appropriations, Automatic Appropriations, and transfers from Special Purpose Funds and Unprogrammed Appropriations. These figures therefore understate the DOH's full spending envelope. All amounts are nominal pesos.
+
+**2025 PREXC re-coding.** DOH renumbered its program codes in 2025. Where the same P/A/P appears under both an old and a new UACS code — `3201`→`3601` (hospitals), `3301`→`3701` (regulation), `3401`→`3801` (patient assistance) — the two are treated as the same line. The public-health programs `3101`–`3105` were reorganized into `3501` and `3502`; see [the reorganization section](#reorg).
+
+**Two P/A/P renames consolidated.** "Assistance to Indigent Patients…" → **MAIFIP**, and "HRH Deployment" (`3102`) → **NHWSS** (re-coded and renamed in 2022). Both are reported as single continuous lines throughout.
+
+**Absorptive-capacity denominator.** Unless noted, ratios use **Adjusted Allotments** — the closest proxy for what the agency was actually cleared to spend. The three ratios are **O/A** (Obligations ÷ Allotment), **D/O** (Disbursements ÷ Obligations), and **D/A** (Disbursements ÷ Allotment).
+
+# The aggregate budget {#aggregate}
+
+## The budget keeps growing
+
+```{r fig-evolution, fig.height=5.2}
+evo <- totals_by_year %>%
+  filter(metric %in% c("NEP","GAA","AdjAllot","Obligations","Disbursements")) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA","AdjAllot","Obligations","Disbursements"),
+                         labels = c("NEP (proposed)","GAA (enacted)","Adj. Allotment","Obligations","Disbursements")))
+
+ggplot(evo, aes(year, total, color = metric, group = metric)) +
+  geom_line(linewidth = 1.0) + geom_point(size = 2) +
+  scale_color_manual(values = exec_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6),
+                     limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "DOH-OSEC budget, NEP through Disbursements (FY 2018–2026)",
+       subtitle = "GAA has nearly tripled since 2018; disbursements lag persistently behind allotments",
+       x = NULL, y = NULL, caption = "FY 2026 reflects NEP/GAA only; execution data not yet available.") +
+  theme_doh() + guides(color = guide_legend(nrow = 1))
+```
+
+Two features stand out and organize the rest of this report. First, the **NEP and GAA lines separate visibly in most years** — the enacted budget sits above the Executive's proposal, the signature of an agency Congress consistently augments (the next sections quantify it). Second, the **disbursement line trails the allotment line by a wide and persistent margin**: DOH releases money it does not fully pay out within the year. The table gives the underlying figures.
+
+```{r tbl-evolution}
+tbl_evo <- totals_by_year %>%
+  filter(metric %in% c("NEP","GAA","AdjAllot","Obligations","Disbursements")) %>%
+  mutate(value = total/1e9) %>% select(year, metric, value) %>%
+  pivot_wider(names_from = year, values_from = value) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA","AdjAllot","Obligations","Disbursements"),
+                         labels = c("NEP","GAA","Adj. Allotment","Obligations","Disbursements"))) %>%
+  arrange(metric) %>% rename(`PHP B` = metric)
+kbl_clean(tbl_evo, font = 13, digits = 1, format.args = list(big.mark = ","), na = "")
+```
+
+The disbursement story is two-sided. The **disbursement-to-allotment ratio has improved** from a low of 53% (2018) to roughly 70% in 2021–2025 — the agency has gotten better at converting releases into payments. But the **absolute disbursement gap has roughly doubled**, from about ₱48B in 2018 to ₱69B in 2025, simply because the budget scaled so much. A better *rate* on a far larger base still leaves more money unspent.
+
+## Year-on-year growth, and the annual augmentation
+
+The budget contracted in 2019 — a re-enactment year following a budget impasse — and grew every year after. The table pairs each year's GAA growth with the size of the Congressional add-on (GAA minus NEP), the recurring feature of the DOH budget.
+
+```{r tbl-growth}
+wide_yr <- totals_by_year %>% pivot_wider(names_from = metric, values_from = total)
+growth <- wide_yr %>% arrange(year) %>%
+  transmute(year,
+            `GAA (B)` = round(GAA/1e9,1),
+            `Growth %` = scales::percent(GAA/lag(GAA) - 1, accuracy = 0.1),
+            `NEP (B)` = round(NEP/1e9,1),
+            `Augmentation GAA−NEP (B)` = round((GAA-NEP)/1e9,1))
+kbl_clean(growth, font = 13, align = "rrrrr", na = "")
+```
+
+<p class="kbl-note">The augmentation column is positive in every year — the defining characteristic of the DOH-OSEC budget.</p>
+
+# The 2025 PREXC reorganization {#reorg}
+
+A structural caveat that shapes several charts below. In 2025 DOH renumbered its program codes. Most changes were **simple renumbering** with unchanged scope — `3201`→`3601` (Hospital Operations), `3301`→`3701` (Regulation), `3401`→`3801` (Social Health Protection) — and are transparently consolidated here. The substantive change was a **split**: the old five public-health programs (`3101`–`3105`, covering policy, systems, public health, epidemiology, and emergencies) were collapsed into two new programs along a *policy/strategy versus local implementation* dividing line.
+
+```{r tbl-reorg}
+reorg <- tibble::tribble(
+  ~`P/A/P`,                                            ~`Old (pre-2025)`,                    ~`New (2025+)`,
+  "Health Sector Policy and Plan Development",         "3101 Health Policy and Standards",   "3501 Policy & Systems Strengthening",
+  "Pharmaceutical Management",                         "3102 Health Systems Strengthening",  "3501 Policy & Systems Strengthening",
+  "Health Promotion",                                  "3102 Health Systems Strengthening",  "3501 Policy & Systems Strengthening",
+  "Epidemiology and Surveillance",                     "3104 Epidemiology and Surveillance", "3501 Policy & Systems Strengthening",
+  "Quick Response Fund",                               "3105 Health Emergency Management",   "3501 Policy & Systems Strengthening",
+  "Health Facilities Enhancement Program (HFEP)",      "3102 Health Systems Strengthening",  "3502 Local Health System Support",
+  "National Health Workforce Support System (NHWSS)",  "3102 Health Systems Strengthening",  "3502 Local Health System Support",
+  "Nationally-procured Commodities (5 new lines)",     "(part of 3103 programs)",            "3502 Local Health System Support"
+)
+kbl_clean(reorg, font = 13, align = "lll", na = "")
+```
+
+The practical consequence: several public-health lines that existed under the old codes **disappear in 2025** and reappear as new-coded lines, which is why some of the low-absorber trajectories later in this report stop in 2024. Throughout, old and new codes are rolled into one functional bucket so the aggregate trends remain continuous.
+
+# Where the money goes {#composition}
+
+## By functional category
+
+Grouping P/A/Ps into six functional categories shows what kind of agency DOH-OSEC is. The chart shows the enacted budget by category; the tables give pesos and shares.
+
+```{r fig-composition, fig.height=5.2}
+comp <- df_long %>%
+  filter(metric == "GAA", year <= 2026, !is.na(amount)) %>%
+  group_by(year, category) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(category = factor(category, levels = names(cat_pal)))
+
+ggplot(comp, aes(year, amount, fill = category)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = cat_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6),
+                     limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "Composition of the GAA by functional category, 2018–2026",
+       subtitle = "Hospital operations and social health protection dominate; both growing fastest",
+       x = NULL, y = NULL) +
+  theme_doh() + guides(fill = guide_legend(nrow = 2, byrow = TRUE))
+```
+
+**Hospital Operations** is the largest and fastest-growing block in absolute terms — DOH-OSEC runs the country's regional and specialty hospitals directly, and that operational footprint expands every year. **Social Health Protection**, which houses MAIFIP, is the next major growth story and the most Congress-driven. The public-health-and-programs category is large but structurally fragmented, which is what the 2025 reorganization tried to address.
+
+```{r tbl-comp}
+comp_tbl <- comp %>% group_by(year) %>% mutate(share = amount/sum(amount)) %>% ungroup()
+comp_amt <- comp_tbl %>% mutate(amount = round(amount/1e9,1)) %>%
+  select(category, year, amount) %>% pivot_wider(names_from = year, values_from = amount)
+kbl_clean(comp_amt %>% rename(`Category (PHP B)` = category),
+          font = 12, digits = 1, format.args = list(big.mark=","), na = "")
+
+comp_pct <- comp_tbl %>% mutate(share = round(share*100,1)) %>%
+  select(category, year, share) %>% pivot_wider(names_from = year, values_from = share)
+```
+
+<p class="kbl-note">Share of each year's total budget:</p>
+
+```{r tbl-comp-pct}
+kbl_clean(comp_pct %>% rename(`Category (% of GAA)` = category), font = 12, digits = 1, na = "")
+```
+
+## By expense class
+
+The same budget by what the money buys. The defining DOH-OSEC trend is a steady **shift from Capital Outlay toward MOOE**.
+
+```{r fig-comp-ec, fig.height=5.2}
+ec_levels <- c("Personnel Services (PS)","Maintenance & Other Op. Exp. (MOOE)","Capital Outlays (CO)")
+comp_ec <- df_long_all %>%
+  filter(metric == "GAA", year <= 2026, expense_class %in% c("1PS","2MOOE","6CO")) %>%
+  group_by(year, expense_class) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(expense_class = factor(expense_class, levels = c("1PS","2MOOE","6CO"), labels = ec_levels))
+
+ggplot(comp_ec, aes(year, amount, fill = expense_class)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = ec_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6),
+                     limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "GAA composition by Expense Class, 2018–2026",
+       subtitle = "MOOE share has grown from 39% (2018) to 53% (2026); Capital Outlays share fell from 29% to 13%",
+       x = NULL, y = NULL) +
+  theme_doh() + guides(fill = guide_legend(nrow = 1))
+```
+
+The MOOE share of the enacted budget rose from 39% in 2018 to 53% in 2026, while the Capital Outlay share fell from 29% to 13%. This matters because, as the absorption section shows, MOOE disburses far more reliably than CO — so the rebalancing is, incidentally, a shift toward more spendable money. Whether that is by design or a byproduct of Congress's MOOE-heavy augmentation preferences is an open question.
+
+```{r tbl-ec-share}
+ec_share <- comp_ec %>% group_by(year) %>% mutate(share = round(amount/sum(amount)*100,1)) %>% ungroup() %>%
+  select(expense_class, year, share) %>% pivot_wider(names_from = year, values_from = share)
+kbl_clean(ec_share %>% rename(`Expense class (% of GAA)` = expense_class), font = 12.5, digits = 1, na = "")
+```
+
+## The ten largest P/A/Ps
+
+```{r fig-top10, fig.height=5.4}
+top_pap <- pap_year %>% filter(year == 2026) %>% arrange(desc(GAA)) %>% slice_head(n = 10) %>%
+  mutate(pap = factor(pap, levels = rev(pap)))
+
+ggplot(top_pap, aes(pap, GAA)) +
+  geom_col(fill = bar_fill, width = 0.75) +
+  geom_text(aes(label = php_b(GAA)), hjust = -0.1, size = 3.3, color = "grey20") +
+  coord_flip() +
+  scale_x_discrete(labels = function(x) str_wrap(x, 50)) +
+  scale_y_continuous(labels = php_b_axis, expand = expansion(mult = c(0, .18))) +
+  labs(title = "Top 10 P/A/Ps by FY 2026 GAA",
+       subtitle = "Regional Hospitals alone is over PHP 100B; MAIFIP and HFEP both sit near the top",
+       x = NULL, y = NULL) +
+  theme_doh() +
+  theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"))
+```
+
+### Full P/A/P ranking (interactive) {.unnumbered}
+
+Every P/A/P, ranked by 2026 GAA, with the 2026 NEP, the prior-year (2025) enacted figure, and the implied 2026 augmentation. Sort, search, or export.
+
+```{r tbl-allpaps}
+all_paps_2026 <- pap_year %>% filter(year == 2026) %>%
+  transmute(`P/A/P` = pap, `NEP 2026 (B)` = NEP/1e9, `GAA 2026 (B)` = GAA/1e9) %>%
+  arrange(desc(`GAA 2026 (B)`))
+gaa25 <- pap_year %>% filter(year == 2025) %>% transmute(`P/A/P` = pap, g25 = GAA/1e9)
+all_paps_2026 <- all_paps_2026 %>% left_join(gaa25, by = "P/A/P") %>%
+  rename(`GAA 2025 (B)` = g25) %>%
+  mutate(`Aug. NEP to GAA 2026 (B)` = `GAA 2026 (B)` - `NEP 2026 (B)`)
+dt_table(all_paps_2026, page = 15,
+         money_cols = c("NEP 2026 (B)","GAA 2026 (B)","GAA 2025 (B)","Aug. NEP to GAA 2026 (B)"))
+```
+
+# Congressional action: NEP → GAA {#augmentation}
+
+DOH is one of the most consistently augmented departments in the budget. The chart ranks the ten P/A/Ps that have received the most cumulative plus-ups (GAA above NEP) over 2018–2026.
+
+```{r fig-augmentation, fig.height=5.2}
+top_aug <- pap_year %>% group_by(pap) %>%
+  summarise(total_nep = sum(NEP, na.rm = TRUE), total_gaa = sum(GAA, na.rm = TRUE), .groups = "drop") %>%
+  mutate(augment = total_gaa - total_nep) %>% filter(augment > 0) %>%
+  arrange(desc(augment)) %>% slice_head(n = 10) %>% mutate(pap = factor(pap, levels = rev(pap)))
+
+ggplot(top_aug, aes(pap, augment)) +
+  geom_col(fill = "#D95F02", width = 0.75) +
+  geom_text(aes(label = paste0("+", php_b(augment))), hjust = -0.1, size = 3.3, color = "grey20") +
+  coord_flip() +
+  scale_x_discrete(labels = function(x) str_wrap(x, 50)) +
+  scale_y_continuous(labels = php_b_axis, expand = expansion(mult = c(0, .22)), limits = c(0, NA)) +
+  labs(title = "Cumulative NEP-to-GAA increase, 2018–2026",
+       subtitle = "MAIFIP and HFEP alone absorbed PHP 153B in plus-ups — over 70% of all DOH-OSEC augmentation",
+       x = NULL, y = NULL) +
+  theme_doh() +
+  theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"))
+```
+
+<div class="takeaway">
+Congress's additions are strikingly concentrated. **MAIFIP** (₱97B cumulative) and **HFEP** (₱56B) together account for ₱153B — more than 70% of all DOH-OSEC augmentation since 2018. One is a cash-assistance (MOOE) line that disburses moderately; the other is a construction (capital-outlay) line that barely disburses at all. The legislature's two favorite programs to fund are, respectively, the agency's largest discretionary transfer and its deepest execution bottleneck.
+</div>
+
+The full cumulative table lists every P/A/P that Congress net-augmented over the nine years.
+
+```{r tbl-aug-full}
+aug_full <- pap_year %>% group_by(pap) %>%
+  summarise(nep = sum(NEP, na.rm = TRUE), gaa = sum(GAA, na.rm = TRUE), .groups = "drop") %>%
+  mutate(aug = gaa - nep) %>% filter(abs(aug) >= 1e8) %>%
+  transmute(`P/A/P` = pap, `Σ NEP 2018–26 (B)` = nep/1e9, `Σ GAA 2018–26 (B)` = gaa/1e9,
+            `Cumulative augmentation (B)` = aug/1e9) %>%
+  arrange(desc(`Cumulative augmentation (B)`))
+dt_table(aug_full, page = 10,
+         money_cols = c("Σ NEP 2018–26 (B)","Σ GAA 2018–26 (B)","Cumulative augmentation (B)"))
+```
+
+## Where the augmentation lands, by expense class
+
+Congress's fiscal preference is operating-expense-heavy. Splitting the cumulative plus-up by expense class shows it goes overwhelmingly to MOOE — commodities, cash-assistance lines, and contracted services — rather than to salaries or infrastructure.
+
+```{r tbl-aug-ec}
+aug_ec <- df_long_all %>%
+  filter(metric %in% c("NEP","GAA"), expense_class %in% c("1PS","2MOOE","6CO")) %>%
+  group_by(metric, expense_class) %>% summarise(a = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = a) %>%
+  transmute(`Expense class` = factor(expense_class, levels = c("1PS","2MOOE","6CO"), labels = ec_levels),
+            `Σ NEP 2018–26 (B)` = round(NEP/1e9,1),
+            `Σ GAA 2018–26 (B)` = round(GAA/1e9,1),
+            `Cumulative augmentation (B)` = round((GAA-NEP)/1e9,1)) %>% arrange(`Expense class`)
+kbl_clean(aug_ec, font = 13, align = "lrrr", na = "")
+```
+
+# MAIFIP: a flagship that exploded {#maifip}
+
+Medical Assistance to Indigent and Financially-Incapacitated Patients is the single most consequential line in the DOH-OSEC budget's recent history. It pays hospital bills for poor patients, and it has grown explosively — almost entirely on the strength of Congressional plus-ups.
+
+```{r fig-maifip, fig.height=5}
+maifip <- pap_year %>% filter(pap == MAIFIP_LAB) %>%
+  select(year, NEP, GAA, AdjAllot, Obligations, Disbursements) %>%
+  pivot_longer(-year, names_to = "metric", values_to = "amount") %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA","AdjAllot","Obligations","Disbursements"),
+                         labels = c("NEP (proposed)","GAA (enacted)","Adj. Allotment","Obligations","Disbursements")))
+
+ggplot(maifip, aes(year, amount, color = metric, group = metric)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 1.8) +
+  scale_color_manual(values = exec_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6),
+                     limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "MAIFIP: from PHP 4.9B (2018) to PHP 58B (2024 GAA)",
+       subtitle = "Congressional plus-ups dwarf the Executive's proposal year after year",
+       x = NULL, y = NULL,
+       caption = "MAIFIP unifies the old 'Assistance to Indigent Patients in Government Hospitals' line with the current MAIFIP label.") +
+  theme_doh() + guides(color = guide_legend(nrow = 1))
+```
+
+The GAA grew roughly twelve-fold, from ₱4.9B in 2018 to ₱58.1B in 2024, and in most years the gap between proposal and enactment is enormous: in 2024 the ₱22.3B NEP became a ₱58.1B GAA (a ₱36B plus-up); in 2026 a ₱24.2B NEP becomes a ₱51.7B GAA (₱27B). But execution tells a more cautious story — the program *obligates* well but *disburses* with a real lag, as the table makes explicit.
+
+```{r tbl-maifip}
+pap_year %>% filter(pap == MAIFIP_LAB, year %in% 2018:2025) %>%
+  transmute(FY = year, `NEP (B)` = round(NEP/1e9,1), `GAA (B)` = round(GAA/1e9,1),
+            `Allotment (B)` = round(AdjAllot/1e9,1), `Obligated (B)` = round(Obligations/1e9,1),
+            `Disbursed (B)` = round(Disbursements/1e9,1),
+            `O/A` = scales::percent(Obligations/AdjAllot, accuracy = 1),
+            `D/A` = scales::percent(Disbursements/AdjAllot, accuracy = 1)) %>%
+  kbl_clean(font = 13, align = "rrrrrrrr", na = "")
+```
+
+In 2024 MAIFIP obligated ₱49.6B of its ₱58.1B allotment (85%) but disbursed only ₱31.7B (55%). Even in 2018, on a far smaller ₱4.9B base, it disbursed only about two-thirds. The open question is what MAIFIP *is*: a de facto substitute for PhilHealth case-rate coverage, or a discretionary assistance line whose size is set politically rather than by demand. The persistent proposal-versus-enacted gap is consistent with the latter dynamic.
+
+# Absorptive capacity {#absorption}
+
+## At the aggregate
+
+At the whole-office level, obligation rates hold near 90% while disbursement rates have climbed from 53% (2018) to about 70% in recent years — an improving but still incomplete conversion of releases into cash.
+
+```{r fig-absorp-agg, fig.height=5}
+absorp_long <- absorp_total %>% select(year, oblig_allot, disb_oblig, disb_allot) %>%
+  pivot_longer(-year, names_to = "ratio", values_to = "value") %>%
+  mutate(ratio = factor(ratio, levels = c("oblig_allot","disb_oblig","disb_allot"),
+    labels = c("Obligations / Adj. Allotment","Disbursements / Obligations","Disbursements / Adj. Allotment")))
+
+ggplot(absorp_long, aes(year, value, color = ratio, group = ratio)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 2) +
+  geom_text(aes(label = scales::percent(value, accuracy = 1)), vjust = -1.0, size = 3.0, show.legend = FALSE, color = "grey20") +
+  scale_color_manual(values = absorp_pal) +
+  scale_y_continuous(labels = percent_format(accuracy = 1), limits = c(0, 1.0), breaks = seq(0, 1, 0.2)) +
+  scale_x_continuous(breaks = 2018:2025) +
+  labs(title = "DOH-OSEC absorptive capacity, 2018–2025",
+       subtitle = "Disbursement rates have improved from 53% (2018) to ~70%; obligation rates hold near 90%",
+       x = NULL, y = NULL) +
+  theme_doh() + guides(color = guide_legend(nrow = 1))
+```
+
+```{r tbl-absorp-agg}
+absorp_total %>%
+  transmute(Year = year, `Allotment (B)` = round(AdjAllot/1e9,1),
+            `Obligations (B)` = round(Obligations/1e9,1), `Disbursements (B)` = round(Disbursements/1e9,1),
+            `O/A` = scales::percent(oblig_allot, accuracy = 1),
+            `D/O` = scales::percent(disb_oblig, accuracy = 1),
+            `D/A` = scales::percent(disb_allot, accuracy = 1)) %>%
+  kbl_clean(font = 13, align = "rrrrrrr", na = "")
+```
+
+## By expense class
+
+Decomposing the aggregate by expense class locates the problem precisely.
+
+```{r fig-absorp-ec, fig.height=5.2}
+absorp_ec <- df_long_all %>%
+  filter(metric %in% c("AdjAllot","Disbursements"), expense_class %in% c("1PS","2MOOE","6CO"), year %in% 2018:2025) %>%
+  group_by(year, metric, expense_class) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = amount) %>%
+  mutate(da = ifelse(AdjAllot > 0, Disbursements/AdjAllot, NA_real_),
+         expense_class = factor(expense_class, levels = c("1PS","2MOOE","6CO"), labels = ec_levels))
+
+ggplot(absorp_ec, aes(year, da, color = expense_class, group = expense_class)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 1.8) +
+  geom_text(aes(label = scales::percent(da, accuracy = 1)), vjust = -1.0, size = 2.9, show.legend = FALSE, color = "grey20") +
+  scale_color_manual(values = ec_pal) +
+  scale_y_continuous(labels = percent_format(accuracy = 1), limits = c(0, 1.05), breaks = seq(0, 1, 0.2)) +
+  scale_x_continuous(breaks = 2018:2025) +
+  labs(title = "Disbursement-to-Allotment by Expense Class, 2018–2025",
+       subtitle = "Personnel spending absorbs at ~98%; Capital Outlays barely move and are getting worse",
+       x = NULL, y = NULL) +
+  theme_doh() + guides(color = guide_legend(nrow = 1))
+```
+
+```{r tbl-absorp-ec}
+absorp_ec %>% mutate(da = round(da*100,0)) %>% select(expense_class, year, da) %>%
+  pivot_wider(names_from = year, values_from = da) %>%
+  rename(`D/A by expense class (%)` = expense_class) %>% kbl_clean(font = 12.5, na = "")
+```
+
+<div class="takeaway">
+The absorption problem is, at root, **a Capital Outlay problem**. CO disburses at just 14–37% of allotment across the period; PS at ~98%; MOOE in between (50–70%). When the aggregate D/A reads as "weak," what is actually weak is the infrastructure pipeline. HFEP's chronic 22–29% is therefore *not* an HFEP-specific failure — HFEP is almost entirely CO, and its number sits squarely on the systemwide CO baseline. Fixing HFEP means fixing capital-outlay execution in general. And CO disbursement is **deteriorating**: from 37% in 2021 to about 19% in 2025, the floor keeps dropping even as the budget grows.
+</div>
+
+## Strongest and weakest absorbers (FY 2025)
+
+The strongest absorbers are personnel-type and recurring-operations lines; the weakest are capital-heavy or newly-created lines. Both tables cover P/A/Ps with a 2025 allotment of at least ₱0.5B.
+
+```{r tbl-absorb-build}
+abs_2025 <- pap_year %>% filter(year == 2025, !is.na(AdjAllot), AdjAllot >= 5e8) %>%
+  mutate(`O/A` = Obligations/AdjAllot, `D/A` = Disbursements/AdjAllot, `Allotment (B)` = round(AdjAllot/1e9, 2))
+```
+
+::: {.takeaway}
+**Strongest absorbers, FY 2025** — ranked by obligation rate. Salary-type and hospital-operations lines obligate up front and disburse cleanly.
+:::
+
+```{r tbl-top-absorb}
+abs_2025 %>% arrange(desc(`O/A`)) %>% slice_head(n = 10) %>%
+  transmute(`P/A/P` = str_trunc(pap, 54), `Allotment (B)`,
+            `O/A` = scales::percent(`O/A`, accuracy = 1), `D/A` = scales::percent(`D/A`, accuracy = 1)) %>%
+  kbl_clean(font = 13, align = "lrrr", na = "")
+```
+
+::: {.takeaway}
+**Weakest absorbers, FY 2025** — ranked by disbursement rate. The new (2025) commodities lines under `3502` came in near-zero in their first year; HFEP and the Quick Response Fund are perennial.
+:::
+
+```{r tbl-bot-absorb}
+abs_2025 %>% arrange(`D/A`) %>% slice_head(n = 10) %>%
+  transmute(`P/A/P` = str_trunc(pap, 54), `Allotment (B)`,
+            `O/A` = scales::percent(`O/A`, accuracy = 1), `D/A` = scales::percent(`D/A`, accuracy = 1)) %>%
+  kbl_clean(font = 13, align = "lrrr", na = "")
+```
+
+The weakest-absorber list mixes a genuine structural problem with a likely transition artefact. **HFEP** disbursing only 22% of a ₱16.6B allotment is consistent with its long-running implementation lag. But three of the **new commodities programs** under PREXC `3502` disbursing near-zero in 2025 may reflect the coding transition rather than a real procurement failure — first-year lines often look catastrophic before they settle. The **Quick Response Fund** disbursing 6% of its ₱500M ceiling is, by contrast, a recurring story: emergency money that rarely flows on schedule.
+
+### Full absorption table, FY 2025 (interactive) {.unnumbered}
+
+Every P/A/P with a 2025 allotment, all three ratios, sortable and searchable.
+
+```{r tbl-absorb-full}
+abs_full <- pap_year %>% filter(year == 2025, !is.na(AdjAllot), AdjAllot > 0) %>%
+  transmute(`P/A/P` = pap, `Allotment (B)` = AdjAllot/1e9, `Obligations (B)` = Obligations/1e9,
+            `Disbursements (B)` = Disbursements/1e9, `O/A` = Obligations/AdjAllot,
+            `D/O` = ifelse(Obligations>0, Disbursements/Obligations, NA_real_), `D/A` = Disbursements/AdjAllot) %>%
+  arrange(`D/A`)
+dt_table(abs_full, page = 15,
+         money_cols = c("Allotment (B)","Obligations (B)","Disbursements (B)"),
+         pct_cols = c("O/A","D/O","D/A"))
+```
+
+# Program deep-dives {#deep-dives}
+
+## Trajectories of the largest health programs
+
+Six heavyweight programs, each showing enacted budget, allotment, and disbursements together. Where the lines sit on top of one another, execution is clean; where disbursements fall away, money is released but unspent.
+
+```{r fig-trend, fig.height=6.7}
+trend_paps <- c(
+  "Operations of DOH Regional Hospitals and Other Health Facilities",
+  MAIFIP_LAB,
+  "Operations of DOH Hospitals in Metro Manila (MM)",
+  "National Health Workforce Support System (NHWSS)",
+  "Health Facilities Enhancement Program",
+  "Administration of Personnel Benefits")
+
+trend_dat <- pap_year %>% filter(pap %in% trend_paps) %>%
+  select(pap, year, GAA, AdjAllot, Disbursements) %>%
+  pivot_longer(c(GAA, AdjAllot, Disbursements), names_to = "metric", values_to = "amount") %>%
+  mutate(metric = factor(metric, levels = c("GAA","AdjAllot","Disbursements"),
+                         labels = c("GAA (enacted)","Adj. Allotment","Disbursements")),
+         pap = factor(pap, levels = trend_paps,
+                      labels = c("Regional Hospitals","MAIFIP","MM Hospitals","NHWSS",
+                                 "Health Facilities Enhancement Program","Administration of Personnel Benefits")))
+trend_pal <- c("GAA (enacted)" = "#54278F","Adj. Allotment" = "#08519C","Disbursements" = "#31A354")
+
+ggplot(trend_dat, aes(year, amount, color = metric, group = metric)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 1.5) +
+  facet_wrap(~ pap, ncol = 3, scales = "free_y",
+             labeller = label_wrap_gen(width = 24)) + expand_limits(y = 0) +
+  scale_color_manual(values = trend_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(4)) +
+  scale_x_continuous(breaks = c(2018, 2022, 2026)) +
+  labs(title = "How the six largest health programs have evolved (2018–2026)",
+       subtitle = "GAA vs. allotment vs. disbursements — the absorption gap is widest for HFEP and MAIFIP",
+       x = NULL, y = NULL) +
+  theme_doh() + guides(color = guide_legend(nrow = 1))
+```
+
+The two hospital lines (**Regional** and **MM**) are steady workhorses — budget, allotment, and disbursement move almost in lockstep, the 2025 Regional Hospitals GAA of ₱75.6B disbursing at about 92%. **NHWSS**, the frontline-health-workforce line (formerly HRH Deployment), is the standout among the large programs: it scaled from ₱9.6B (2018) to ₱23.4B (2026) while absorbing cleanly throughout (D/A 87–98%) — growth without an execution lag. **MAIFIP** shows runaway GAA growth with disbursement running well below, and **HFEP** is the flat disbursement curve beneath a volatile budget. **Administration of Personnel Benefits** is a straightforward payroll line, near-fully disbursed every year.
+
+## Zooming in on HFEP
+
+The Health Facilities Enhancement Program — DOH-OSEC's main infrastructure line — is the deepest structural absorption issue in the portfolio. It builds and upgrades health facilities, and it has never managed to spend what it is given.
+
+```{r fig-hfep, fig.height=4.6}
+hfep <- pap_year %>% filter(pap == "Health Facilities Enhancement Program") %>%
+  select(year, NEP, GAA, AdjAllot, Obligations, Disbursements) %>%
+  pivot_longer(-year, names_to = "metric", values_to = "amount") %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA","AdjAllot","Obligations","Disbursements"),
+                         labels = c("NEP (proposed)","GAA (enacted)","Adj. Allotment","Obligations","Disbursements")))
+
+ggplot(hfep, aes(year, amount, color = metric, group = metric)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 1.8) +
+  scale_color_manual(values = exec_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "Health Facilities Enhancement Program (HFEP), 2018–2026",
+       subtitle = "Allotments are downward-adjusted from GAA; disbursements barely move",
+       x = NULL, y = NULL) +
+  theme_doh() + guides(color = guide_legend(nrow = 1))
+```
+
+```{r tbl-hfep}
+pap_year %>% filter(pap == "Health Facilities Enhancement Program", year %in% 2018:2025) %>%
+  transmute(FY = year, `NEP (B)` = round(NEP/1e9,1), `GAA (B)` = round(GAA/1e9,1),
+            `Allotment (B)` = round(AdjAllot/1e9,1), `Disbursed (B)` = round(Disbursements/1e9,1),
+            `D/A` = scales::percent(Disbursements/AdjAllot, accuracy = 1)) %>%
+  kbl_clean(font = 14, align = "rrrrrr", na = "")
+```
+
+Three things stand out. First, **DBM has been cutting HFEP releases**: the GAA reached ₱35.4B in 2025 but only ₱16.6B was actually allotted — the Adjusted Allotment ran ₱10–19B below the enacted budget in 2024 and 2025. Whatever the absorption story, DBM is already pricing it in. Second, the **2026 GAA fell to ₱22.3B** (from ₱35.4B), the first major reversal since HFEP's 2022 recovery, suggesting Congress too is acknowledging the ceiling. Third, **the ceiling is structural**: D/A has never exceeded 32% in any year on record, and cumulative unspent allotment across 2018–2025 is roughly **₱109B** — close to four full years of average HFEP allotment. Procurement and NGA–LGU coordination are the usual diagnoses; the practical question is which specific reform would actually move the number.
+
+## Chronic low absorbers
+
+A set of public-health programs with persistently low obligation rates. Several lines stop in 2024 because the 2025 reorganization re-coded them (`3103` → `3501`/`3502`), which is itself part of the story — reorganizations interrupt execution histories.
+
+```{r fig-lowoa, fig.height=6.7}
+low_paps <- c("Health Information Technology","Quick Response Fund","Health Promotion",
+              "Family Health, Immunization, Nutrition and Responsible Parenting",
+              "Prevention and Control of Communicable Diseases","Prevention and Control of Non-Communicable Diseases")
+
+low_dat <- pap_year %>% filter(pap %in% low_paps) %>%
+  mutate(oa = ifelse(!is.na(AdjAllot) & AdjAllot > 0, Obligations/AdjAllot, NA_real_),
+         pap = factor(pap, levels = low_paps,
+                      labels = c("Health Information Technology","Quick Response Fund","Health Promotion",
+                                 "FH, Imm, Nutrition & Resp. Parenting","Prev. & Control of Communicable Diseases",
+                                 "Prev. & Control of Non-Communicable Diseases"))) %>%
+  select(pap, year, oa) %>% tidyr::complete(year = 2018:2025, pap)
+
+ggplot(low_dat, aes(year, oa, group = 1)) +
+  geom_hline(yintercept = 1, linetype = "dotted", color = "grey60") +
+  geom_line(linewidth = 0.9, color = "#E6550D") + geom_point(size = 1.6, color = "#E6550D") +
+  geom_text(aes(label = scales::percent(oa, accuracy = 1)), vjust = -0.9, size = 2.6, color = "grey20") +
+  facet_wrap(~ pap, ncol = 3, labeller = label_wrap_gen(width = 24)) +
+  scale_y_continuous(labels = percent_format(accuracy = 1), limits = c(0, 1.15), breaks = seq(0, 1, 0.25)) +
+  scale_x_continuous(breaks = c(2018, 2021, 2023, 2025)) +
+  labs(title = "Obligations-to-Allotment ratios: chronic under-absorbers (2018–2025)",
+       subtitle = "Several lines disappeared in 2025 due to the PREXC reorganization (3103 → 3501/3502)",
+       x = NULL, y = NULL) +
+  theme_doh() + theme(legend.position = "none")
+```
+
+These are the public-health and emergency-response lines — health promotion, disease control, the Quick Response Fund, health IT — where even the *obligation* rate (a looser test than disbursement) runs well below full. They are individually small but collectively define the agency's public-health-delivery capacity, and they are precisely the programs the 2025 reorganization was meant to rationalize.
+
+# Line-item reference {#reference}
+
+The top 30 P/A/Ps by 2026 GAA, with the 2026 NEP and GAA, the prior-year (2025) enacted budget, and the most recent (2025) disbursement-to-allotment ratio as an execution indicator. The full unabridged list is in [the ranking section above](#full-p-a-p-ranking-interactive).
+
+```{r tbl-reference}
+ref <- pap_year %>% filter(year == 2026, !is.na(GAA), GAA > 0) %>%
+  arrange(desc(GAA)) %>% slice_head(n = 30) %>%
+  transmute(pap, `NEP 2026 (B)` = NEP/1e9, `GAA 2026 (B)` = GAA/1e9)
+ctx_2025 <- pap_year %>% filter(year == 2025) %>%
+  transmute(pap, `GAA 2025 (B)` = GAA/1e9,
+            `D/A 2025` = ifelse(!is.na(AdjAllot) & AdjAllot > 0, Disbursements/AdjAllot, NA_real_))
+ref %>% left_join(ctx_2025, by = "pap") %>% rename(`P/A/P` = pap) %>%
+  dt_table(page = 15, money_cols = c("NEP 2026 (B)","GAA 2026 (B)","GAA 2025 (B)"), pct_cols = "D/A 2025")
+```
+
+<p class="kbl-note">2026 execution data is not yet available; the 2025 D/A column indicates how each line has most recently absorbed.</p>
+
+# Questions for discussion {#discussion}
+
+1. **MAIFIP's growth path.** If Congress keeps adding ₱20–35B in plus-ups annually, is the program institutionally ready to absorb and account for the increase — and what is the distributional incidence of the assistance?
+2. **HFEP's chronic absorption gap.** What would actually push disbursement past 50% — procurement reform, multi-year obligation authority, NGA–LGU coordination — and is the 2026 cut an admission that the capacity simply isn't there?
+3. **The 3501/3502 split.** Is separating commodities/local support from policy/strategy a useful reform, or does it create new coordination costs and first-year absorptive risk, as the near-zero 2025 commodities disbursement suggests?
+4. **The Quick Response Fund.** Dead weight or genuine insurance? If the latter, what redesign would let it actually flow during emergencies rather than disbursing 6%?
+5. **The rising operations share.** Is DOH-OSEC slowly becoming an agency that operates hospitals first and stewards the health system second — and is that the intended division of labor with PhilHealth and the LGUs?
+
+---
+
+<p class="caption">
+Underlying data: DBM-published budget and execution data for the DOH Office of the Secretary (Current New Appropriations only), FY 2018–2026. Execution measures (Allotments, Obligations, Disbursements) cover FY 2018–2025. Prepared as the long-form companion to the DOH-OSEC budget briefing.
+</p>

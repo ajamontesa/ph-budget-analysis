@@ -1,0 +1,827 @@
+---
+title: "Department of Education — Office of the Secretary"
+subtitle: "Budget evolution and absorptive capacity, FY 2018–2026"
+date: "`r format(Sys.Date(), '%B %Y')`"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    toc_depth: 3
+    number_sections: true
+    code_folding: hide
+    self_contained: true
+    df_print: paged
+    fig_width: 10
+    fig_height: 5.5
+---
+
+
+```{css, echo=FALSE}
+:root { --ink:#1a1a1a; --muted:#6e6e6e; --accent:#08519C; --rule:#e6e6e6; }
+
+body, .main-container {
+  font-family: Arial, Helvetica, "IBM Plex Sans", sans-serif;
+  color: var(--ink);
+}
+.main-container { max-width: 980px; }
+h1, h2, h3, h4 { font-family: Arial, Helvetica, sans-serif; font-weight: 600; }
+h1.title { font-size: 30px; }
+h1 { font-size: 25px; margin-top: 1.6em; padding-top: .3em; border-top: 2px solid var(--rule); }
+h2 { font-size: 20px; margin-top: 1.4em; }
+h3 { font-size: 17px; color: #333; }
+.author, .date { color: var(--muted); }
+p, li { font-size: 15.5px; line-height: 1.62; }
+blockquote {
+  border-left: 3px solid var(--accent); background: #f5f8fc;
+  color: #25405e; font-size: 14.5px; padding: .6em 1em; margin: 1.2em 0;
+}
+.lead { font-size: 16.5px; color: #2b2b2b; }
+.takeaway {
+  background: #f7f9fb; border: 1px solid var(--rule); border-radius: 6px;
+  padding: .4em 1.1em; margin: 1.1em 0;
+}
+.takeaway p, .takeaway li { font-size: 14.5px; }
+.caption, .figcaption { color: var(--muted); font-size: 13px; }
+table.dataTable { font-size: 13px; }
+.kbl-note { color: var(--muted); font-size: 12.5px; margin-top: -.5em; }
+.toc-content { padding-left: 0; }
+hr { border-top: 1px solid var(--rule); }
+.home-link { font-size: 13.5px; }
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE, message = FALSE, warning = FALSE,
+  dpi = 150, fig.align = "center", out.width = "100%"
+)
+
+# ---- Self-contained setup: libraries, theme, palettes, table helpers -----
+options(knitr.kable.NA = "")
+library(readxl); library(dplyr); library(tidyr); library(stringr)
+library(ggplot2); library(scales); library(knitr); library(kableExtra); library(DT)
+
+# Robust data path (works whether knitting from reports/ or the repo root)
+.candidates <- c(
+  "../data/Compiled_-_NEP-GAA-SAAODB-ByPAPLabelled.xlsx",
+  "data/Compiled_-_NEP-GAA-SAAODB-ByPAPLabelled.xlsx",
+  "Compiled - NEP-GAA-SAAODB-ByPAPLabelled.xlsx",
+  "Compiled_-_NEP-GAA-SAAODB-ByPAPLabelled.xlsx"
+)
+file_path <- .candidates[file.exists(.candidates)][1]
+stopifnot(!is.na(file_path))
+
+# Minimalist ggplot theme
+theme_deped <- function(base_size = 12) {
+  theme_minimal(base_size = base_size, base_family = "sans") +
+    theme(
+      plot.title       = element_text(face = "bold", size = base_size + 2, color = "black"),
+      plot.subtitle    = element_text(color = "grey30", size = base_size),
+      plot.caption     = element_text(color = "grey40", size = base_size - 3, hjust = 0),
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_blank(),
+      axis.title       = element_text(size = base_size - 1, color = "grey20"),
+      axis.text        = element_text(color = "grey20"),
+      legend.position  = "bottom",
+      legend.title     = element_blank(),
+      legend.text      = element_text(size = base_size - 1),
+      strip.text       = element_text(face = "bold", size = base_size - 1.5, lineheight = 0.9)
+    )
+}
+
+# Palettes: execution stages, absorption ratios, expense class
+exec_pal <- c(
+  "NEP (proposed)" = "#9E9AC8", "GAA (enacted)" = "#54278F",
+  "Adj. Appropriation" = "#3182BD", "Adj. Allotment" = "#08519C",
+  "Obligations" = "#E6550D", "Disbursements" = "#31A354"
+)
+absorp_pal <- c(
+  "Obligations / Adj. Allotment" = "#3182BD",
+  "Disbursements / Obligations" = "#E6550D",
+  "Disbursements / Adj. Allotment" = "#31A354"
+)
+ec_pal <- c(
+  "Personnel Services (PS)" = "#2CA02C",
+  "Maintenance & Other Op. Exp. (MOOE)" = "#FF7F0E",
+  "Capital Outlays (CO)" = "#9467BD"
+)
+bar_fill <- "#08519C"
+
+# Formatters (operate on RAW peso amounts)
+peso       <- "PHP "
+php_b      <- function(x) paste0(peso, scales::comma(x / 1e9, accuracy = 0.1), "B")
+php_b_axis <- function(x) paste0(peso, round(x / 1e9), "B")
+
+# Interactive reference-table helper (sortable, searchable, exportable)
+dt_table <- function(df, caption = NULL, page = 10, money_cols = NULL,
+                     pct_cols = NULL, money_digits = 2) {
+  dt <- datatable(
+    df, rownames = FALSE, caption = caption, extensions = "Buttons",
+    options = list(
+      pageLength = page, lengthMenu = c(10, 20, 50, 100),
+      dom = "Bfrtip", buttons = c("copy", "csv"),
+      scrollX = TRUE, autoWidth = FALSE,
+      columnDefs = list(list(className = "dt-right",
+                             targets = which(sapply(df, is.numeric)) - 1))
+    ),
+    class = "stripe hover compact"
+  )
+  if (!is.null(money_cols)) {
+    mc <- which(names(df) %in% money_cols)
+    if (length(mc)) dt <- formatRound(dt, mc, digits = money_digits, mark = ",")
+  }
+  if (!is.null(pct_cols)) {
+    pc <- which(names(df) %in% pct_cols)
+    if (length(pc)) dt <- formatPercentage(dt, pc, digits = 0)
+  }
+  dt
+}
+
+# Static styled-kable helper for small curated tables
+kbl_clean <- function(x, font = 14, ...) {
+  x %>% kable(...) %>%
+    kable_styling(full_width = TRUE, font_size = font,
+                  bootstrap_options = c("condensed", "striped", "hover"))
+}
+
+# Agency-specific functional-category palette (DepEd PREXC programs)
+cat_pal <- c(
+  "General Administration and Support" = "#A6761D",
+  "Support to Operations" = "#E6AB02",
+  "Education Policy Development Program" = "#7570B3",
+  "Basic Education Inputs Program" = "#1B9E77",
+  "Inclusive Education Program" = "#E7298A",
+  "Support to Schools and Learners Program" = "#D95F02",
+  "Education Human Resource Development Program" = "#666666"
+)
+
+# ---- Data load & processing (faithful to the deck, then extended) --------
+raw <- read_excel(file_path, sheet = "DepEd") %>%
+  filter(UACS_AGY_DSC == "Office of the Secretary")
+
+df_long_all <- raw %>%
+  pivot_longer(
+    cols = matches("^(NEP|GAA|AuthAppro|AdjAppro|AdjAllot|Obligations|Disbursements)_\\d{4}_EXP_(1PS|2MOOE|6CO|TOTAL)$"),
+    names_to = "var", values_to = "amount"
+  ) %>%
+  separate(var, into = c("metric", "year", "tag", "expense_class"), sep = "_") %>%
+  mutate(year = as.integer(year), amount = as.numeric(amount)) %>%
+  select(-tag)
+
+df_long <- df_long_all %>%
+  filter(expense_class == "TOTAL") %>%
+  select(-expense_class) %>%
+  mutate(pap = case_when(
+    str_detect(`P/A/P`, "Educational Service Contracting \\(ESC\\)") ~
+      "GAS - Educational Service Contracting (ESC) for Private JHS",
+    `P/A/P` %in% c(
+      "Government Assistance and Subsidies - Voucher Program for Private Senior High School (per RA No. 10533)",
+      "Government Assistance and Subsidies - Senior High School Voucher Program",
+      "Subsidies - Senior High School Voucher Program") ~
+      "GAS - Senior High School Voucher Program",
+    TRUE ~ `P/A/P`
+  )) %>%
+  mutate(category = case_when(
+    PREXC_PROG == 1000 ~ "General Administration and Support",
+    PREXC_PROG == 2000 ~ "Support to Operations",
+    PREXC_PROG == 3101 ~ "Education Policy Development Program",
+    PREXC_PROG == 3102 ~ "Basic Education Inputs Program",
+    PREXC_PROG == 3103 ~ "Inclusive Education Program",
+    PREXC_PROG == 3104 ~ "Support to Schools and Learners Program",
+    PREXC_PROG == 3105 ~ "Education Human Resource Development Program",
+    TRUE               ~ "Other"
+  ))
+
+pap_year <- df_long %>%
+  group_by(pap, year, metric) %>%
+  summarise(amount = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE),
+            .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = amount)
+
+totals_by_year <- df_long %>%
+  group_by(year, metric) %>%
+  summarise(total = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE),
+            .groups = "drop")
+
+absorp_total <- totals_by_year %>%
+  pivot_wider(names_from = metric, values_from = total) %>%
+  filter(year %in% 2018:2025) %>%
+  mutate(
+    oblig_allot = Obligations   / AdjAllot,
+    disb_oblig  = Disbursements / Obligations,
+    disb_allot  = Disbursements / AdjAllot
+  )
+
+# convenience: latest enacted year
+LAST_GAA  <- 2026
+LAST_EXEC <- 2025
+```
+
+<p class="home-link"><a href="index.html">← All agencies</a></p>
+
+# Overview {#overview .unnumbered}
+
+<p class="lead">
+This document follows the budget of the **Department of Education – Office of the Secretary (DepEd-OSEC)** across nine fiscal years, from the FY 2018 enacted budget to the FY 2026 proposal, and traces each peso through the four stages of the public-expenditure cycle: proposed (NEP), enacted (GAA), released (allotment), committed (obligation), and finally paid out (disbursement).
+</p>
+
+It is the long-form companion to the DepEd-OSEC briefing deck. Where the deck compresses each point to a single slide, this version keeps the full reasoning and adds reference tables — most of them sortable and searchable — so that a reader can interrogate the figures directly rather than take the narrative on trust. Every table can be copied or exported to CSV from its toolbar.
+
+The story has one organizing tension. DepEd-OSEC is, in budget terms, a payroll organization: roughly two-thirds to four-fifths of its money is teacher and staff salaries, and salaries are spent with near-perfect reliability. That makes the agency's *headline* absorption look excellent. But it also means the headline number tells you almost nothing about the programs that actually deliver classrooms, textbooks, equipment, and subsidies — and those programs are where execution repeatedly breaks down. Most of what follows is an attempt to look past the salary block at the discretionary tail underneath it.
+
+# Executive summary {#exec}
+
+The DepEd-OSEC budget has grown about **1.7× in nominal terms**, from a ₱552B enacted budget in 2018 to a proposed ₱959B in the 2026 GAA. Growth has been steady rather than smooth, with the steepest single-year jumps in 2023 and 2026.
+
+In structure this is **a teacher-salary organization**. The three "Operation of Schools" lines — Elementary, Junior High, and Senior High — together account for 65–78% of the OSEC budget in every year, and Personnel Services alone is 64–80% of every year's GAA. Operation of Schools – Elementary, by itself, is ₱358B in the 2026 GAA: more than a third of the entire office.
+
+That structure is why **headline absorption looks strong**. Obligations run 93–97% of allotments and disbursements 86–92% — but this is carried almost entirely by Personnel Services, which disburses at 97–99% like clockwork. Strip the salaries away and a very different picture emerges.
+
+The **non-salary tail absorbs far worse**. Textbooks and Other Instructional Materials disbursed just 2–17% of its allotment in every year on record; Basic Education Facilities, the agency's capital-outlay bottleneck, has swung between 16% and 54% with no clear improvement. The **GASTPE demand-side subsidies collapsed** after 2022 — the Senior High School Voucher fell from near-full disbursement to 28% by 2025, and Educational Service Contracting from ~80% to the mid-30s.
+
+Two structural shifts stand out at the top of the budget. **Capital Outlay was squeezed** from 22% of the budget in 2018 to 3–5% in 2021–2023, then **restored sharply** to about ₱100B (10%) in the 2026 GAA. And FY 2026 carries a **record Congressional augmentation**: the ₱873B NEP was raised to a ₱959B GAA, an ₱86B add-on after years in which the enacted budget barely departed from the Executive's proposal.
+
+> The recurring policy question this raises: Congress channels its largest additions into exactly the procurement-heavy lines — facilities, textbooks, feeding — that already struggle most to disburse what they have. Capacity to *spend*, not willingness to *appropriate*, is the binding constraint.
+
+# A note on the data {#data-notes}
+
+**Period.** FY 2018 through FY 2026 for NEP and GAA. Execution data — Adjusted Appropriations, Adjusted Allotments, Obligations, and Disbursements — is available for FY 2018–2025; FY 2026 reflects the proposed/enacted budget only, with no execution data yet.
+
+**Scope.** DepEd **Office of the Secretary only.** Attached agencies (the National Museum, the ECCD Council, the National Book Development Board, and others) are excluded. Figures are **Current New Appropriations only** — they exclude Continuing and Automatic Appropriations and Special Purpose Fund transfers. All amounts are in **nominal pesos**; no inflation adjustment is applied.
+
+**P/A/P consolidation.** Two programs appear under two or three slightly different P/A/P labels across the years: the Educational Service Contracting (ESC) program and the Senior High School Voucher program. Each is reported here as a single continuous line so its trajectory can be read without artificial breaks.
+
+**Absorptive-capacity denominator.** Unless stated otherwise, absorption ratios use **Adjusted Allotments** as the denominator — the closest available proxy for what the agency was actually cleared to spend in a given year.
+
+**Key terms.** *NEP* (National Expenditure Program) is the Executive's proposed budget; *GAA* (General Appropriations Act) is the enacted budget. *Obligations* are spending commitments (contracts signed, orders placed); *Disbursements* are cash actually paid out. The three ratios used throughout are **O/A** (Obligations ÷ Allotment), **D/O** (Disbursements ÷ Obligations), and **D/A** (Disbursements ÷ Allotment, the end-to-end measure).
+
+# The aggregate budget {#aggregate}
+
+## The budget keeps growing
+
+```{r fig-evolution, fig.height=5.2}
+evo <- totals_by_year %>%
+  filter(metric %in% c("NEP","GAA","AdjAllot","Obligations","Disbursements")) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA","AdjAllot","Obligations","Disbursements"),
+                         labels = c("NEP (proposed)","GAA (enacted)","Adj. Allotment",
+                                    "Obligations","Disbursements")))
+
+ggplot(evo, aes(year, total, color = metric, group = metric)) +
+  geom_line(linewidth = 1.0) + geom_point(size = 2) +
+  scale_color_manual(values = exec_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6),
+                     limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "DepEd-OSEC budget, NEP through Disbursements (FY 2018–2026)",
+       subtitle = "The enacted budget tracks the Executive proposal closely — until a record 2026 augmentation",
+       x = NULL, y = NULL,
+       caption = "FY 2026 reflects NEP/GAA only; execution data not yet available.") +
+  theme_deped() + guides(color = guide_legend(nrow = 1))
+```
+
+Three features of this chart organize the rest of the document. First, the **NEP and GAA lines sit almost on top of each other** for eight of the nine years — DepEd is rarely a target of large Congressional revision — and then visibly separate in 2026. Second, the **allotment, obligation, and disbursement lines track below the enacted budget** in a stable band, and the disbursement line pulls away slightly in 2024–2025, hinting at a widening execution gap. Third, the **overall slope is firmly upward**: this is a growing budget in every multi-year stretch.
+
+The table below gives the underlying figures for every year, in billions of pesos.
+
+```{r tbl-evolution}
+tbl_evo <- totals_by_year %>%
+  filter(metric %in% c("NEP","GAA","AdjAllot","Obligations","Disbursements")) %>%
+  mutate(value = total / 1e9) %>%
+  select(year, metric, value) %>%
+  pivot_wider(names_from = year, values_from = value) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA","AdjAllot","Obligations","Disbursements"),
+                         labels = c("NEP","GAA","Adj. Allotment","Obligations","Disbursements"))) %>%
+  arrange(metric) %>% rename(`PHP B` = metric)
+
+kbl_clean(tbl_evo, font = 13, digits = 0, format.args = list(big.mark = ","), na = "")
+```
+
+## Year-on-year growth
+
+Reading the levels above as growth rates makes the budget's rhythm clearer. The enacted budget actually **contracted in 2019** (a post-election re-enactment year), then expanded every year after, with the two largest jumps being 2023 (+14%) and the 2026 proposal (+31% over the 2025 GAA, the bulk of it from the Congressional add-on).
+
+```{r tbl-growth}
+growth <- totals_by_year %>%
+  filter(metric == "GAA") %>% arrange(year) %>%
+  mutate(`GAA (B)` = total/1e9,
+         `Δ vs prior yr (B)` = (total - lag(total))/1e9,
+         `Growth %` = (total/lag(total) - 1)) %>%
+  select(year, `GAA (B)`, `Δ vs prior yr (B)`, `Growth %`)
+
+growth %>%
+  mutate(`GAA (B)` = round(`GAA (B)`,1),
+         `Δ vs prior yr (B)` = round(`Δ vs prior yr (B)`,1),
+         `Growth %` = scales::percent(`Growth %`, accuracy = 0.1)) %>%
+  kbl_clean(font = 13, align = "rrrr", na = "")
+```
+
+<p class="kbl-note">Growth is measured on the enacted GAA. The 2026 figure compares the proposed/enacted 2026 budget to the 2025 GAA.</p>
+
+# Where the money goes {#composition}
+
+## Composition by PREXC program
+
+DepEd-OSEC's budget is organized into seven PREXC programs. The chart shows how the enacted budget divides among them each year; the table that follows gives the exact peso amounts and each program's share of the total.
+
+```{r fig-composition, fig.height=5.2}
+comp <- df_long %>%
+  filter(metric == "GAA", year <= 2026, !is.na(amount)) %>%
+  group_by(year, category) %>%
+  summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(category = factor(category, levels = names(cat_pal)))
+
+ggplot(comp, aes(year, amount, fill = category)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = cat_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6),
+                     limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "Composition of the GAA by PREXC program, 2018–2026",
+       subtitle = "Support to Schools and Learners is by far the largest program; Basic Education Inputs is second",
+       x = NULL, y = NULL) +
+  theme_deped() + guides(fill = guide_legend(nrow = 4, byrow = TRUE))
+```
+
+The **Support to Schools and Learners Program** — which houses the three Operation of Schools lines — dwarfs the others; it is the salary engine of the department. The **Basic Education Inputs Program** (textbooks, facilities, equipment, computerization) is a distant but important second, and it is here that most of the absorption problems documented later in this report live. The smaller programs — policy development, inclusive education, human-resource development — are modest in budget terms but not in mandate.
+
+```{r tbl-composition-share}
+comp_tbl <- comp %>%
+  group_by(year) %>% mutate(share = amount/sum(amount)) %>% ungroup()
+
+comp_amt <- comp_tbl %>%
+  mutate(amount = round(amount/1e9,1)) %>%
+  select(category, year, amount) %>%
+  pivot_wider(names_from = year, values_from = amount)
+
+kbl_clean(comp_amt %>% rename(`Program (PHP B)` = category),
+          font = 12, digits = 1, format.args = list(big.mark=","), na = "") %>%
+  add_header_above(c(" " = 1, "General Appropriations Act, by year (PHP billions)" = ncol(comp_amt)-1))
+```
+
+<p class="kbl-note">Share of each year's total budget for the same programs:</p>
+
+```{r tbl-composition-pct}
+comp_pct <- comp_tbl %>%
+  mutate(share = round(share*100,1)) %>%
+  select(category, year, share) %>%
+  pivot_wider(names_from = year, values_from = share)
+kbl_clean(comp_pct %>% rename(`Program (% of GAA)` = category),
+          font = 12, digits = 1, na = "")
+```
+
+## Composition by expense class
+
+The same budget, cut a different way — by what the money buys rather than which program it sits in. Three expense classes matter for DepEd-OSEC: Personnel Services (PS, salaries and benefits), Maintenance and Other Operating Expenses (MOOE, the running costs of programs), and Capital Outlays (CO, infrastructure and equipment).
+
+```{r fig-comp-ec, fig.height=5.2}
+ec_levels <- c("Personnel Services (PS)","Maintenance & Other Op. Exp. (MOOE)","Capital Outlays (CO)")
+comp_ec <- df_long_all %>%
+  filter(metric == "GAA", year <= 2026, expense_class %in% c("1PS","2MOOE","6CO")) %>%
+  group_by(year, expense_class) %>%
+  summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(expense_class = factor(expense_class, levels = c("1PS","2MOOE","6CO"), labels = ec_levels))
+
+ggplot(comp_ec, aes(year, amount, fill = expense_class)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = ec_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6),
+                     limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "GAA composition by Expense Class, 2018–2026",
+       subtitle = "Personnel Services is 64–80% of the budget every year; Capital Outlays was squeezed, then restored in 2026",
+       x = NULL, y = NULL) +
+  theme_deped() + guides(fill = guide_legend(nrow = 1))
+```
+
+The PS block is the dominant feature and it grows roughly in line with the headcount of the school system. The **Capital Outlay story is the most dynamic**: CO was a substantial 22% of the 2018 budget, was compressed to the low single digits in 2021–2023 as fiscal space tightened during and after the pandemic, and is sharply restored in the 2026 GAA. The share table makes the swing explicit.
+
+```{r tbl-ec-share}
+ec_share <- comp_ec %>%
+  group_by(year) %>% mutate(share = amount/sum(amount)) %>% ungroup()
+
+ec_pct <- ec_share %>% mutate(share = round(share*100,1)) %>%
+  select(expense_class, year, share) %>%
+  pivot_wider(names_from = year, values_from = share)
+kbl_clean(ec_pct %>% rename(`Expense class (% of GAA)` = expense_class),
+          font = 12.5, digits = 1, na = "")
+```
+
+That restoration is a setup for a question this report returns to repeatedly: Capital Outlay has historically been DepEd-OSEC's *weakest*-absorbing expense class. Putting ₱100B of CO back into the budget only delivers classrooms if the agency can disburse it — and the recent record there is poor.
+
+## The ten largest P/A/Ps
+
+At the line-item level, concentration is extreme. The ten largest P/A/Ps in the 2026 GAA, charted below, account for the overwhelming majority of the office's budget.
+
+```{r fig-top10, fig.height=5.6}
+top10 <- pap_year %>%
+  filter(year == 2026, !is.na(GAA)) %>%
+  arrange(desc(GAA)) %>% slice_head(n = 10) %>%
+  mutate(pap = factor(pap, levels = rev(pap)))
+
+ggplot(top10, aes(pap, GAA)) +
+  geom_col(fill = bar_fill, width = 0.75) +
+  geom_text(aes(label = php_b(GAA)), hjust = -0.1, size = 3.3, color = "grey20") +
+  coord_flip() +
+  scale_x_discrete(labels = function(x) str_wrap(x, 42)) +
+  scale_y_continuous(labels = php_b_axis, expand = expansion(mult = c(0, .20)), limits = c(0, NA)) +
+  labs(title = "Top 10 P/A/Ps by FY 2026 GAA",
+       subtitle = "Operation of Schools – Elementary alone is PHP 358B — 37% of the entire OSEC budget",
+       x = NULL, y = NULL) +
+  theme_deped() +
+  theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"))
+```
+
+### Full P/A/P ranking (interactive) {.unnumbered}
+
+The chart shows ten lines; the office has many more. The table below ranks **every P/A/P** by its 2026 GAA, alongside the 2026 NEP and the prior-year (2025) enacted figure, so the full distribution — and the long tail of small programs — is available for inspection. Sort by any column, search by name, or export the whole thing.
+
+```{r tbl-allpaps}
+all_paps_2026 <- pap_year %>%
+  filter(year == 2026) %>%
+  transmute(`P/A/P` = pap,
+            `NEP 2026 (B)` = NEP/1e9,
+            `GAA 2026 (B)` = GAA/1e9,
+            `GAA 2025 (B)` = NA_real_) %>%
+  arrange(desc(`GAA 2026 (B)`))
+
+gaa_2025 <- pap_year %>% filter(year == 2025) %>% transmute(`P/A/P` = pap, g25 = GAA/1e9)
+all_paps_2026 <- all_paps_2026 %>%
+  select(-`GAA 2025 (B)`) %>%
+  left_join(gaa_2025, by = "P/A/P") %>%
+  rename(`GAA 2025 (B)` = g25) %>%
+  mutate(`Chg NEP to GAA 2026 (B)` = `GAA 2026 (B)` - `NEP 2026 (B)`)
+
+dt_table(all_paps_2026, page = 15,
+         money_cols = c("NEP 2026 (B)","GAA 2026 (B)","GAA 2025 (B)","Chg NEP to GAA 2026 (B)"))
+```
+
+## Operation of Schools dominates
+
+Collapsing the budget to just the three school-operations lines against everything else shows how lopsided the distribution is.
+
+```{r fig-schoolshare, fig.height=4.8}
+oos <- c("Operation of Schools - Elementary (Kinder to Grade 6)",
+         "Operation of Schools - Junior High School (Grade 7 to Grade 10)",
+         "Operation of Schools - Senior High School (Grade 11 to Grade 12)")
+share <- df_long %>%
+  filter(metric == "GAA", year <= 2026, !is.na(amount)) %>%
+  mutate(grp = case_when(
+    pap == oos[1] ~ "Operation of Schools - Elementary",
+    pap == oos[2] ~ "Operation of Schools - JHS",
+    pap == oos[3] ~ "Operation of Schools - SHS",
+    TRUE          ~ "All other P/A/Ps")) %>%
+  group_by(year, grp) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(grp = factor(grp, levels = c("Operation of Schools - Elementary","Operation of Schools - JHS",
+                                      "Operation of Schools - SHS","All other P/A/Ps")))
+school_pal <- c("Operation of Schools - Elementary" = "#08519C","Operation of Schools - JHS" = "#3182BD",
+                "Operation of Schools - SHS" = "#9ECAE1","All other P/A/Ps" = "#D9D9D9")
+
+ggplot(share, aes(year, amount, fill = grp)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = school_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6),
+                     limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "Operation of Schools vs. everything else, FY 2018–2026 GAA",
+       subtitle = "The three school-level lines together are 65–78% of the OSEC budget",
+       x = NULL, y = NULL) +
+  theme_deped() + guides(fill = guide_legend(nrow = 2, byrow = TRUE))
+```
+
+Why this concentration matters, in four points:
+
+- The three Operation of Schools P/A/Ps make up **65–78% of the entire OSEC budget**, and Operation of Schools – Elementary alone is ₱358B in the 2026 GAA.
+- These lines are **almost pure Personnel Services** — teacher and non-teaching staff salaries — and they are obligated and paid like clockwork, disbursing at 98–99% of allotment.
+- This is precisely **why the agency's headline absorption looks excellent**: a budget that is two-thirds salaries will always post a high aggregate disbursement rate, regardless of how the rest is performing.
+- The corollary is the analytical heart of this report: **everything interesting — and everything problematic — is in the other quarter-to-third of the budget**: facilities, materials, equipment, subsidies. For anyone focused on learning outcomes and service delivery, that non-salary tail is where attention belongs.
+
+# Congressional action: NEP → GAA {#augmentation}
+
+DepEd is rarely heavily augmented. In most years the enacted GAA differs from the Executive's NEP by under 2%. The chart below is therefore *cumulative* over all nine budget cycles, isolating where Congress has consistently added to — or trimmed from — the President's proposal. Only movements of at least ₱0.5B are shown.
+
+```{r fig-augmentation, fig.height=4.6}
+aug <- pap_year %>%
+  group_by(pap) %>%
+  summarise(nep = sum(NEP, na.rm = TRUE), gaa = sum(GAA, na.rm = TRUE), .groups = "drop") %>%
+  mutate(change = gaa - nep) %>% filter(abs(change) >= 5e8)
+
+aug_plot <- bind_rows(
+  aug %>% arrange(desc(change)) %>% slice_head(n = 8),
+  aug %>% arrange(change) %>% slice_head(n = 8)) %>%
+  distinct() %>%
+  mutate(direction = ifelse(change >= 0, "Net increase (GAA > NEP)", "Net decrease (GAA < NEP)"),
+         hj = ifelse(change >= 0, -0.12, 1.12),
+         pap = factor(pap, levels = pap[order(change)]))
+
+ggplot(aug_plot, aes(pap, change/1e9, fill = direction)) +
+  geom_col(width = 0.7) +
+  geom_text(aes(label = sprintf("%+.1fB", change/1e9), hjust = hj), size = 2.9, color = "grey20") +
+  coord_flip() +
+  scale_fill_manual(values = c("Net increase (GAA > NEP)" = "#1B9E77", "Net decrease (GAA < NEP)" = "#D95F02")) +
+  scale_x_discrete(labels = function(x) str_trunc(x, 44)) +
+  scale_y_continuous(labels = function(v) paste0(peso, v, "B"), expand = expansion(mult = c(0.20, 0.20))) +
+  labs(title = "Cumulative NEP-to-GAA change by P/A/P, 2018–2026",
+       subtitle = "Congress adds most to Basic Education Facilities; trims most from Computerization",
+       x = NULL, y = NULL) +
+  theme_deped() +
+  theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85")) +
+  guides(fill = guide_legend(nrow = 1))
+```
+
+<div class="takeaway">
+The pattern carries a built-in tension. The lines Congress augments most — **Basic Education Facilities, Textbooks, School-Based Feeding** — are among the **weakest absorbers** in the entire portfolio (documented in the next section). Extra money is being routed, year after year, into precisely the programs least able to spend what they already have. Augmentation is an act of appropriation; it does nothing on its own to fix the downstream procurement and liquidation bottlenecks that keep these lines from disbursing.
+</div>
+
+The full cumulative table below lists every P/A/P with a material (≥₱0.5B) net change over the nine years, so the complete pattern of Congressional preference — not just the sixteen largest movements — is available.
+
+```{r tbl-augmentation}
+aug_full <- aug %>%
+  transmute(`P/A/P` = pap,
+            `Σ NEP 2018–26 (B)` = nep/1e9,
+            `Σ GAA 2018–26 (B)` = gaa/1e9,
+            `Cumulative Δ (B)` = change/1e9) %>%
+  arrange(desc(`Cumulative Δ (B)`))
+dt_table(aug_full, page = 10,
+         money_cols = c("Σ NEP 2018–26 (B)","Σ GAA 2018–26 (B)","Cumulative Δ (B)"))
+```
+
+# Absorptive capacity {#absorption}
+
+## At the aggregate
+
+At the whole-office level, DepEd-OSEC looks like a model absorber. All three execution ratios hold within a tight 86–97% band across 2018–2025.
+
+```{r fig-absorp-agg, fig.height=5}
+absorp_long <- absorp_total %>%
+  select(year, oblig_allot, disb_oblig, disb_allot) %>%
+  pivot_longer(-year, names_to = "ratio", values_to = "value") %>%
+  mutate(ratio = factor(ratio, levels = c("oblig_allot","disb_oblig","disb_allot"),
+    labels = c("Obligations / Adj. Allotment","Disbursements / Obligations","Disbursements / Adj. Allotment")))
+
+ggplot(absorp_long, aes(year, value, color = ratio, group = ratio)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 2) +
+  scale_color_manual(values = absorp_pal) +
+  scale_y_continuous(labels = percent_format(accuracy = 1), limits = c(0, 1.0), breaks = seq(0, 1, 0.2)) +
+  scale_x_continuous(breaks = 2018:2025) +
+  labs(title = "DepEd-OSEC absorptive capacity, 2018–2025",
+       subtitle = "At the aggregate, DepEd is a strong absorber — all three ratios hold in a tight 86–97% band",
+       x = NULL, y = NULL) +
+  theme_deped() + guides(color = guide_legend(nrow = 1))
+```
+
+```{r tbl-absorp-agg}
+absorp_total %>%
+  transmute(Year = year,
+            `Adj. Allotment (B)` = round(AdjAllot/1e9,1),
+            `Obligations (B)` = round(Obligations/1e9,1),
+            `Disbursements (B)` = round(Disbursements/1e9,1),
+            `O/A` = scales::percent(oblig_allot, accuracy = 1),
+            `D/O` = scales::percent(disb_oblig, accuracy = 1),
+            `D/A` = scales::percent(disb_allot, accuracy = 1)) %>%
+  kbl_clean(font = 13, align = "rrrrrrr", na = "")
+```
+
+## By expense class
+
+The aggregate is a weighted blend, and decomposing it by expense class is where the headline number falls apart. The end-to-end disbursement-to-allotment ratio is plotted separately for each expense class below.
+
+```{r fig-absorp-ec, fig.height=5.2}
+absorp_ec <- df_long_all %>%
+  filter(metric %in% c("AdjAllot","Disbursements"), expense_class %in% c("1PS","2MOOE","6CO"), year %in% 2018:2025) %>%
+  group_by(year, metric, expense_class) %>%
+  summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = amount) %>%
+  mutate(da = ifelse(AdjAllot > 0, Disbursements/AdjAllot, NA_real_),
+         expense_class = factor(expense_class, levels = c("1PS","2MOOE","6CO"), labels = ec_levels))
+
+ggplot(absorp_ec, aes(year, da, color = expense_class, group = expense_class)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 1.8) +
+  geom_text(aes(label = scales::percent(da, accuracy = 1)), vjust = -1.0, size = 2.9, show.legend = FALSE, color = "grey20") +
+  scale_color_manual(values = ec_pal) +
+  scale_y_continuous(labels = percent_format(accuracy = 1), limits = c(0, 1.05), breaks = seq(0, 1, 0.2)) +
+  scale_x_continuous(breaks = 2018:2025) +
+  labs(title = "Disbursement-to-Allotment by Expense Class, 2018–2025",
+       subtitle = "Personnel Services absorbs at ~98%; MOOE is uneven; Capital Outlays swings wildly and mostly low",
+       x = NULL, y = NULL) +
+  theme_deped() + guides(color = guide_legend(nrow = 1))
+```
+
+```{r tbl-absorp-ec}
+absorp_ec %>%
+  mutate(da = round(da*100,0)) %>%
+  select(expense_class, year, da) %>%
+  pivot_wider(names_from = year, values_from = da) %>%
+  rename(`D/A by expense class (%)` = expense_class) %>%
+  kbl_clean(font = 12.5, na = "")
+```
+
+### The absorption paradox {.unnumbered}
+
+At the aggregate, DepEd-OSEC looks like a model absorber: disbursement-to-allotment holds at 86–92% every year, and taken alone that number suggests budget execution is not a problem. But that average is a weighted blend of a near-perfect Personnel Services block (98–99%) and a much weaker non-salary tail. MOOE disburses at 53–80% and has weakened sharply since 2023; Capital Outlay swings between roughly 9% and 54% and is low in most years. The programs that actually deliver classrooms, textbooks, equipment, and subsidies — the discretionary, procurement-heavy lines — are exactly where appropriated money piles up undisbursed. The headline figure is therefore *misleading for service delivery*: because salaries dominate, the agency-wide absorption rate hides the very execution failures that matter most for learners.
+
+## Strongest and weakest absorbers (FY 2025)
+
+To make the paradox concrete, the next two tables rank P/A/Ps with a 2025 allotment of at least ₱1B by their end-to-end D/A ratio. The strongest absorbers are salary-driven school-operations lines and a handful of small, well-defined programs; the weakest are procurement- and subsidy-heavy.
+
+```{r tbl-absorb-build}
+abs_2025 <- pap_year %>%
+  filter(year == 2025, !is.na(AdjAllot), AdjAllot >= 1e9) %>%
+  mutate(`O/A` = Obligations/AdjAllot, `D/O` = Disbursements/Obligations,
+         `D/A` = Disbursements/AdjAllot, `Allotment (B)` = round(AdjAllot/1e9, 1))
+```
+
+::: {.takeaway}
+**Strongest absorbers, FY 2025** — disbursement at or near 100% is the norm where spending is payroll.
+:::
+
+```{r tbl-top-absorb}
+abs_2025 %>% arrange(desc(`D/A`)) %>% slice_head(n = 8) %>%
+  transmute(`P/A/P` = str_trunc(pap, 52), `Allotment (B)`,
+            `O/A` = scales::percent(`O/A`, accuracy = 1),
+            `D/O` = scales::percent(`D/O`, accuracy = 1),
+            `D/A` = scales::percent(`D/A`, accuracy = 1)) %>%
+  kbl_clean(font = 13, align = "lrrrr", na = "")
+```
+
+::: {.takeaway}
+**Weakest absorbers, FY 2025** — instructional materials, equipment, facilities, and the demand-side voucher/ESC lines. Textbooks disbursed 14% of a ₱17B allotment.
+:::
+
+```{r tbl-bot-absorb}
+abs_2025 %>% arrange(`D/A`) %>% slice_head(n = 8) %>%
+  transmute(`P/A/P` = str_trunc(pap, 52), `Allotment (B)`,
+            `O/A` = scales::percent(`O/A`, accuracy = 1),
+            `D/O` = scales::percent(`D/O`, accuracy = 1),
+            `D/A` = scales::percent(`D/A`, accuracy = 1)) %>%
+  kbl_clean(font = 13, align = "lrrrr", na = "")
+```
+
+### Full absorption table, FY 2025 (interactive) {.unnumbered}
+
+Both curated tables above are slices of the same underlying data. The interactive table below contains **every P/A/P with a 2025 allotment**, with all three ratios, sortable and searchable — the complete absorption picture rather than the top and bottom eight. Sort ascending on D/A to see the chronic problem lines; sort descending on Allotment to see where the largest sums sit.
+
+```{r tbl-absorb-full}
+abs_full <- pap_year %>%
+  filter(year == 2025, !is.na(AdjAllot), AdjAllot > 0) %>%
+  transmute(`P/A/P` = pap,
+            `Allotment (B)` = AdjAllot/1e9,
+            `Obligations (B)` = Obligations/1e9,
+            `Disbursements (B)` = Disbursements/1e9,
+            `O/A` = Obligations/AdjAllot,
+            `D/O` = ifelse(Obligations>0, Disbursements/Obligations, NA_real_),
+            `D/A` = Disbursements/AdjAllot) %>%
+  arrange(`D/A`)
+dt_table(abs_full, page = 15,
+         money_cols = c("Allotment (B)","Obligations (B)","Disbursements (B)"),
+         pct_cols = c("O/A","D/O","D/A"))
+```
+
+# Program deep-dives {#deep-dives}
+
+## Trajectories of the largest programs
+
+Six of the most consequential programs are tracked below, each showing the enacted budget, the adjusted allotment, and disbursements together. Where the three lines sit on top of one another, execution is clean; where the disbursement line falls away from the allotment, money is being appropriated and released but not paid out.
+
+```{r fig-trend, fig.height=6.7}
+trend_paps <- c(
+  "Operation of Schools - Elementary (Kinder to Grade 6)",
+  "Operation of Schools - Junior High School (Grade 7 to Grade 10)",
+  "Operation of Schools - Senior High School (Grade 11 to Grade 12)",
+  "Basic Education Facilities","New School Personnel Positions",
+  "GAS - Senior High School Voucher Program")
+
+trend_dat <- pap_year %>% filter(pap %in% trend_paps) %>%
+  select(pap, year, GAA, AdjAllot, Disbursements) %>%
+  pivot_longer(c(GAA, AdjAllot, Disbursements), names_to = "metric", values_to = "amount") %>%
+  mutate(metric = factor(metric, levels = c("GAA","AdjAllot","Disbursements"),
+                         labels = c("GAA (enacted)","Adj. Allotment","Disbursements")),
+         pap = factor(pap, levels = trend_paps,
+                      labels = c("Op. of Schools - Elementary","Op. of Schools - JHS","Op. of Schools - SHS",
+                                 "Basic Education Facilities","New School Personnel Positions","SHS Voucher Program")))
+trend_pal <- c("GAA (enacted)" = "#54278F","Adj. Allotment" = "#08519C","Disbursements" = "#31A354")
+
+ggplot(trend_dat, aes(year, amount, color = metric, group = metric)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 1.5) +
+  facet_wrap(~ pap, ncol = 3, scales = "free_y",
+             labeller = label_wrap_gen(width = 24)) + expand_limits(y = 0) +
+  scale_color_manual(values = trend_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(4)) +
+  scale_x_continuous(breaks = c(2018, 2022, 2026)) +
+  labs(title = "How the six largest programs have evolved (2018–2026)",
+       subtitle = "School-operations lines absorb cleanly; Facilities and the SHS Voucher show widening gaps",
+       x = NULL, y = NULL) +
+  theme_deped() + guides(color = guide_legend(nrow = 1))
+```
+
+The three school-operations panels are textbook clean execution — the disbursement line shadows the allotment. **Basic Education Facilities** and the **SHS Voucher** are the visible exceptions, with disbursements falling conspicuously short of what was released. Those two are the subjects of the next two sections.
+
+## The GASTPE puzzle: demand-side subsidies
+
+GASTPE — Government Assistance to Students and Teachers in Private Education — is public money that follows students into private schools, through two channels: the Senior High School Voucher and Educational Service Contracting (ESC) for private junior high. For most of the period both disbursed well. Then both broke.
+
+```{r fig-gastpe, fig.height=4.8}
+gastpe <- pap_year %>%
+  filter(pap %in% c("GAS - Senior High School Voucher Program","GAS - Educational Service Contracting (ESC) for Private JHS"),
+         year %in% 2018:2025, !is.na(AdjAllot), AdjAllot > 0) %>%
+  mutate(da = Disbursements/AdjAllot,
+         pap = factor(pap, levels = c("GAS - Senior High School Voucher Program","GAS - Educational Service Contracting (ESC) for Private JHS"),
+                      labels = c("SHS Voucher Program","ESC (Educational Service Contracting)")))
+
+ggplot(gastpe, aes(year, da, color = pap, group = pap)) +
+  geom_hline(yintercept = 1, linetype = "dotted", color = "grey60") +
+  geom_line(linewidth = 1.0) + geom_point(size = 2.2) +
+  geom_text(aes(label = scales::percent(da, accuracy = 1)), vjust = -1.0, size = 3.0, show.legend = FALSE, color = "grey20") +
+  scale_color_manual(values = c("SHS Voucher Program" = "#D95F02","ESC (Educational Service Contracting)" = "#7570B3")) +
+  scale_y_continuous(labels = percent_format(accuracy = 1), limits = c(0, 1.1), breaks = seq(0, 1, 0.25)) +
+  scale_x_continuous(breaks = 2018:2025) +
+  labs(title = "Disbursement-to-Allotment: GASTPE demand-side subsidies",
+       subtitle = "Both programs disbursed at 80–100% through 2022, then collapsed",
+       x = NULL, y = NULL) +
+  theme_deped() + guides(color = guide_legend(nrow = 1))
+```
+
+For most of the period both lines disbursed well — the SHS Voucher ran 91–100% through 2018–2022. Then both collapsed: the Voucher fell to 76% in 2023, 53% in 2024, and 28% in 2025; ESC fell from around 80% to the mid-30s. Crucially, **the allotments did not shrink** — the money was appropriated and released, but not paid out. Whether the cause is a payment-processing or liquidation bottleneck, falling enrollment in the voucher program, or a deliberate slowdown, the data alone cannot say. What it can say is that the break is steep, recent, and concentrated in exactly the demand-side instruments meant to reach students outside the public system.
+
+```{r tbl-gastpe}
+pap_year %>%
+  filter(pap %in% c("GAS - Senior High School Voucher Program","GAS - Educational Service Contracting (ESC) for Private JHS"),
+         year %in% 2018:2025) %>%
+  mutate(line = ifelse(str_detect(pap,"Voucher"),"SHS Voucher","ESC"),
+         da = ifelse(!is.na(AdjAllot)&AdjAllot>0, round(Disbursements/AdjAllot*100,0), NA_real_)) %>%
+  select(line, year, da) %>% pivot_wider(names_from = year, values_from = da) %>%
+  rename(`D/A (%)` = line) %>% kbl_clean(font = 13, na = "")
+```
+
+## Chronic low absorbers
+
+Six procurement-heavy programs that have struggled to disburse for years are tracked below. The common thread is not the program area but the *mechanism*: every one of these depends on bidding, contracting, delivery, and liquidation rather than payroll.
+
+```{r fig-lowabs, fig.height=6.7}
+low_paps <- c("Textbooks and Other Instructional Materials","Basic Education Facilities","Computerization Program",
+              "Learning Tools and Equipment","School-Based Feeding Program (SBFP)","National Assessment Systems for Basic Education")
+
+low_dat <- pap_year %>% filter(pap %in% low_paps) %>%
+  mutate(da = ifelse(!is.na(AdjAllot) & AdjAllot > 0, Disbursements/AdjAllot, NA_real_),
+         pap = factor(pap, levels = low_paps,
+                      labels = c("Textbooks & Instructional Materials","Basic Education Facilities","Computerization Program",
+                                 "Learning Tools and Equipment","School-Based Feeding Program","National Assessment Systems"))) %>%
+  select(pap, year, da) %>% tidyr::complete(year = 2018:2025, pap)
+
+ggplot(low_dat, aes(year, da, group = 1)) +
+  geom_hline(yintercept = 1, linetype = "dotted", color = "grey60") +
+  geom_line(linewidth = 0.9, color = "#E6550D") + geom_point(size = 1.6, color = "#E6550D") +
+  geom_text(aes(label = scales::percent(da, accuracy = 1)), vjust = -0.9, size = 2.6, color = "grey20") +
+  facet_wrap(~ pap, ncol = 3, labeller = label_wrap_gen(width = 24)) +
+  scale_y_continuous(labels = percent_format(accuracy = 1), limits = c(0, 1.15), breaks = seq(0, 1, 0.25)) +
+  scale_x_continuous(breaks = c(2018, 2021, 2024)) +
+  labs(title = "Disbursement-to-Allotment ratios: chronic under-absorbers (2018–2025)",
+       subtitle = "Textbooks has never crossed 20%; Basic Education Facilities is DepEd's infrastructure bottleneck",
+       x = NULL, y = NULL) +
+  theme_deped() + theme(legend.position = "none")
+```
+
+**Textbooks and Other Instructional Materials is the standout failure**: disbursement-to-allotment has stayed between 2% and 17% in every year on record — money for learning materials is appropriated and allotted, but barely paid out. **Basic Education Facilities is the infrastructure bottleneck**, the agency's chronic capital-outlay problem, swinging between 16% and 54% with no clear improvement trend. The **Computerization Program** has been similarly weak (12–48%), with some recovery in 2024–2025, and the **School-Based Feeding Program** is volatile (35–87%) — a recurring annual program that nonetheless cannot disburse on a predictable schedule. The common thread is procurement, which is also where execution reform would have the most leverage.
+
+```{r tbl-lowabs}
+low_dat %>% mutate(da = round(da*100,0)) %>%
+  pivot_wider(names_from = year, values_from = da) %>%
+  rename(`D/A (%)` = pap) %>% kbl_clean(font = 12.5, na = "")
+```
+
+# Line-item reference {#reference}
+
+The table below is the complete reference for the office's largest lines: for the top 30 P/A/Ps by 2026 GAA, it gives the 2026 NEP and GAA, the prior-year (2025) enacted budget, and the most recent (2025) disbursement-to-allotment ratio as an indicator of how each line has recently absorbed. The full, unabridged P/A/P table is in [the ranking section above](#full-p-a-p-ranking-interactive); this one pairs budget levels with execution.
+
+```{r tbl-reference}
+ref <- pap_year %>% filter(year == 2026, !is.na(GAA), GAA > 0) %>%
+  arrange(desc(GAA)) %>% slice_head(n = 30) %>%
+  transmute(pap, `NEP 2026 (B)` = NEP/1e9, `GAA 2026 (B)` = GAA/1e9)
+
+ctx_2025 <- pap_year %>% filter(year == 2025) %>%
+  transmute(pap, `GAA 2025 (B)` = GAA/1e9,
+            `D/A 2025` = ifelse(!is.na(AdjAllot) & AdjAllot > 0, Disbursements/AdjAllot, NA_real_))
+
+ref %>% left_join(ctx_2025, by = "pap") %>%
+  rename(`P/A/P` = pap) %>%
+  dt_table(page = 15,
+           money_cols = c("NEP 2026 (B)","GAA 2026 (B)","GAA 2025 (B)"),
+           pct_cols = "D/A 2025")
+```
+
+<p class="kbl-note">2026 execution data is not yet available; the 2025 D/A column indicates how each line has most recently absorbed.</p>
+
+# Questions for discussion {#discussion}
+
+1. **Textbooks and instructional materials.** A 2–17% disbursement rate, year after year, on a line that directly affects classroom learning. What is the binding constraint — procurement, printing, delivery, or liquidation — and which of those is actually fixable within a fiscal year?
+2. **The GASTPE collapse.** The SHS Voucher and ESC disbursement rates have fallen sharply since 2023. Is this a payment-processing problem, an enrollment problem, or a policy decision? The answer determines whether the fix is administrative or structural.
+3. **Capital Outlay restoration.** The 2026 GAA raises CO to roughly ₱100B. Given CO's 9–54% disbursement history, is the absorptive capacity there to spend it — and if not, what changes before the money is released?
+4. **The aggregate-absorption blind spot.** Should DepEd and its oversight bodies track and report disbursement *by expense class or program type*, rather than a single agency-wide figure that Personnel Services dominates and therefore flatters?
+5. **The 2026 augmentation.** Congress added a record ₱86B over the NEP. Where did it land, and do those lines have the capacity to absorb it — or does the augmentation simply enlarge next year's unspent balance?
+
+---
+
+<p class="caption">
+Underlying data: DBM-published budget and execution data for the DepEd Office of the Secretary (Current New Appropriations only), FY 2018–2026. Execution measures (Allotments, Obligations, Disbursements) cover FY 2018–2025. Prepared as the long-form companion to the DepEd-OSEC budget briefing.
+</p>
