@@ -95,11 +95,15 @@ agencies <- tibble::tribble(
   "A different angle: with no P/A/P-level execution data, this review traces DPWH's budget back to 1988 and maps how Congress redirects money \u2014 every year \u2014 from the Central Office toward named district engineering offices.",
   "Footprint doubled to a mid-teens budget share; 2026 GAA collapses below 8%  |  2019 line-item veto: \u20b195.4B struck, \u20b174B from the Central Office  |  A four-signal screen flags Batangas 4th, Sorsogon, Abra & Bulacan 1st",
 
+  "TESDA",  "Technical Education and Skills Development Authority","",                        "tesda.html",       "planned", "", "",
+
   "NCIP",   "National Commission on Indigenous Peoples",          "Whole commission (no P/A/P execution)", "ncip.html",        "published",
   "The smallest agency in the series, carrying an outsized IPRA mandate. With no FAR No. 1, execution is read only at the agency level \u2014 but the budget story is clear: a near-doubling since 2018, a sharp 2025 cut, and an administration-heavy mix, across two reorganizations.",
   "Budget nearly doubled: \u20b1968M (2018) \u2192 \u20b11,804M (2026), +86%  |  FY2025 cut 25% below proposal, across the board; capital outlay zeroed  |  Admin + policy = 46% of 2026; agency obligation rate 92\u201399%",
 
-  "TESDA",  "Technical Education and Skills Development Authority","",                        "tesda.html",       "planned", "", ""
+  "NCMF",   "National Commission on Muslim Filipinos",            "Whole commission (no P/A/P execution)", "ncmf.html",        "published",
+  "Like NCIP, a small commission with no FAR No. 1, so execution is read only at the agency level. The fastest grower in the series (+145% since 2018), and unusually concentrated: a single cultural-heritage line is about half the budget, and Congress reliably tops it up.",
+  "Budget more than doubled: \u20b1535M (2018) \u2192 \u20b11,314M (2026), +145%  |  One line \u2014 Muslim cultural centers & heritage \u2014 is ~46% of 2026; top 3 = 71%  |  Congress tops up 8 of 9 years; agency obligation rate 86\u201399%"
 )
 
 # ---- EDIT THIS: briefing slides --------------------------------------------
@@ -120,7 +124,8 @@ slides_paths <- c(
   DENR  = "slides/DENR_OSEC_Budget_Analysis.html",
   DOH   = "slides/DOH_OSEC_Budget_Analysis.html",
   DSWD  = "slides/DSWD_OSEC_Budget_Analysis.html",
-  NCIP  = "slides/NCIP_Budget_Analysis.html"
+  NCIP  = "slides/NCIP_Budget_Analysis.html",
+  NCMF  = "slides/NCMF_Budget_Analysis.html"
 )
 ```
 

@@ -26,7 +26,8 @@ budget-analysis/
 │   ├── DOH_OSEC_Budget_Analysis.Rmd
 │   ├── DSWD_OSEC_Budget_Analysis.Rmd
 │   ├── DPWH_Budget_Analysis.Rmd
-│   └── NCIP_Budget_Analysis.Rmd
+│   ├── NCIP_Budget_Analysis.Rmd
+│   └── NCMF_Budget_Analysis.Rmd
 └── docs/                          # GitHub Pages root (published HTML output)
     ├── index.html
     ├── dar-osec.html
@@ -37,6 +38,7 @@ budget-analysis/
     ├── dswd-osec.html
     ├── dpwh.html
     ├── ncip.html
+    ├── ncmf.html
     └── slides/                     # briefing decks (standalone HTML, one per agency)
         ├── DAR_OSEC_Budget_Analysis.html
         ├── DA_Budget_Analysis.html
@@ -44,7 +46,8 @@ budget-analysis/
         ├── DENR_OSEC_Budget_Analysis.html
         ├── DOH_OSEC_Budget_Analysis.html
         ├── DSWD_OSEC_Budget_Analysis.html
-        └── NCIP_Budget_Analysis.html
+        ├── NCIP_Budget_Analysis.html
+        └── NCMF_Budget_Analysis.html
 ```
 
 Every `.Rmd` is **self-contained**: it carries its own CSS and R setup, so it

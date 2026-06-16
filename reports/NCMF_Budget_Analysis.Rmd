@@ -1,0 +1,419 @@
+---
+title: "National Commission on Muslim Filipinos"
+subtitle: "Budget evolution and agency-level utilization, FY 2018–2026"
+date: "`r format(Sys.Date(), '%B %Y')`"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    toc_depth: 3
+    number_sections: true
+    code_folding: hide
+    self_contained: true
+    df_print: paged
+    fig_width: 10
+    fig_height: 5.5
+---
+
+```{css, echo=FALSE}
+:root { --ink:#1a1a1a; --muted:#6e6e6e; --accent:#08519C; --rule:#e6e6e6; }
+body, .main-container { font-family: Arial, Helvetica, "IBM Plex Sans", sans-serif; color: var(--ink); }
+.main-container { max-width: 980px; }
+h1, h2, h3, h4 { font-family: Arial, Helvetica, sans-serif; font-weight: 600; }
+h1.title { font-size: 30px; }
+h1 { font-size: 25px; margin-top: 1.6em; padding-top: .3em; border-top: 2px solid var(--rule); }
+h2 { font-size: 20px; margin-top: 1.4em; }
+h3 { font-size: 17px; color: #333; }
+.author, .date { color: var(--muted); }
+p, li { font-size: 15.5px; line-height: 1.62; }
+blockquote { border-left: 3px solid var(--accent); background: #f5f8fc; color: #25405e;
+  font-size: 14.5px; padding: .6em 1em; margin: 1.2em 0; }
+.lead { font-size: 16.5px; color: #2b2b2b; }
+.takeaway { background: #f7f9fb; border: 1px solid var(--rule); border-radius: 6px;
+  padding: .4em 1.1em; margin: 1.1em 0; }
+.takeaway p, .takeaway li { font-size: 14.5px; }
+.caption, .figcaption { color: var(--muted); font-size: 13px; }
+table.dataTable { font-size: 13px; }
+.kbl-note { color: var(--muted); font-size: 12.5px; margin-top: -.5em; }
+hr { border-top: 1px solid var(--rule); }
+.home-link { font-size: 13.5px; }
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                     dpi = 150, fig.align = "center", out.width = "100%")
+
+options(knitr.kable.NA = "")
+library(readxl); library(dplyr); library(tidyr); library(stringr)
+library(ggplot2); library(scales); library(knitr); library(kableExtra); library(DT)
+
+.candidates <- c("../data/Compiled_-_NEP-GAA-NoFAR1.xlsx", "data/Compiled_-_NEP-GAA-NoFAR1.xlsx",
+                 "Compiled - NEP-GAA-NoFAR1.xlsx", "Compiled_-_NEP-GAA-NoFAR1.xlsx")
+file_path <- .candidates[file.exists(.candidates)][1]
+stopifnot(!is.na(file_path))
+AGENCY_SHEET <- "NCMF"; EXEC_SHEET <- "SAAODB"
+
+theme_ncmf <- function(base_size = 12) {
+  theme_minimal(base_size = base_size, base_family = "sans") +
+    theme(
+      plot.title = element_text(face = "bold", size = base_size + 2, color = "black"),
+      plot.subtitle = element_text(color = "grey30", size = base_size),
+      plot.caption = element_text(color = "grey40", size = base_size - 3, hjust = 0),
+      panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
+      axis.title = element_text(size = base_size - 1, color = "grey20"),
+      axis.text = element_text(color = "grey20"),
+      legend.position = "bottom", legend.title = element_blank(),
+      legend.text = element_text(size = base_size - 1),
+      strip.text = element_text(face = "bold", size = base_size - 1.5, lineheight = 0.9))
+}
+
+exec_pal <- c("NEP (proposed)" = "#9E9AC8", "GAA (enacted)" = "#54278F",
+  "Allotments" = "#08519C", "Obligations" = "#E6550D", "Disbursements" = "#31A354")
+cat_pal <- c(
+  "General Administration and Support"             = "#A6761D",
+  "Support to Operations"                          = "#E6AB02",
+  "Cultural, Religious & Hajj Services"            = "#1B9E77",
+  "Economic Empowerment (Endowment, MSEs, Halal)"  = "#D95F02",
+  "Social, Legal & Peace Services"                 = "#7570B3")
+absorp_pal <- c("Obligations / Allotment" = "#3182BD",
+  "Disbursements / Obligations" = "#E6550D", "Disbursements / Allotment" = "#31A354")
+ec_pal <- c("Personnel Services (PS)" = "#2CA02C",
+  "Maintenance & Other Op. Exp. (MOOE)" = "#FF7F0E", "Capital Outlays (CO)" = "#9467BD")
+bar_fill <- "#08519C"; peso <- "PHP "
+php_m      <- function(x) paste0(peso, scales::comma(x / 1e6, accuracy = 1), "M")
+php_m_axis <- function(x) paste0(peso, scales::comma(x / 1e6, accuracy = 1), "M")
+
+dt_table <- function(df, caption = NULL, page = 10, money_cols = NULL, pct_cols = NULL, money_digits = 0) {
+  dt <- datatable(df, rownames = FALSE, caption = caption, extensions = "Buttons",
+    options = list(pageLength = page, lengthMenu = c(10, 20, 50, 100), dom = "Bfrtip",
+      buttons = c("copy", "csv"), scrollX = TRUE, autoWidth = FALSE,
+      columnDefs = list(list(className = "dt-right", targets = which(sapply(df, is.numeric)) - 1))),
+    class = "stripe hover compact")
+  if (!is.null(money_cols)) { mc <- which(names(df) %in% money_cols)
+    if (length(mc)) dt <- formatRound(dt, mc, digits = money_digits, mark = ",") }
+  if (!is.null(pct_cols)) { pc <- which(names(df) %in% pct_cols)
+    if (length(pc)) dt <- formatPercentage(dt, pc, digits = 0) }
+  dt
+}
+kbl_clean <- function(x, font = 14, ...) {
+  x %>% kable(...) %>% kable_styling(full_width = TRUE, font_size = font,
+    bootstrap_options = c("condensed", "striped", "hover"))
+}
+
+# ---- Data load -----------------------------------------------------------
+CODE_COLS <- c("DEPARTMENT", "AGENCY", "PREXC_PROG", "PREXC_SUBPROG")
+raw <- read_excel(file_path, sheet = AGENCY_SHEET) %>% mutate(across(any_of(CODE_COLS), as.character))
+AGENCY_NAME <- raw$UACS_AGY_DSC[!is.na(raw$UACS_AGY_DSC)][1]
+# The agency tab and the SAAODB tab don't always spell the agency identically
+# (a trailing "(Office on Muslim Affairs)" appears on one but not the other);
+# normalise by dropping a trailing parenthetical so the execution filter matches.
+agency_key <- function(x) str_trim(str_remove(x, "\\s*\\(.*\\)\\s*$"))
+
+df_long_all <- raw %>% filter(!is.na(`P/A/P`)) %>%
+  pivot_longer(cols = matches("^(NEP|GAA|AuthAppro|AdjAppro|AdjAllot|Obligations|Disbursements)_\\d{4}_EXP_(1PS|2MOOE|6CO|TOTAL)$"),
+               names_to = "var", values_to = "amount") %>%
+  separate(var, into = c("metric", "year", "tag", "expense_class"), sep = "_") %>%
+  mutate(year = as.integer(year), amount = as.numeric(amount)) %>%
+  select(-tag) %>% rename(agency = UACS_AGY_DSC, pap = `P/A/P`)
+
+df_long <- df_long_all %>% filter(expense_class == "TOTAL") %>% select(-expense_class) %>%
+  mutate(category = case_when(
+    PREXC_PROG == "1000" ~ "General Administration and Support",
+    PREXC_PROG == "2000" ~ "Support to Operations",
+    PREXC_PROG == "3101" ~ "Cultural, Religious & Hajj Services",
+    PREXC_PROG == "3201" ~ "Economic Empowerment (Endowment, MSEs, Halal)",
+    PREXC_PROG == "3202" ~ "Social, Legal & Peace Services",
+    TRUE ~ NA_character_))
+
+totals <- df_long %>% group_by(year, metric) %>%
+  summarise(total = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE), .groups = "drop")
+pap_year <- df_long %>% group_by(pap, year, metric) %>%
+  summarise(amount = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = amount)
+
+exec <- read_excel(file_path, sheet = EXEC_SHEET) %>% filter(agency_key(Agency) == agency_key(AGENCY_NAME)) %>%
+  pivot_longer(cols = matches("^\\d{4}$"), names_to = "year", values_to = "amt_k") %>%
+  mutate(year = as.integer(year), amount = amt_k * 1e3) %>% filter(!is.na(amount)) %>%
+  group_by(year, Particular) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = Particular, values_from = amount) %>% rename(Obligations = `Obligations Incurred`) %>%
+  arrange(year) %>%
+  mutate(oblig_allot = Obligations / Allotments, disb_oblig = Disbursements / Obligations,
+         disb_allot = Disbursements / Allotments)
+```
+
+
+<p class="home-link"><a href="index.html">← All agencies</a></p>
+
+# Overview {#overview .unnumbered}
+
+<p class="lead">
+This document profiles the budget of the **National Commission on Muslim Filipinos (NCMF)** — the agency, formerly the Office on Muslim Affairs, mandated to promote the well-being of Muslim Filipinos and preserve their cultural, religious, and historical heritage — across nine fiscal years, FY 2018 to FY 2026. Like NCIP, NCMF carries a particular data constraint: usable program-level execution records were not available, so this review pairs the **proposed-to-enacted budget at the program level** with **budget utilization measured at the agency aggregate**.
+</p>
+
+Because the program-by-program execution chain cannot be traced, the emphasis is on what NCMF's budget is *composed of*, how Congress adjusts it, and — at the whole-agency level — how much of what is released actually gets obligated and paid out.
+
+Three features define NCMF's budget. First, it has **grown fast** — more than doubling since 2018, faster than most small agencies. Second, it is **unusually concentrated**: a single line, the preservation of Muslim cultural centers and heritage, has been roughly **half the entire agency** every year. Third, unlike many peers, NCMF has been **institutionally stable** — one move (from the Other Executive Offices to the DILG, around 2019) and **no change to its five-program structure** — so its trend lines read cleanly from 2018 to 2026.
+
+# Executive summary {#exec}
+
+**NCMF's enacted budget has more than doubled.** From ₱535M (2018 GAA) to ₱1,314M (2026) — about **+145%**, roughly 12% a year, faster than most small agencies, with a steep ramp in 2025–2026.
+
+**One organizational move, a stable structure.** NCMF (the former Office on Muslim Affairs) shifted from the **Other Executive Offices to the DILG around 2019** and has stayed there — *without* re-cutting its five-program structure, so program lines are comparable across all years.
+
+**Half the budget is a single line.** Preservation of **Muslim cultural centers, heritage, holidays and festivities** has been **46–60% of the agency every year**, reaching ₱603M in 2026. With Hajj operations (₱104M) and Madrasah/Shari'ah education (₱142M), cultural and religious services define the budget.
+
+**Congress reliably tops up NCMF.** Enacted budgets matched or beat the proposal in eight of nine years; the **+₱148M (+13%) add for FY 2026** is the largest in the period.
+
+**A delivery-oriented tilt.** Operating programs are about **75% of the 2026 budget**, and the personnel share of spending fell from **84% (2018) to 56% (2026)** as MOOE expanded.
+
+**Execution is strong.** Agency-level obligation rates run **86–99%**, and NCMF disburses nearly everything it obligates — except **2019 (68% cash utilization)**, the OEO→DILG transition year.
+
+> NCMF is a small, fast-growing, culturally-focused agency with a stable structure and strong execution — but with so much of its budget in one undifferentiated heritage line, the sharpest questions are about concentration and transparency.
+
+# A note on the data {#data-notes}
+
+**Period.** FY 2018 through FY 2026 for the proposed (NEP) and enacted (GAA) budget, at the P/A/P level. Agency-level execution (Allotments, Obligations, Disbursements) covers FY 2011–2025.
+
+**No program-level execution.** Usable **FAR No. 1** (SAAODB) records were not available for NCMF, so there is **no P/A/P-level absorption analysis**. Utilization is shown only at the **agency aggregate** — the same constraint as NCIP, and one that will recur for some agencies until complete execution data can be obtained.
+
+**Two bases, not directly comparable.** The NEP/GAA figures are **current-year new appropriations only**. The execution figures are DBM's **published agency aggregates, which combine all available funds** — new, automatic, and continuing appropriations. The two series should not be read one-to-one.
+
+**One reorganization, a stable program structure.** NCMF's mother agency changed once (**OEOs → DILG, ~2019**); unlike some peers, its **P/A/P structure stayed stable** throughout, so program lines are comparable across all years.
+
+**Expense classes.** Personnel Services (PS), Maintenance & Other Operating Expenses (MOOE), Capital Outlays (CO). NCMF carries no Financial Expenses. **Units are PHP millions** throughout.
+
+# One move to DILG — a stable structure {#reorg}
+
+NCMF changed mother agency once and otherwise kept its programs intact — which makes its trends easier to read than agencies that churn their structure.
+
+```{r reorg-timeline, fig.height=3.0}
+tl <- tibble::tribble(
+  ~track,            ~label,                          ~start, ~end,   ~fill,
+  "Mother agency",   "OEOs",                           2018,   2019,   "#1B4965",
+  "Mother agency",   "Under DILG",                     2019,   2026.4, "#54278F",
+  "P/A/P structure", "Stable five-program structure",  2018,   2026.4, "#1B9E77")
+ggplot(tl, aes(y = track)) +
+  geom_segment(aes(x = start, xend = end, yend = track, color = fill), linewidth = 13, lineend = "butt") +
+  scale_color_identity() +
+  geom_text(aes(x = (start + end) / 2, label = label), color = "white", fontface = "bold", size = 3.6) +
+  scale_x_continuous(breaks = 2018:2026, limits = c(2017.7, 2026.6)) +
+  labs(title = "NCMF moved once — and kept its programs intact",
+       subtitle = "Placement based on where each year's enacted (GAA) appropriations are recorded", x = NULL, y = NULL) +
+  theme_ncmf() + theme(panel.grid.major.y = element_blank(),
+        axis.text.y = element_text(face = "bold", color = "grey20"))
+```
+
+The same program lines run cleanly from 2018 to 2026, so the trends that follow can be read at face value.
+
+# The aggregate budget {#aggregate}
+
+## A budget that more than doubled
+
+```{r evolution, fig.height=5}
+evo <- totals %>% filter(metric %in% c("NEP","GAA")) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA"), labels = c("NEP (proposed)","GAA (enacted)")))
+ggplot(evo, aes(year, total, color = metric, group = metric)) +
+  geom_line(linewidth = 1.0) + geom_point(size = 2) +
+  scale_color_manual(values = exec_pal) +
+  scale_y_continuous(labels = php_m_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "NCMF current-year appropriations, FY 2018–2026",
+       subtitle = "Enacted funding grew ~145% (₱535M → ₱1,314M), with a steep ramp in 2025–2026",
+       x = NULL, y = NULL, caption = "Current-year new appropriations only.") +
+  theme_ncmf() + guides(color = guide_legend(nrow = 1))
+```
+
+The budget grew at roughly 12% a year, accelerating recently — up ₱265M in FY 2025 and a further ₱181M in FY 2026. The proposed (NEP) and enacted (GAA) lines rarely diverge much: NCMF's appropriations are largely Executive-led, with Congress fine-tuning at the margin.
+
+```{r tbl-evolution}
+totals %>% filter(metric %in% c("NEP","GAA")) %>% mutate(value = total/1e6) %>%
+  select(year, metric, value) %>% pivot_wider(names_from = year, values_from = value) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA"))) %>% arrange(metric) %>% rename(`PHP M` = metric) %>%
+  kbl_clean(font = 13, digits = 0, format.args = list(big.mark = ","), na = "")
+```
+
+## Where Congress adjusts the budget
+
+```{r nep-gaa-gap, fig.height=4.4}
+gap <- totals %>% filter(metric %in% c("NEP","GAA")) %>% pivot_wider(names_from = metric, values_from = total) %>%
+  mutate(change = GAA - NEP, direction = ifelse(change >= 0, "Net increase (GAA > NEP)", "Net decrease (GAA < NEP)"))
+ggplot(gap, aes(year, change/1e6, fill = direction)) +
+  geom_col(width = 0.7) +
+  geom_text(aes(label = ifelse(abs(change) < 1e6, "", sprintf("%+.0f", change/1e6)),
+                vjust = ifelse(change >= 0, -0.4, 1.2)), size = 3.2, color = "grey20") +
+  scale_fill_manual(values = c("Net increase (GAA > NEP)" = "#1B9E77", "Net decrease (GAA < NEP)" = "#D95F02")) +
+  scale_x_continuous(breaks = 2018:2026) +
+  scale_y_continuous(labels = function(v) paste0(peso, v, "M"), expand = expansion(mult = c(0.16, 0.18))) +
+  labs(title = "Enacted minus proposed (GAA − NEP), by year",
+       subtitle = "Congress tops NCMF up almost every year; the +₱148M FY 2026 add is the largest", x = NULL, y = NULL) +
+  theme_ncmf() + guides(fill = guide_legend(nrow = 1))
+```
+
+NCMF is one of the few agencies in this series that Congress **reliably augments**: the enacted budget met or exceeded the proposal in eight of nine years, the only cut being FY 2018 (−₱39M). The **+₱148M (+13%) plus-up for FY 2026** is the largest single adjustment in the period.
+
+# Where the money goes {#composition}
+
+## Composition by PREXC program
+
+```{r composition, fig.height=5.2}
+comp <- df_long %>% filter(metric == "GAA", year <= 2026, !is.na(amount), !is.na(category)) %>%
+  group_by(year, category) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(category = factor(category, levels = names(cat_pal)))
+ggplot(comp, aes(year, amount, fill = category)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = cat_pal, labels = function(x) str_wrap(x, 30)) +
+  scale_y_continuous(labels = php_m_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "Composition of the GAA by PREXC program, 2018–2026",
+       subtitle = "Cultural, Religious & Hajj services are roughly two-thirds of the budget throughout", x = NULL, y = NULL) +
+  theme_ncmf() + guides(fill = guide_legend(nrow = 3, byrow = TRUE)) +
+  theme(legend.text = element_text(size = 9), legend.key.size = unit(0.4, "cm"))
+```
+
+The green **Cultural, Religious & Hajj Services** program is the budget: it runs around two-thirds of the total in every year, dwarfing economic empowerment (orange) and social/legal/peace services (purple). Administration and support carry through unchanged. The stable structure means these shares are directly comparable across all nine years.
+
+## Composition by expense class
+
+```{r comp-ec, fig.height=5}
+ec_levels <- c("Personnel Services (PS)","Maintenance & Other Op. Exp. (MOOE)","Capital Outlays (CO)")
+comp_ec <- df_long_all %>% filter(metric == "GAA", year <= 2026, expense_class %in% c("1PS","2MOOE","6CO")) %>%
+  group_by(year, expense_class) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(expense_class = factor(expense_class, levels = c("1PS","2MOOE","6CO"), labels = ec_levels))
+ggplot(comp_ec, aes(year, amount, fill = expense_class)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = ec_pal) +
+  scale_y_continuous(labels = php_m_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "GAA composition by expense class, 2018–2026",
+       subtitle = "Personnel share fell from 84% (2018) to 56% (2026) as MOOE expanded — a tilt toward operations", x = NULL, y = NULL) +
+  theme_ncmf() + guides(fill = guide_legend(nrow = 1))
+```
+
+The mix has shifted markedly toward operations. **Personnel Services fell from 84% of the budget in 2018 to 56% in 2026**, while MOOE climbed to 41% — by 2026 the maintenance-and-operating bill nearly matches the payroll, the clearest sign of a budget being pushed toward delivery rather than staffing.
+
+```{r tbl-ec-share}
+comp_ec %>% group_by(year) %>% mutate(share = round(amount/sum(amount)*100)) %>% ungroup() %>%
+  select(expense_class, year, share) %>% pivot_wider(names_from = year, values_from = share) %>%
+  rename(`Expense class (% of GAA)` = expense_class) %>% kbl_clean(font = 12.5, na = "")
+```
+
+## The largest P/A/Ps
+
+```{r top-paps, fig.height=5.2}
+top_paps <- pap_year %>% filter(year == 2026, !is.na(GAA), GAA > 0) %>% arrange(desc(GAA)) %>%
+  slice_head(n = 10) %>% mutate(pap = factor(pap, levels = rev(pap)))
+ggplot(top_paps, aes(pap, GAA)) +
+  geom_col(fill = bar_fill, width = 0.72) +
+  geom_text(aes(label = php_m(GAA)), hjust = -0.1, size = 3.2, color = "grey20") +
+  coord_flip() + scale_x_discrete(labels = function(x) str_wrap(x, 50)) +
+  scale_y_continuous(labels = php_m_axis, expand = expansion(mult = c(0, .25)), limits = c(0, NA)) +
+  labs(title = "Top P/A/Ps by FY 2026 GAA",
+       subtitle = "One line — preservation of Muslim cultural centers & heritage — is 46% of the budget; the top three are 71%",
+       x = NULL, y = NULL) +
+  theme_ncmf() + theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"))
+```
+
+The concentration is the headline: a single P/A/P — **preservation of Muslim cultural centers, heritage, holidays and festivities (₱603M)** — is nearly half the budget, more than three times the next line, General Management (₱193M). Institutional support for Madrasah/Shari'ah education (₱142M) and Hajj operations (₱104M) follow. The top three lines alone are 71% of the agency.
+
+### Full P/A/P ranking, FY 2026 (interactive) {.unnumbered}
+
+```{r tbl-allpaps}
+pap_year %>% filter(year == 2026, !is.na(GAA)) %>%
+  left_join(pap_year %>% filter(year == 2025) %>% transmute(pap, GAA25 = GAA), by = "pap") %>%
+  transmute(`P/A/P` = pap, `NEP 2026 (M)` = NEP/1e6, `GAA 2026 (M)` = GAA/1e6,
+            `GAA 2025 (M)` = GAA25/1e6, `Net chg 2026 (M)` = (GAA - NEP)/1e6) %>%
+  arrange(desc(`GAA 2026 (M)`)) %>%
+  dt_table(page = 10, money_cols = c("NEP 2026 (M)","GAA 2026 (M)","GAA 2025 (M)","Net chg 2026 (M)"))
+```
+
+# Half the agency: the cultural-heritage line {#heritage}
+
+Because so much of NCMF rides on one P/A/P, it deserves a closer look. The **promotion and preservation of Muslim cultural centers, heritage, holidays and festivities** has been roughly half the agency every year and has grown in step with the total.
+
+```{r heritage, fig.height=4.2}
+heritage <- pap_year %>% filter(str_detect(pap, "cultural centers")) %>%
+  select(year, NEP, GAA) %>% pivot_longer(-year, names_to = "metric", values_to = "amount") %>%
+  filter(!is.na(amount)) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA"), labels = c("NEP (proposed)","GAA (enacted)")))
+ggplot(heritage, aes(year, amount, color = metric, group = metric)) +
+  geom_line(linewidth = 1.0) + geom_point(size = 2.2) +
+  scale_color_manual(values = exec_pal) +
+  scale_y_continuous(labels = php_m_axis, breaks = pretty_breaks(5), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = 2018:2026) +
+  labs(title = "Promotion & preservation of Muslim cultural centers, heritage & festivities",
+       subtitle = "A single P/A/P that has been ~half the entire agency every year since 2018", x = NULL, y = NULL) +
+  theme_ncmf() + guides(color = guide_legend(nrow = 1))
+```
+
+The line grew from **₱299M (2018) to ₱603M (2026)** — a 102% rise — holding a 46–60% share throughout. Two things follow. First, because so much rides on one line, **its sub-components — which centers, which festivities, what upkeep — are not visible** in the budget data, a transparency question for a program this large. Second, together with Hajj operations and Madrasah/Shari'ah education, **cultural and religious services define NCMF's budget**, while the livelihood programs (Endowment, Muslim MSEs, Halal) remain barely 5% of the total.
+
+# Overall budget utilization {#utilization}
+
+With no program-level execution data, utilization can only be read at the **agency aggregate**, and on a different basis from the appropriations above (all available funds, not just current-year new appropriations). On that basis NCMF is a strong absorber, with one clear exception.
+
+## Execution over time
+
+```{r exec-levels, fig.height=4.8}
+el <- exec %>% select(year, Allotments, Obligations, Disbursements) %>%
+  pivot_longer(-year, names_to = "stage", values_to = "amount") %>% filter(!is.na(amount)) %>%
+  mutate(stage = factor(stage, levels = c("Allotments","Obligations","Disbursements")))
+ggplot(el, aes(year, amount, color = stage, group = stage)) +
+  geom_line(linewidth = 1.0) + geom_point(size = 2) +
+  scale_color_manual(values = exec_pal) +
+  scale_y_continuous(labels = php_m_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2011, 2025, 2)) +
+  labs(title = "Budget execution, FY 2011–2025 (all available funds)",
+       subtitle = "Allotments, obligations & disbursements track closely — except a sharp 2019 disbursement dip",
+       x = NULL, y = NULL, caption = "Includes new, automatic & continuing appropriations; not comparable to the NEP/GAA series.") +
+  theme_ncmf() + guides(color = guide_legend(nrow = 1))
+```
+
+The three lines sit close together across fifteen years — what is released is, for the most part, obligated and paid — with one visible break in **2019**, when disbursements fell well below obligations.
+
+## Absorptive capacity
+
+```{r absorp, fig.height=4.8}
+absorp_long <- exec %>% select(year, oblig_allot, disb_oblig, disb_allot) %>%
+  pivot_longer(-year, names_to = "ratio", values_to = "value") %>% filter(!is.na(value)) %>%
+  mutate(ratio = factor(ratio, levels = c("oblig_allot","disb_oblig","disb_allot"),
+    labels = c("Obligations / Allotment","Disbursements / Obligations","Disbursements / Allotment")))
+ggplot(absorp_long, aes(year, value, color = ratio, group = ratio)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 2) +
+  scale_color_manual(values = absorp_pal) +
+  scale_y_continuous(labels = percent_format(accuracy = 1), limits = c(0.6, 1.02), breaks = seq(0.6, 1, 0.1)) +
+  scale_x_continuous(breaks = seq(2011, 2025, 2)) +
+  labs(title = "NCMF absorptive capacity, FY 2011–2025",
+       subtitle = "Obligation rate stays high (86–99%); cash utilization fell to 68% in 2019, the OEO→DILG transition year",
+       x = NULL, y = NULL) +
+  theme_ncmf() + guides(color = guide_legend(nrow = 1))
+```
+
+NCMF **obligates almost everything released to it** (86–99%) and, in normal years, disburses nearly all of what it obligates. The exception is **2019**, when disbursement-to-obligation fell to ~70% (and disbursement-to-allotment to 68%) — the year the agency moved to the DILG, a textbook transition-year cash lag rather than a chronic problem, since the ratio recovered immediately afterward.
+
+### Execution at a glance (interactive) {.unnumbered}
+
+```{r exec-table}
+exec %>% transmute(Year = year, `Allotments (M)` = Allotments/1e6, `Obligations (M)` = Obligations/1e6,
+            `Disbursements (M)` = Disbursements/1e6, `O/A` = oblig_allot, `D/O` = disb_oblig, `D/A` = disb_allot) %>%
+  dt_table(page = 15, money_cols = c("Allotments (M)","Obligations (M)","Disbursements (M)"),
+           pct_cols = c("O/A","D/O","D/A"))
+```
+
+<p class="kbl-note">PHP millions, all-funds basis. O/A = obligations ÷ allotment; D/O = disbursements ÷ obligations; D/A = disbursements ÷ allotment. Not comparable to the NEP/GAA appropriations series above.</p>
+
+# Questions for discussion {#discussion}
+
+1. **One line, half the budget.** The Muslim cultural centers / heritage / festivities P/A/P is ~46% of the 2026 budget and rising in peso terms. Is this concentration the right priority — and is a single, undifferentiated line transparent enough for a program this large?
+2. **Hajj as a state function.** NCMF administers Hajj operations (₱104M in 2026). How should a secular state budget for, and account for, facilitating a religious pilgrimage?
+3. **Education versus the population.** Institutional support for Madrasah education, Shari'ah and Qur'an programs is ₱142M. Is that adequate given the size of the Muslim Filipino school-age population?
+4. **The economic-empowerment gap.** Endowment, Muslim MSEs and Halal — the livelihood programs — are barely 5% of the budget (~₱62M). Should economic empowerment carry more weight relative to cultural preservation?
+5. **The missing execution detail.** With no FAR No. 1, we can see NCMF spends what it is given overall, but not *which* programs lag. What would program-level execution data reveal about delivery on the cultural, education, and livelihood lines?
+
+---
+
+<p class="caption">
+Underlying data: DBM NEP & GAA documents (current-year new appropriations, P/A/P level), FY 2018–2026; DBM-published execution aggregates (all available funds, agency level), FY 2011–2025. No FAR No. 1 (P/A/P-level execution) was available for NCMF, so absorption is reported only at the agency aggregate, on a basis not directly comparable to the appropriations series. Prepared as the long-form companion to the NCMF budget briefing.
+</p>
