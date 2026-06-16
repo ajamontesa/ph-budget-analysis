@@ -15,7 +15,8 @@ folder. The landing page (`docs/index.html`) links to every published report.
 budget-analysis/
 ├── data/
 │   ├── Compiled_-_NEP-GAA-SAAODB-ByPAPLabelled.xlsx   # source data (one sheet per agency)
-│   └── Compiled_-_DPWH.xlsx                            # DPWH (separate structure: long-run + by operating unit)
+│   ├── Compiled_-_DPWH.xlsx                            # DPWH (separate structure: long-run + by operating unit)
+│   └── Compiled_-_NEP-GAA-NoFAR1.xlsx                  # agencies without FAR No.1 (P/A/P NEP-GAA + agency-level SAAODB)
 ├── reports/                       # R Markdown sources (each is fully self-contained)
 │   ├── index.Rmd                  # landing page -> knits to index.html
 │   ├── DAR_OSEC_Budget_Analysis.Rmd
@@ -24,7 +25,8 @@ budget-analysis/
 │   ├── DENR_OSEC_Budget_Analysis.Rmd
 │   ├── DOH_OSEC_Budget_Analysis.Rmd
 │   ├── DSWD_OSEC_Budget_Analysis.Rmd
-│   └── DPWH_Budget_Analysis.Rmd
+│   ├── DPWH_Budget_Analysis.Rmd
+│   └── NCIP_Budget_Analysis.Rmd
 └── docs/                          # GitHub Pages root (published HTML output)
     ├── index.html
     ├── dar-osec.html
@@ -34,13 +36,15 @@ budget-analysis/
     ├── doh-osec.html
     ├── dswd-osec.html
     ├── dpwh.html
+    ├── ncip.html
     └── slides/                     # briefing decks (standalone HTML, one per agency)
         ├── DAR_OSEC_Budget_Analysis.html
         ├── DA_Budget_Analysis.html
         ├── DepEd_OSEC_Budget_Analysis.html
         ├── DENR_OSEC_Budget_Analysis.html
         ├── DOH_OSEC_Budget_Analysis.html
-        └── DSWD_OSEC_Budget_Analysis.html
+        ├── DSWD_OSEC_Budget_Analysis.html
+        └── NCIP_Budget_Analysis.html
 ```
 
 Every `.Rmd` is **self-contained**: it carries its own CSS and R setup, so it

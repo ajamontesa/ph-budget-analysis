@@ -1,0 +1,429 @@
+---
+title: "National Commission on Indigenous Peoples"
+subtitle: "Budget evolution and agency-level utilization, FY 2018–2026"
+date: "`r format(Sys.Date(), '%B %Y')`"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    toc_depth: 3
+    number_sections: true
+    code_folding: hide
+    self_contained: true
+    df_print: paged
+    fig_width: 10
+    fig_height: 5.5
+---
+
+```{css, echo=FALSE}
+:root { --ink:#1a1a1a; --muted:#6e6e6e; --accent:#08519C; --rule:#e6e6e6; }
+body, .main-container { font-family: Arial, Helvetica, "IBM Plex Sans", sans-serif; color: var(--ink); }
+.main-container { max-width: 980px; }
+h1, h2, h3, h4 { font-family: Arial, Helvetica, sans-serif; font-weight: 600; }
+h1.title { font-size: 30px; }
+h1 { font-size: 25px; margin-top: 1.6em; padding-top: .3em; border-top: 2px solid var(--rule); }
+h2 { font-size: 20px; margin-top: 1.4em; }
+h3 { font-size: 17px; color: #333; }
+.author, .date { color: var(--muted); }
+p, li { font-size: 15.5px; line-height: 1.62; }
+blockquote { border-left: 3px solid var(--accent); background: #f5f8fc; color: #25405e;
+  font-size: 14.5px; padding: .6em 1em; margin: 1.2em 0; }
+.lead { font-size: 16.5px; color: #2b2b2b; }
+.takeaway { background: #f7f9fb; border: 1px solid var(--rule); border-radius: 6px;
+  padding: .4em 1.1em; margin: 1.1em 0; }
+.takeaway p, .takeaway li { font-size: 14.5px; }
+.caption, .figcaption { color: var(--muted); font-size: 13px; }
+table.dataTable { font-size: 13px; }
+.kbl-note { color: var(--muted); font-size: 12.5px; margin-top: -.5em; }
+hr { border-top: 1px solid var(--rule); }
+.home-link { font-size: 13.5px; }
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                     dpi = 150, fig.align = "center", out.width = "100%")
+
+options(knitr.kable.NA = "")
+library(readxl); library(dplyr); library(tidyr); library(stringr)
+library(ggplot2); library(scales); library(knitr); library(kableExtra); library(DT)
+
+.candidates <- c("../data/Compiled_-_NEP-GAA-NoFAR1.xlsx", "data/Compiled_-_NEP-GAA-NoFAR1.xlsx",
+                 "Compiled - NEP-GAA-NoFAR1.xlsx", "Compiled_-_NEP-GAA-NoFAR1.xlsx")
+file_path <- .candidates[file.exists(.candidates)][1]
+stopifnot(!is.na(file_path))
+AGENCY_SHEET <- "NCIP"; EXEC_SHEET <- "SAAODB"
+
+theme_ncip <- function(base_size = 12) {
+  theme_minimal(base_size = base_size, base_family = "sans") +
+    theme(
+      plot.title = element_text(face = "bold", size = base_size + 2, color = "black"),
+      plot.subtitle = element_text(color = "grey30", size = base_size),
+      plot.caption = element_text(color = "grey40", size = base_size - 3, hjust = 0),
+      panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
+      axis.title = element_text(size = base_size - 1, color = "grey20"),
+      axis.text = element_text(color = "grey20"),
+      legend.position = "bottom", legend.title = element_blank(),
+      legend.text = element_text(size = base_size - 1),
+      strip.text = element_text(face = "bold", size = base_size - 1.5, lineheight = 0.9))
+}
+
+exec_pal <- c("NEP (proposed)" = "#9E9AC8", "GAA (enacted)" = "#54278F",
+  "Allotments" = "#08519C", "Obligations" = "#E6550D", "Disbursements" = "#31A354")
+cat_pal <- c(
+  "General Administration and Support"          = "#A6761D",
+  "Support to Operations"                       = "#E6AB02",
+  "Ancestral Domain Recognition (2018-24)"      = "#1B9E77",
+  "Socio-economic & Cultural Services (2018-24)"= "#D95F02",
+  "Rights, Legal & Adjudication (2018-24)"      = "#7570B3",
+  "Domain/Land Recognition & Dev't (2025-)"     = "#66A61E",
+  "IP Governance & Empowerment (2025-)"         = "#E7298A",
+  "IP Human Rights, Legal & Basic Svcs (2025-)" = "#386CB0",
+  "IP Cultural Services (2025-)"                = "#666666")
+absorp_pal <- c("Obligations / Allotment" = "#3182BD",
+  "Disbursements / Obligations" = "#E6550D", "Disbursements / Allotment" = "#31A354")
+ec_pal <- c("Personnel Services (PS)" = "#2CA02C",
+  "Maintenance & Other Op. Exp. (MOOE)" = "#FF7F0E", "Capital Outlays (CO)" = "#9467BD")
+bar_fill <- "#08519C"; peso <- "PHP "
+php_m      <- function(x) paste0(peso, scales::comma(x / 1e6, accuracy = 1), "M")
+php_m_axis <- function(x) paste0(peso, scales::comma(x / 1e6, accuracy = 1), "M")
+
+dt_table <- function(df, caption = NULL, page = 10, money_cols = NULL, pct_cols = NULL, money_digits = 0) {
+  dt <- datatable(df, rownames = FALSE, caption = caption, extensions = "Buttons",
+    options = list(pageLength = page, lengthMenu = c(10, 20, 50, 100), dom = "Bfrtip",
+      buttons = c("copy", "csv"), scrollX = TRUE, autoWidth = FALSE,
+      columnDefs = list(list(className = "dt-right", targets = which(sapply(df, is.numeric)) - 1))),
+    class = "stripe hover compact")
+  if (!is.null(money_cols)) { mc <- which(names(df) %in% money_cols)
+    if (length(mc)) dt <- formatRound(dt, mc, digits = money_digits, mark = ",") }
+  if (!is.null(pct_cols)) { pc <- which(names(df) %in% pct_cols)
+    if (length(pc)) dt <- formatPercentage(dt, pc, digits = 0) }
+  dt
+}
+kbl_clean <- function(x, font = 14, ...) {
+  x %>% kable(...) %>% kable_styling(full_width = TRUE, font_size = font,
+    bootstrap_options = c("condensed", "striped", "hover"))
+}
+
+# ---- Data load -----------------------------------------------------------
+CODE_COLS <- c("DEPARTMENT", "AGENCY", "PREXC_PROG", "PREXC_SUBPROG")
+raw <- read_excel(file_path, sheet = AGENCY_SHEET) %>% mutate(across(any_of(CODE_COLS), as.character))
+AGENCY_NAME <- raw$UACS_AGY_DSC[!is.na(raw$UACS_AGY_DSC)][1]
+
+df_long_all <- raw %>% filter(!is.na(`P/A/P`)) %>%
+  pivot_longer(cols = matches("^(NEP|GAA|AuthAppro|AdjAppro|AdjAllot|Obligations|Disbursements)_\\d{4}_EXP_(1PS|2MOOE|6CO|TOTAL)$"),
+               names_to = "var", values_to = "amount") %>%
+  separate(var, into = c("metric", "year", "tag", "expense_class"), sep = "_") %>%
+  mutate(year = as.integer(year), amount = as.numeric(amount)) %>%
+  select(-tag) %>% rename(agency = UACS_AGY_DSC, pap = `P/A/P`)
+
+df_long <- df_long_all %>% filter(expense_class == "TOTAL") %>% select(-expense_class) %>%
+  mutate(category = case_when(
+    PREXC_PROG == "1000" ~ "General Administration and Support",
+    PREXC_PROG == "2000" ~ "Support to Operations",
+    PREXC_PROG == "3101" ~ "Ancestral Domain Recognition (2018-24)",
+    PREXC_PROG == "3102" ~ "Socio-economic & Cultural Services (2018-24)",
+    PREXC_PROG == "3103" ~ "Rights, Legal & Adjudication (2018-24)",
+    PREXC_PROG == "3201" ~ "Domain/Land Recognition & Dev't (2025-)",
+    PREXC_PROG == "3202" ~ "IP Governance & Empowerment (2025-)",
+    PREXC_PROG == "3203" ~ "IP Human Rights, Legal & Basic Svcs (2025-)",
+    PREXC_PROG == "3204" ~ "IP Cultural Services (2025-)",
+    TRUE ~ NA_character_))
+
+totals <- df_long %>% group_by(year, metric) %>%
+  summarise(total = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE), .groups = "drop")
+pap_year <- df_long %>% group_by(pap, year, metric) %>%
+  summarise(amount = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = amount)
+
+exec <- read_excel(file_path, sheet = EXEC_SHEET) %>% filter(Agency == AGENCY_NAME) %>%
+  pivot_longer(cols = matches("^\\d{4}$"), names_to = "year", values_to = "amt_k") %>%
+  mutate(year = as.integer(year), amount = amt_k * 1e3) %>% filter(!is.na(amount)) %>%
+  group_by(year, Particular) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = Particular, values_from = amount) %>% rename(Obligations = `Obligations Incurred`) %>%
+  arrange(year) %>%
+  mutate(oblig_allot = Obligations / Allotments, disb_oblig = Disbursements / Obligations,
+         disb_allot = Disbursements / Allotments)
+```
+
+<p class="home-link"><a href="index.html">← All agencies</a></p>
+
+# Overview {#overview .unnumbered}
+
+<p class="lead">
+This document profiles the budget of the **National Commission on Indigenous Peoples (NCIP)** — the agency mandated by the Indigenous Peoples' Rights Act (IPRA) to recognize ancestral domains and serve the country's Indigenous Peoples — across nine fiscal years, FY 2018 to FY 2026. NCIP is one of the smallest agencies in this series, and one with a particular data constraint: usable program-level execution records were not available, so this review pairs the **proposed-to-enacted budget at the program level** with **budget utilization measured at the agency aggregate**.
+</p>
+
+Because the program-by-program execution chain cannot be traced, the emphasis here is different from the line-department reviews: what NCIP's budget is *composed of*, how Congress adjusts it, and — at the whole-agency level — how much of what is released actually gets obligated and paid out.
+
+Three features define NCIP's budget. First, it is **tiny relative to its mandate**: about ₱1.8B in 2026 to recognize ancestral domains spanning millions of hectares. Second, the agency has been **institutionally restless** — it moved from the Other Executive Offices to being attached to DSWD and back again within seven years, and re-cut its entire program structure in 2025, so almost every trend line in this report contains a break. Third, it is **administration- and personnel-heavy**: roughly half the 2026 budget is general management and policy/planning, and personnel services alone are 54–71% of spending in any given year.
+
+# Executive summary {#exec}
+
+**NCIP's enacted budget has nearly doubled.** From ₱968M (2018 GAA) to ₱1,804M (2026) — about **+86% over eight years**, roughly 8% a year, and the largest enacted budget in the series in 2026.
+
+**The agency keeps moving.** NCIP sat under the **Other Executive Offices (OEOs)**, shifted **under DSWD for FY 2019–2024**, then **returned to the OEOs (FY 2025–2026)** — and adopted a **new P/A/P structure in 2025**. Every trend line below straddles these breaks.
+
+**FY 2025 is the conspicuous exception.** Congress enacted ₱1,202M against a ₱1,600M proposal — a **−25% cut that hit every program** and zeroed out capital outlay — before FY 2026 rebounded to the record ₱1,804M.
+
+**A people-heavy agency.** Personnel Services run **54–71% of the budget**; capital outlay is small and intermittent (₱0 in the FY 2025 GAA).
+
+**Administration is nearly half the budget.** In FY 2026, General Management (₱435M) and Policy/Planning (₱399M) together are **46%** — almost as much as all field operations combined. Just three lines — IP Human Rights/Legal/Basic Services, General Management, and Policy/Planning — are **76%** of the budget.
+
+**Execution is high on an all-funds basis.** Agency-level obligation rates run **92–99%**; cash disbursement-to-allotment is lower (**83–97%**), dipping to ~86% in 2024 — the gap that opens is between obligating funds and actually paying them out.
+
+> NCIP is a small, administration-heavy agency carrying an outsized mandate, whose budget has grown but been repeatedly disrupted by reorganization. With no program-level execution data, the sharpest questions are about scale versus mandate, and overhead versus delivery.
+
+# A note on the data {#data-notes}
+
+**Period.** FY 2018 through FY 2026 for the proposed (NEP) and enacted (GAA) budget, at the P/A/P level. Agency-level execution (Allotments, Obligations, Disbursements) covers FY 2011–2025.
+
+**No program-level execution.** Usable **FAR No. 1** (SAAODB) records were not available for NCIP, so there is **no P/A/P-level absorption analysis**. Utilization is shown only at the **agency aggregate**. Some agencies in this series will carry the same constraint until complete execution data can be obtained.
+
+**Two bases, not directly comparable.** The NEP/GAA figures are **current-year new appropriations only**. The execution figures are DBM's **published agency aggregates, which combine all available funds** — new, automatic, and continuing appropriations. The two series should not be read one-to-one (for example, obligations can exceed a single year's new appropriation because continuing funds are in play).
+
+**Two reorganizations inside one window.** NCIP's *mother agency* changed (OEOs → DSWD → OEOs) and its *P/A/P structure* was re-cut in 2025. Program names before and after 2025 do not line up; pre- and post-2025 program lines should be bridged with care, not compared directly.
+
+**Expense classes.** Personnel Services (PS), Maintenance & Other Operating Expenses (MOOE), Capital Outlays (CO). NCIP carries no Financial Expenses. **Units are PHP millions** throughout (NCIP is a ₱1–2B agency).
+
+# Two reorganizations inside one budget window {#reorg}
+
+Before any trend, the two structural breaks: NCIP changed mother agency twice and re-cut its programs once, all within this window.
+
+```{r reorg-timeline, fig.height=3.4}
+tl <- tibble::tribble(
+  ~track,            ~label,                ~start, ~end,   ~fill,
+  "Mother agency",   "OEOs",                 2018,   2019,   "#1B4965",
+  "Mother agency",   "Under DSWD",           2019,   2025,   "#54278F",
+  "Mother agency",   "Back to OEOs",         2025,   2026.4, "#1B4965",
+  "P/A/P structure", "Original P/A/P set",   2018,   2025,   "#1B9E77",
+  "P/A/P structure", "New P/A/Ps",           2025,   2026.4, "#E6AB02")
+ggplot(tl, aes(y = track)) +
+  geom_segment(aes(x = start, xend = end, yend = track, color = fill), linewidth = 12, lineend = "butt") +
+  scale_color_identity() +
+  geom_text(aes(x = (start + end) / 2, label = label), color = "white", fontface = "bold", size = 3.6) +
+  scale_x_continuous(breaks = 2018:2026, limits = c(2017.7, 2026.6)) +
+  labs(title = "NCIP moved twice — and re-cut its programs once",
+       subtitle = "Placement based on where each year's enacted (GAA) appropriations are recorded", x = NULL, y = NULL) +
+  theme_ncip() + theme(panel.grid.major.y = element_blank(),
+        axis.text.y = element_text(face = "bold", color = "grey20"))
+```
+
+Read every chart that follows with these breaks in mind — continuity of program lines is the exception here, not the rule.
+
+# The aggregate budget {#aggregate}
+
+## A budget that nearly doubled
+
+```{r evolution, fig.height=5}
+evo <- totals %>% filter(metric %in% c("NEP","GAA")) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA"), labels = c("NEP (proposed)","GAA (enacted)")))
+ggplot(evo, aes(year, total, color = metric, group = metric)) +
+  geom_line(linewidth = 1.0) + geom_point(size = 2) +
+  scale_color_manual(values = exec_pal) +
+  scale_y_continuous(labels = php_m_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "NCIP current-year appropriations, FY 2018–2026",
+       subtitle = "Enacted funding rose ~86% (₱968M → ₱1,804M); FY 2025 is the conspicuous exception",
+       x = NULL, y = NULL, caption = "Current-year new appropriations only.") +
+  theme_ncip() + guides(color = guide_legend(nrow = 1))
+```
+
+The budget grew steadily through the DSWD years (FY 2019–2024 GAA rose ~9–10% a year), dropped sharply in FY 2025, then rebounded to a record in FY 2026. The proposed (NEP) and enacted (GAA) lines track closely in most years — Congress generally stays within a few percent of the proposal — with two exceptions: 2018 (−15%) and 2025 (−25%).
+
+```{r tbl-evolution}
+totals %>% filter(metric %in% c("NEP","GAA")) %>% mutate(value = total/1e6) %>%
+  select(year, metric, value) %>% pivot_wider(names_from = year, values_from = value) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA"))) %>% arrange(metric) %>% rename(`PHP M` = metric) %>%
+  kbl_clean(font = 13, digits = 0, format.args = list(big.mark = ","), na = "")
+```
+
+## Where Congress adjusts the budget
+
+```{r nep-gaa-gap, fig.height=4.4}
+gap <- totals %>% filter(metric %in% c("NEP","GAA")) %>% pivot_wider(names_from = metric, values_from = total) %>%
+  mutate(change = GAA - NEP, direction = ifelse(change >= 0, "Net increase (GAA > NEP)", "Net decrease (GAA < NEP)"))
+ggplot(gap, aes(year, change/1e6, fill = direction)) +
+  geom_col(width = 0.7) +
+  geom_text(aes(label = ifelse(abs(change) < 1e6, "", sprintf("%+.0f", change/1e6)),
+                vjust = ifelse(change >= 0, -0.4, 1.2)), size = 3.2, color = "grey20") +
+  scale_fill_manual(values = c("Net increase (GAA > NEP)" = "#1B9E77", "Net decrease (GAA < NEP)" = "#D95F02")) +
+  scale_x_continuous(breaks = 2018:2026) +
+  scale_y_continuous(labels = function(v) paste0(peso, v, "M"), expand = expansion(mult = c(0.16, 0.16))) +
+  labs(title = "Enacted minus proposed (GAA − NEP), by year",
+       subtitle = "Most years see modest add-ons; FY 2018 and FY 2025 were sizeable cuts", x = NULL, y = NULL) +
+  theme_ncip() + guides(fill = guide_legend(nrow = 1))
+```
+
+In most years Congress trims or tops up the proposal only modestly. The exception that matters is **FY 2025**, when the enacted budget came in ₱398M (−25%) below the proposal.
+
+## The FY 2025 cut hit everything
+
+```{r y2025-cut}
+df_long %>% filter(year == 2025, metric %in% c("NEP","GAA")) %>%
+  group_by(category, metric) %>% summarise(v = sum(amount, na.rm = TRUE)/1e6, .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = v) %>% filter(!(is.na(NEP) & is.na(GAA))) %>%
+  mutate(Cut = GAA - NEP, `Cut %` = scales::percent(Cut/NEP, accuracy = 1)) %>% arrange(desc(NEP)) %>%
+  transmute(`Program (2025 structure)` = category, NEP = round(NEP), GAA = round(GAA), Cut = round(Cut), `Cut %`) %>%
+  kbl_clean(font = 13, align = "lrrrr", format.args = list(big.mark = ","), na = "") %>%
+  column_spec(4:5, color = "#D95F02")
+```
+
+The reduction was **broad, not targeted** — roughly −25% across administration, support, and every operating program, with capital outlay zeroed. FY 2025 was also the transition year (return to the OEOs plus the new P/A/P structure), so part of this may be a budget caught mid-reorganization rather than a deliberate deprioritization.
+
+# Where the money goes {#composition}
+
+## Composition by PREXC program
+
+```{r composition, fig.height=5.4}
+comp <- df_long %>% filter(metric == "GAA", year <= 2026, !is.na(amount), !is.na(category)) %>%
+  group_by(year, category) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(category = factor(category, levels = names(cat_pal)))
+ggplot(comp, aes(year, amount, fill = category)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = cat_pal, labels = function(x) str_wrap(x, 28)) +
+  scale_y_continuous(labels = php_m_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "Composition of the GAA by PREXC program, 2018–2026",
+       subtitle = "The operating block is re-cut in 2025; administration & support persist throughout", x = NULL, y = NULL) +
+  theme_ncip() + guides(fill = guide_legend(nrow = 3, byrow = TRUE)) +
+  theme(legend.text = element_text(size = 8.5), legend.key.size = unit(0.38, "cm"))
+```
+
+The colour change at 2025 is the program restructuring, not a real discontinuity in activity: the three original operating programs (greens/orange) give way to the four new ones. What carries through unchanged is the **administration (gold) and support-to-operations (yellow)** block, which remains a large share throughout.
+
+## Composition by expense class
+
+```{r comp-ec, fig.height=5}
+ec_levels <- c("Personnel Services (PS)","Maintenance & Other Op. Exp. (MOOE)","Capital Outlays (CO)")
+comp_ec <- df_long_all %>% filter(metric == "GAA", year <= 2026, expense_class %in% c("1PS","2MOOE","6CO")) %>%
+  group_by(year, expense_class) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(expense_class = factor(expense_class, levels = c("1PS","2MOOE","6CO"), labels = ec_levels))
+ggplot(comp_ec, aes(year, amount, fill = expense_class)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = ec_pal) +
+  scale_y_continuous(labels = php_m_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "GAA composition by expense class, 2018–2026",
+       subtitle = "Personnel Services dominate (54–71%); Capital Outlays are small, lumpy, and ₱0 in FY 2025", x = NULL, y = NULL) +
+  theme_ncip() + guides(fill = guide_legend(nrow = 1))
+```
+
+NCIP is a payroll-and-operations agency: **Personnel Services are 54–71% of the budget every year**, MOOE the bulk of the rest, and **Capital Outlays small, lumpy, and absent entirely from the FY 2025 GAA**. For an agency whose mandate is field-intensive — delineating and titling ancestral domains — the near-absence of capital spending is itself notable.
+
+```{r tbl-ec-share}
+comp_ec %>% group_by(year) %>% mutate(share = round(amount/sum(amount)*100)) %>% ungroup() %>%
+  select(expense_class, year, share) %>% pivot_wider(names_from = year, values_from = share) %>%
+  rename(`Expense class (% of GAA)` = expense_class) %>% kbl_clean(font = 12.5, na = "")
+```
+
+## The largest P/A/Ps
+
+```{r top-paps, fig.height=5.2}
+top_paps <- pap_year %>% filter(year == 2026, !is.na(GAA), GAA > 0) %>% arrange(desc(GAA)) %>%
+  slice_head(n = 10) %>% mutate(pap = factor(pap, levels = rev(pap)))
+ggplot(top_paps, aes(pap, GAA)) +
+  geom_col(fill = bar_fill, width = 0.72) +
+  geom_text(aes(label = php_m(GAA)), hjust = -0.1, size = 3.2, color = "grey20") +
+  coord_flip() + scale_x_discrete(labels = function(x) str_wrap(x, 46)) +
+  scale_y_continuous(labels = php_m_axis, expand = expansion(mult = c(0, .22)), limits = c(0, NA)) +
+  labs(title = "Top P/A/Ps by FY 2026 GAA",
+       subtitle = "Three lines — IP Human Rights/Legal, General Management, and Policy/Planning — are 76% of the budget",
+       x = NULL, y = NULL) +
+  theme_ncip() + theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"))
+```
+
+The concentration is striking for a commission with a broad field mandate: the single largest line is **IP Human Rights, Legal and Basic Social Services (₱539M)**, followed immediately by two overhead lines — **General Management (₱435M)** and **Policy formulation and planning (₱399M)**. Ancestral **Domain/Land Recognition** — arguably the core IPRA function — is fourth at ₱311M.
+
+```{r structure-map}
+tibble::tibble(
+  `Original operating programs (≤ 2024)` = c("Ancestral Domain Recognition", "Socio-economic & Cultural Services",
+    "Rights, Legal & Adjudication", "", ""),
+  `Restructured operating programs (2025 →)` = c("Domain/Land Recognition, Management & Development",
+    "IP Governance & Empowerment Services", "IP Human Rights, Legal & Basic Social Services",
+    "IP Cultural Services", "")) %>%
+  kbl_clean(font = 13, align = "ll", na = "",
+            caption = "How the operating side was re-cut in 2025 (three programs → four)")
+```
+
+The operating side was reorganized from **three programs into four**, around domain/land, governance & empowerment, human rights/legal/basic services, and culture. The two support programs — General Administration & Support and Support to Operations — carry through both regimes unchanged.
+
+### Full P/A/P ranking, FY 2026 (interactive) {.unnumbered}
+
+```{r tbl-allpaps}
+pap_year %>% filter(year == 2026, !is.na(GAA)) %>%
+  left_join(pap_year %>% filter(year == 2025) %>% transmute(pap, GAA25 = GAA), by = "pap") %>%
+  transmute(`P/A/P` = pap, `NEP 2026 (M)` = NEP/1e6, `GAA 2026 (M)` = GAA/1e6,
+            `GAA 2025 (M)` = GAA25/1e6, `Net chg 2026 (M)` = (GAA - NEP)/1e6) %>%
+  arrange(desc(`GAA 2026 (M)`)) %>%
+  dt_table(page = 10, money_cols = c("NEP 2026 (M)","GAA 2026 (M)","GAA 2025 (M)","Net chg 2026 (M)"))
+```
+
+# Overall budget utilization {#utilization}
+
+With no program-level execution data, utilization can only be read at the **agency aggregate** — and on a different basis from the appropriations above (all available funds, not just current-year new appropriations). On that basis NCIP is a strong absorber.
+
+## Execution over time
+
+```{r exec-levels, fig.height=4.8}
+el <- exec %>% select(year, Allotments, Obligations, Disbursements) %>%
+  pivot_longer(-year, names_to = "stage", values_to = "amount") %>% filter(!is.na(amount)) %>%
+  mutate(stage = factor(stage, levels = c("Allotments","Obligations","Disbursements")))
+ggplot(el, aes(year, amount, color = stage, group = stage)) +
+  geom_line(linewidth = 1.0) + geom_point(size = 2) +
+  scale_color_manual(values = exec_pal) +
+  scale_y_continuous(labels = php_m_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2011, 2025, 2)) +
+  labs(title = "Budget execution, FY 2011–2025 (all available funds)",
+       subtitle = "Allotments, obligations, and disbursements track closely — NCIP puts released funds to work",
+       x = NULL, y = NULL, caption = "Includes new, automatic & continuing appropriations; not comparable to the NEP/GAA series.") +
+  theme_ncip() + guides(color = guide_legend(nrow = 1))
+```
+
+The three lines sit close together across fifteen years: what is released is, for the most part, obligated and paid.
+
+## Absorptive capacity
+
+```{r absorp, fig.height=4.8}
+absorp_long <- exec %>% select(year, oblig_allot, disb_oblig, disb_allot) %>%
+  pivot_longer(-year, names_to = "ratio", values_to = "value") %>% filter(!is.na(value)) %>%
+  mutate(ratio = factor(ratio, levels = c("oblig_allot","disb_oblig","disb_allot"),
+    labels = c("Obligations / Allotment","Disbursements / Obligations","Disbursements / Allotment")))
+ggplot(absorp_long, aes(year, value, color = ratio, group = ratio)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 2) +
+  scale_color_manual(values = absorp_pal) +
+  scale_y_continuous(labels = percent_format(accuracy = 1), limits = c(0.7, 1.02), breaks = seq(0.7, 1, 0.1)) +
+  scale_x_continuous(breaks = seq(2011, 2025, 2)) +
+  labs(title = "NCIP absorptive capacity, FY 2011–2025",
+       subtitle = "Obligation rate stays high (92–99%); cash utilization is lower and dipped to ~86% in 2024", x = NULL, y = NULL) +
+  theme_ncip() + guides(color = guide_legend(nrow = 1))
+```
+
+NCIP **obligates almost everything released to it** (92–99%). The softer number is cash: disbursement-to-allotment runs 83–97% and dipped to ~86% in 2024 — so the gap that opens is between *committing* funds and *paying them out*, not in releasing them in the first place.
+
+### Execution at a glance (interactive) {.unnumbered}
+
+```{r exec-table}
+exec %>% transmute(Year = year, `Allotments (M)` = Allotments/1e6, `Obligations (M)` = Obligations/1e6,
+            `Disbursements (M)` = Disbursements/1e6, `O/A` = oblig_allot, `D/O` = disb_oblig, `D/A` = disb_allot) %>%
+  dt_table(page = 15, money_cols = c("Allotments (M)","Obligations (M)","Disbursements (M)"),
+           pct_cols = c("O/A","D/O","D/A"))
+```
+
+<p class="kbl-note">PHP millions, all-funds basis. O/A = obligations ÷ allotment; D/O = disbursements ÷ obligations; D/A = disbursements ÷ allotment. Not comparable to the NEP/GAA appropriations series above.</p>
+
+# Questions for discussion {#discussion}
+
+1. **Scale versus mandate.** NCIP's enacted budget (~₱1.8B for 2026) is a rounding error in the national budget, yet IPRA tasks it with recognizing ancestral domains covering millions of hectares and serving millions of people. Is this commensurate with the mandate?
+2. **Administration versus delivery.** In FY 2026, General Management (₱435M) and Policy/Planning (₱399M) together are 46% of the budget — almost as much as all field operations combined. Is the overhead-to-delivery balance right?
+3. **The FY 2025 cut.** Congress cut FY 2025 by 25% below proposal, across the board, and zeroed capital outlay — in the same year NCIP returned to the OEOs and re-cut its programs. Deliberate deprioritization, transition turbulence, or both?
+4. **The reorganization carousel.** OEOs → DSWD → OEOs in seven years, plus a P/A/P overhaul. What has constant institutional reshuffling cost the agency in continuity and delivery?
+5. **The missing execution detail.** With no FAR No. 1, we can see that NCIP spends what it is given overall, but not *which* programs lag. What would program-level execution data reveal about delivery on ancestral-domain titling versus administration?
+
+---
+
+<p class="caption">
+Underlying data: DBM NEP & GAA documents (current-year new appropriations, P/A/P level), FY 2018–2026; DBM-published execution aggregates (all available funds, agency level), FY 2011–2025. No FAR No. 1 (P/A/P-level execution) was available for NCIP, so absorption is reported only at the agency aggregate, on a basis not directly comparable to the appropriations series. Prepared as the long-form companion to the NCIP budget briefing.
+</p>

@@ -95,6 +95,10 @@ agencies <- tibble::tribble(
   "A different angle: with no P/A/P-level execution data, this review traces DPWH's budget back to 1988 and maps how Congress redirects money \u2014 every year \u2014 from the Central Office toward named district engineering offices.",
   "Footprint doubled to a mid-teens budget share; 2026 GAA collapses below 8%  |  2019 line-item veto: \u20b195.4B struck, \u20b174B from the Central Office  |  A four-signal screen flags Batangas 4th, Sorsogon, Abra & Bulacan 1st",
 
+  "NCIP",   "National Commission on Indigenous Peoples",          "Whole commission (no P/A/P execution)", "ncip.html",        "published",
+  "The smallest agency in the series, carrying an outsized IPRA mandate. With no FAR No. 1, execution is read only at the agency level \u2014 but the budget story is clear: a near-doubling since 2018, a sharp 2025 cut, and an administration-heavy mix, across two reorganizations.",
+  "Budget nearly doubled: \u20b1968M (2018) \u2192 \u20b11,804M (2026), +86%  |  FY2025 cut 25% below proposal, across the board; capital outlay zeroed  |  Admin + policy = 46% of 2026; agency obligation rate 92\u201399%",
+
   "TESDA",  "Technical Education and Skills Development Authority","",                        "tesda.html",       "planned", "", ""
 )
 
@@ -115,7 +119,8 @@ slides_paths <- c(
   DepEd = "slides/DepEd_OSEC_Budget_Analysis.html",
   DENR  = "slides/DENR_OSEC_Budget_Analysis.html",
   DOH   = "slides/DOH_OSEC_Budget_Analysis.html",
-  DSWD  = "slides/DSWD_OSEC_Budget_Analysis.html"
+  DSWD  = "slides/DSWD_OSEC_Budget_Analysis.html",
+  NCIP  = "slides/NCIP_Budget_Analysis.html"
 )
 ```
 
