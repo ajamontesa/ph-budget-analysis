@@ -97,6 +97,26 @@ agencies <- tibble::tribble(
 
   "TESDA",  "Technical Education and Skills Development Authority","",                        "tesda.html",       "planned", "", ""
 )
+
+# ---- EDIT THIS: briefing slides --------------------------------------------
+# Map an agency's short code to its slide deck under docs/ (i.e. "slides/<file>.html").
+# A "Briefing slides" link appears on that row only when an entry is present here,
+# so leave a code out until its deck is actually in docs/slides/ (avoids dead links).
+# Works for published AND planned agencies (e.g. slides can go up before the report).
+# Example, once the files exist:
+#   slides_paths <- c(
+#     DepEd = "slides/deped-osec.html",
+#     DENR  = "slides/denr-osec.html",
+#     DA    = "slides/da-osec.html"
+#   )
+slides_paths <- c(
+  DAR   = "slides/DAR_OSEC_Budget_Analysis.html",
+  DA    = "slides/DA_Budget_Analysis.html",
+  DepEd = "slides/DepEd_OSEC_Budget_Analysis.html",
+  DENR  = "slides/DENR_OSEC_Budget_Analysis.html",
+  DOH   = "slides/DOH_OSEC_Budget_Analysis.html",
+  DSWD  = "slides/DSWD_OSEC_Budget_Analysis.html"
+)
 ```
 
 ```{css, echo=FALSE}
@@ -115,7 +135,7 @@ body { margin:0; font-family:Arial,Helvetica,"IBM Plex Sans",sans-serif;
 .row { display:flex; gap:26px; background:#fff; border:1px solid var(--rule); border-radius:8px;
        padding:20px 24px; text-decoration:none; color:inherit;
        transition:box-shadow .15s, transform .15s, border-color .15s; }
-.row.pub { border-left:4px solid var(--accent); }
+.row.pub { border-left:4px solid var(--accent); position:relative; }
 .row.pub:hover { box-shadow:0 6px 20px rgba(8,81,156,.10); transform:translateY(-1px); border-color:#cfd8e3; }
 .row.planned { border-style:dashed; background:#fcfcfd; }
 .row-id { flex:0 0 196px; }
@@ -123,12 +143,19 @@ body { margin:0; font-family:Arial,Helvetica,"IBM Plex Sans",sans-serif;
 .badge { display:inline-block; min-width:54px; text-align:center; background:var(--accent);
          color:#fff; font-weight:700; font-size:13px; padding:5px 10px; border-radius:5px; }
 .badge.muted { background:#c7ccd1; }
+.dept-link { display:block; text-decoration:none; color:inherit; }
+.dept-link::after { content:""; position:absolute; inset:0; }
+.dept-link:hover .dept { color:var(--accent); }
 .dept { font-size:16px; font-weight:600; line-height:1.3; margin:10px 0 0; }
 .unit { font-size:12.5px; color:var(--muted); margin-top:3px; }
 .blurb { font-size:14px; color:#333; margin:0 0 11px; line-height:1.55; }
-.hl { margin:0 0 11px; padding-left:18px; }
+.hl { margin:0 0 12px; padding-left:18px; }
 .hl li { font-size:13px; color:#444; margin-bottom:4px; line-height:1.5; }
+.ctas { display:flex; gap:20px; align-items:center; flex-wrap:wrap; }
 .cta { font-size:13.5px; font-weight:600; color:var(--accent); }
+.cta-slides { position:relative; z-index:1; font-size:13px; font-weight:600;
+              color:var(--muted); text-decoration:none; }
+.cta-slides:hover { color:var(--accent); }
 .muted-txt { color:var(--muted); }
 @media (max-width:640px) {
   .row { flex-direction:column; gap:14px; }
@@ -152,21 +179,26 @@ esc <- function(s) {
 
 card <- function(a) {
   is_pub <- tolower(a[["status"]]) == "published"
+  sl <- if (a[["short"]] %in% names(slides_paths)) slides_paths[[a[["short"]]]] else ""
+  has_sl <- nzchar(sl)
   unit_line <- if (nzchar(a[["unit"]])) sprintf('<div class="unit">%s</div>', esc(a[["unit"]])) else ""
-  rail <- sprintf(
-    '<div class="row-id"><span class="badge%s">%s</span><div class="dept">%s</div>%s</div>',
-    if (is_pub) "" else " muted", esc(a[["short"]]), esc(a[["name"]]), unit_line)
+  slides_link <- if (has_sl) sprintf(
+    '<a class="cta-slides" href="%s" target="_blank" rel="noopener">Briefing slides &#8599;</a>', esc(sl)) else ""
 
   if (is_pub) {
-    hs <- trimws(unlist(strsplit(a[["highlights"]], "|", fixed = TRUE)))
-    hs <- hs[nzchar(hs)]
-    hl <- if (length(hs)) paste0('<ul class="hl">',
-                                 paste0("<li>", esc(hs), "</li>", collapse = ""), '</ul>') else ""
-    body <- sprintf('<div class="row-body"><p class="blurb">%s</p>%s<div class="cta">Read the analysis &rarr;</div></div>',
-                    esc(a[["blurb"]]), hl)
-    sprintf('<a class="row pub" href="%s">%s%s</a>', esc(a[["output"]]), rail, body)
+    dept <- sprintf('<a class="dept-link" href="%s"><div class="dept">%s</div></a>', esc(a[["output"]]), esc(a[["name"]]))
+    rail <- sprintf('<div class="row-id"><span class="badge">%s</span>%s%s</div>', esc(a[["short"]]), dept, unit_line)
+    hs <- trimws(unlist(strsplit(a[["highlights"]], "|", fixed = TRUE))); hs <- hs[nzchar(hs)]
+    hl <- if (length(hs)) paste0('<ul class="hl">', paste0("<li>", esc(hs), "</li>", collapse = ""), '</ul>') else ""
+    ctas <- sprintf('<div class="ctas"><span class="cta">Read the analysis &rarr;</span>%s</div>', slides_link)
+    body <- sprintf('<div class="row-body"><p class="blurb">%s</p>%s%s</div>', esc(a[["blurb"]]), hl, ctas)
+    sprintf('<div class="row pub">%s%s</div>', rail, body)
   } else {
-    body <- '<div class="row-body"><p class="blurb muted-txt">Report in preparation.</p><div class="cta muted-txt">Coming soon</div></div>'
+    rail <- sprintf('<div class="row-id"><span class="badge muted">%s</span><div class="dept">%s</div>%s</div>',
+                    esc(a[["short"]]), esc(a[["name"]]), unit_line)
+    blurb <- if (has_sl) "Long-form report in preparation \u2014 briefing slides available now." else "Report in preparation."
+    tail <- if (has_sl) sprintf('<div class="ctas">%s</div>', slides_link) else '<div class="cta muted-txt">Coming soon</div>'
+    body <- sprintf('<div class="row-body"><p class="blurb muted-txt">%s</p>%s</div>', blurb, tail)
     sprintf('<div class="row planned">%s%s</div>', rail, body)
   }
 }
