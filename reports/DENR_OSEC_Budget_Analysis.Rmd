@@ -148,11 +148,11 @@ This document tracks the budget of the **Department of Environment and Natural R
 
 It is the long-form companion to the DENR-OSEC briefing material. Where a slide deck must compress, this version keeps the full argument and adds reference tables — sortable, searchable, and exportable — so a reader can interrogate the figures directly.
 
-DENR stands apart from the other departments in this series in one fundamental way: **its budget has not grown.** While health, education, agriculture, and social welfare scaled up over 2018–2026, DENR-OSEC has been held almost perfectly flat in nominal terms at ₱16–19B — which, against the inflation of the period, is a real-terms *cut*. Three further features define it: Congress is a **net subtractor**, trimming the proposal in most years and cutting **forestry** hardest of all; **administration is the single largest line** in the budget; and the department has been **shedding capital spending** (down from 37% of the budget to 12%) in favour of payroll. The result is an environment department doing relatively less on-the-ground work, on a budget that has effectively shrunk, even as its mandate — climate resilience, Manila Bay, biodiversity, mining oversight — has expanded.
+DENR-OSEC has one defining feature: **its budget has not grown.** Over 2018–2026 it has been held almost perfectly flat in nominal terms at ₱16–19B — which, against the inflation of the period, is a real-terms *cut*. Three further features define it: Congress is a **net subtractor**, trimming the proposal in most years and cutting **forestry** hardest of all; **administration is the single largest line** in the budget; and the department has been **shedding capital spending** (down from 37% of the budget to 12%) in favour of payroll. The result is an environment department doing relatively less on-the-ground work, on a budget that has effectively shrunk, even as its mandate — climate resilience, Manila Bay, biodiversity, mining oversight — has expanded.
 
 # Executive summary {#exec}
 
-**DENR-OSEC's budget has been frozen.** The enacted GAA has held at ₱16–20B for nine straight years — ₱19.4B in 2018, ₱19.3B in 2026 — making DENR one of the few line departments not to scale up. **2018 remains the peak.** In nominal terms that is near-zero growth; adjusting for inflation, the FY 2026 budget is worth roughly **₱13.6B in 2018 pesos — about 30% below where the department started the period**.
+**DENR-OSEC's budget has been frozen.** The enacted GAA has held at ₱16–20B for nine straight years — ₱19.4B in 2018, ₱19.3B in 2026. **2018 remains the peak.** In nominal terms that is near-zero growth; adjusting for inflation, the FY 2026 budget is worth roughly **₱13.6B in 2018 pesos — about 30% below where the department started the period**.
 
 **Congress is a net subtractor, and forestry is the target.** The enacted GAA came in below the Executive's proposal in six of nine years. The cuts fall overwhelmingly on **Forest Development** (the greening/reforestation line): cumulatively **−₱12.4B from NEP to GAA**, and the enacted line itself shrank from **₱6.6B (2018) to ₱2.4B (2026)** — a ~63% collapse as the National Greening Program wound down.
 
@@ -194,7 +194,7 @@ ggplot(evo, aes(year, total, color = metric, group = metric)) +
   scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
   scale_x_continuous(breaks = seq(2018, 2026, 2)) +
   labs(title = "DENR-OSEC budget, NEP through Disbursements (FY 2018–2026)",
-       subtitle = "Held almost perfectly flat at PHP 16–19B for nine years — while peers grew",
+       subtitle = "Held almost perfectly flat at PHP 16–19B for nine years",
        x = NULL, y = NULL, caption = "FY 2026 reflects NEP/GAA only; execution data not yet available.") +
   theme_denr() + guides(color = guide_legend(nrow = 1))
 ```

@@ -134,10 +134,10 @@ kbl_clean <- function(x, font = 14, ...) {
 # Overview {#overview .unnumbered}
 
 <p class="lead">
-This document profiles the budget of the **Department of Public Works and Highways (DPWH)** — the government's largest infrastructure agency — from two angles the other reviews in this series cannot take: a **long-run time series stretching back to 1988**, and a **fine-grained map of how money moves between the President's proposal and the enacted law**, both by program and across the department's 200-plus operating units.
+This document profiles the budget of the **Department of Public Works and Highways (DPWH)** — the government's largest infrastructure agency — from two angles: a **long-run time series stretching back to 1988**, and a **fine-grained map of how money moves between the President's proposal and the enacted law**, both by program and across the department's 200-plus operating units.
 </p>
 
-The reason for the different approach is a data limitation. Unlike the line departments covered elsewhere, DPWH's budget-execution reports (SAAODB) are not available at the program/activity/project level, so the peso-by-peso *execution* chain cannot be traced down to individual line items. What *is* available, and unusually deep, is the **appropriations** record: a near-four-decade series of proposed, enacted, and (where sourced) obligated totals, plus a complete office-by-office breakdown of the NEP and GAA from FY 2014 to FY 2026. So this review leans into those strengths — the **long arc** of the department's budget and **the geography of Congressional realignment** — rather than absorption ratios.
+The reason for this approach is a data limitation. DPWH's budget-execution reports (SAAODB) are not available at the program/activity/project level, so the peso-by-peso *execution* chain cannot be traced down to individual line items. What *is* available, and unusually deep, is the **appropriations** record: a near-four-decade series of proposed, enacted, and (where sourced) obligated totals, plus a complete office-by-office breakdown of the NEP and GAA from FY 2014 to FY 2026. So this review leans into those strengths — the **long arc** of the department's budget and **the geography of Congressional realignment** — rather than absorption ratios.
 
 Two themes run through it. First, DPWH has grown from a roughly 6–8% slice of the national budget in the 1990s–2000s to a mid-teens share in recent years, with the **2026 GAA a sharp, anomalous contraction**. Second, the budget process is a sustained tug-of-war between the executive, which concentrates the proposal in the **Central Office**, and Congress, which **systematically redirects money toward named district engineering offices** — every year on record — making the geography of those insertions, and the 2019 line-item veto that briefly reversed them, the central story.
 
@@ -145,7 +145,7 @@ Two themes run through it. First, DPWH has grown from a roughly 6–8% slice of 
 
 **DPWH's footprint roughly doubled over the long run.** From about 6–8% of the national budget in the 1990s–2000s, the department rose to a mid-teens share (around 17% of the GAA in 2024–2025) — evidence its expansion outpaced overall budget growth rather than merely tracking it. In real (2018-constant) terms, much of the headline post-2018 "growth" is the price level catching up; the real GAA was broadly flat between 2018 and 2023 before resuming its climb.
 
-**The 2026 GAA is a sharp anomaly.** Against a proposed ₱881B (New + Automatic Appropriations), the enacted 2026 GAA falls to ₱531B — the reverse of the usual upward realignment, and a one-year collapse in DPWH's budget share to under 8%. By program, **Flood Management is realigned down by roughly ₱246B** in 2026 — the single largest program cut in the series.
+**The 2026 GAA is a sharp anomaly.** Against a proposed ₱881B (New + Automatic Appropriations), the enacted 2026 GAA falls to ₱531B — the reverse of the usual upward realignment, and a one-year collapse in DPWH's budget share to under 8%. By program, **Flood Management is realigned down by roughly ₱246B** in 2026 — the largest single-program cut on record.
 
 **Congress reshapes the program mix.** The **Convergence and Special Support Program** gains year after year, peaking at **+₱265B over its proposal in 2025**, while Network Development and Bridge programs are routinely trimmed from proposed levels.
 
@@ -161,7 +161,7 @@ Two themes run through it. First, DPWH has grown from a roughly 6–8% slice of 
 
 # A note on the data {#data-notes}
 
-**Why this report is different.** DPWH's SAAODB execution data is not published at the P/A/P level, so — unlike the other reviews — this one does not compute program-level absorptive capacity. It instead exploits the deep **appropriations** record: the long-run total series, the program breakdown, and the office-by-office NEP/GAA.
+**Why this report focuses on appropriations.** DPWH's SAAODB execution data is not published at the P/A/P level, so this report does not compute program-level absorptive capacity. It instead exploits the deep **appropriations** record: the long-run total series, the program breakdown, and the office-by-office NEP/GAA.
 
 **Three data layers, three time spans.**
 
@@ -362,7 +362,7 @@ ggplot(byprogram, aes(FY, fct_rev(Program), fill = Realign)) +
         legend.position = "right", legend.key.width = unit(0.4, "cm"))
 ```
 
-Two patterns stand out: the **Convergence and Special Support Program** gains year after year (peaking at **+₱265B in 2025**), while **Network Development** and **Bridge** are routinely trimmed from their proposed levels. The **2026** column is exceptional — Flood Management is realigned **down by ~₱246B**, the largest single-program cut in the series.
+Two patterns stand out: the **Convergence and Special Support Program** gains year after year (peaking at **+₱265B in 2025**), while **Network Development** and **Bridge** are routinely trimmed from their proposed levels. The **2026** column is exceptional — Flood Management is realigned **down by ~₱246B**, the largest single-program cut on record.
 
 ```{r table-realign}
 realign_tbl <- byprogram %>% transmute(FY, Program, Realign = round(Realign,1)) %>%
@@ -537,7 +537,7 @@ ggplot(central_split, aes(FY, GAA_B, fill = Unit)) +
   theme_dpwh()
 ```
 
-Across the series the Central Office holds most of the *enacted* budget — typically **60–75%**, peaking at **75% in 2025** — with 2015–2016 (both under 50%) and the unusual 2026 GAA (62%) the main exceptions. A single operating unit carrying most of the department's budget is a reason for *closer* scrutiny, not less. The enacted shares also understate how concentrated the executive's *proposal* is — the subject of the next section.
+Across the period the Central Office holds most of the *enacted* budget — typically **60–75%**, peaking at **75% in 2025** — with 2015–2016 (both under 50%) and the unusual 2026 GAA (62%) the main exceptions. A single operating unit carrying most of the department's budget is a reason for *closer* scrutiny, not less. The enacted shares also understate how concentrated the executive's *proposal* is — the subject of the next section.
 
 ```{r table-central}
 central_split %>% pivot_wider(names_from = Unit, values_from = GAA_B) %>%

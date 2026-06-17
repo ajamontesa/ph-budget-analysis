@@ -214,7 +214,7 @@ This document tracks the budget of the **Department of Social Welfare and Develo
 
 It is the long-form companion to the DSWD-OSEC briefing deck. Where the deck fits each point on a slide, this version keeps the full argument and adds reference tables — most sortable, searchable, and exportable — so a reader can interrogate the figures directly. Every table can be copied or downloaded from its toolbar.
 
-DSWD is the simplest of the agencies to characterize and, in some ways, the most politically charged. It is overwhelmingly a **cash-transfer machine**: three programs — Pantawid Pamilyang Pilipino (4Ps), Protective Services, and the Social Pension — carry the great majority of the budget, and because cash assistance classifies as Maintenance and Other Operating Expenses, the agency is almost entirely MOOE. Two threads run through what follows. First, **execution has steadily improved** — unlike the capital-outlay bottlenecks that dog other departments, DSWD's money increasingly gets paid out, reaching 96% of allotments in 2025. Second, **Congress does not so much enlarge the DSWD budget as re-shape it from within**, trimming the flagship 4Ps while building up Protective Services and inventing an entirely new program, AKAP, that never appeared in any Presidential proposal.
+DSWD is simple to characterize and, in some ways, politically charged. It is overwhelmingly a **cash-transfer machine**: three programs — Pantawid Pamilyang Pilipino (4Ps), Protective Services, and the Social Pension — carry the great majority of the budget, and because cash assistance classifies as Maintenance and Other Operating Expenses, the agency is almost entirely MOOE. Two threads run through what follows. First, **execution has steadily improved** — DSWD's money increasingly gets paid out, reaching 96% of allotments in 2025. Second, **Congress does not so much enlarge the DSWD budget as re-shape it from within**, trimming the flagship 4Ps while building up Protective Services and inventing an entirely new program, AKAP, that never appeared in any Presidential proposal.
 
 # Executive summary {#exec}
 
@@ -224,7 +224,7 @@ DSWD is the simplest of the agencies to characterize and, in some ways, the most
 
 **The agency is almost entirely MOOE.** Maintenance and Other Operating Expenses run **93–95% of every year's GAA**, because cash transfers and subsidies classify as MOOE. Personnel Services is a thin sliver, and Financial Expenses and Capital Outlays are each under 1% of the budget.
 
-**Absorption has improved steadily.** Disbursement-to-allotment held at 71–84% through 2018–2023, then jumped to **90% (2024) and 96% (2025)** — the strongest readings on record, and a marked contrast to the capital-outlay struggles seen at health and education.
+**Absorption has improved steadily.** Disbursement-to-allotment held at 71–84% through 2018–2023, then jumped to **90% (2024) and 96% (2025)** — the strongest readings on record.
 
 **Congress consistently augments DSWD, but redirects within the agency.** The enacted GAA exceeded the Executive's NEP in eight of nine years. But the headline net change conceals a large internal reshuffle: the biggest cumulative *add* is to **Protective Services (+₱116B)**, the biggest cumulative *trim* is to **4Ps (−₱83B)**, and Congress created **AKAP** — now ₱26B a year — entirely outside the President's budget, a cumulative +₱53B that never had a matching NEP line.
 
@@ -264,7 +264,7 @@ ggplot(evo, aes(year, total, color = metric, group = metric)) +
   theme_dswd() + guides(color = guide_legend(nrow = 1))
 ```
 
-The defining feature of this chart, in contrast to health and education, is how **tightly the disbursement line now hugs the allotment line** at the right-hand end. Through the middle years there is a visible gap; by 2024–2025 it has nearly closed. The budget itself roughly doubled over the period, dipping in 2025 before the large 2026 proposal. The table gives the underlying figures.
+The defining feature of this chart is how **tightly the disbursement line now hugs the allotment line** at the right-hand end. Through the middle years there is a visible gap; by 2024–2025 it has nearly closed. The budget itself roughly doubled over the period, dipping in 2025 before the large 2026 proposal. The table gives the underlying figures.
 
 ```{r tbl-evolution}
 tbl_evo <- totals_by_year %>%
@@ -339,7 +339,7 @@ kbl_clean(comp_pct %>% rename(`Program (% of GAA)` = category), font = 12, digit
 
 ## By expense class
 
-DSWD's expense-class profile is the most lopsided of any agency in this series: it is a MOOE department, because cash assistance is classified as an operating expense.
+DSWD's expense-class profile is extremely lopsided: it is a MOOE department, because cash assistance is classified as an operating expense.
 
 ```{r fig-comp-ec, fig.height=5.2}
 ec_levels <- c("Personnel Services (PS)","Maintenance & Other Op. Exp. (MOOE)",
@@ -536,7 +536,7 @@ The program has grown roughly eleven-fold, from ₱5.7B (2018 GAA) to a proposed
 
 ## At the aggregate
 
-DSWD's absorption story is one of steady improvement — the opposite of the deteriorating capital-outlay pictures at health and education.
+DSWD's absorption story is one of steady improvement.
 
 ```{r fig-absorp-agg, fig.height=5}
 absorp_long <- absorp_total %>% select(year, oblig_allot, disb_oblig, disb_allot) %>%
@@ -594,7 +594,7 @@ ggplot(absorp_ec, aes(year, da, color = expense_class, group = expense_class)) +
   theme_dswd() + guides(color = guide_legend(nrow = 1))
 ```
 
-Because MOOE is 93–95% of the budget, the MOOE line here is essentially the aggregate line — the agency-wide absorption rate *is* the MOOE absorption rate. That is the mirror image of education and health, where the aggregate was dominated by a near-perfect Personnel Services block that masked weaker non-salary execution. At DSWD there is no large salary block to flatter the average; the headline number reflects how well the cash actually goes out the door.
+Because MOOE is 93–95% of the budget, the MOOE line here is essentially the aggregate line — the agency-wide absorption rate *is* the MOOE absorption rate. There is no large salary block to flatter the average; the headline number reflects how well the cash actually goes out the door.
 
 ## Strongest and weakest absorbers (FY 2025)
 
@@ -632,7 +632,7 @@ abs_2025 %>% arrange(`D/A`) %>% slice_head(n = 8) %>%
   kbl_clean(font = 13, align = "lrrrr", na = "")
 ```
 
-The pattern echoes the other agencies: routine cash-transfer execution runs cleanly, while administrative and project-type lines lag. But the spread is far narrower than at health or education — the weakest material absorbers here sit around 40–57%, not the single digits seen elsewhere.
+The familiar pattern holds: routine cash-transfer execution runs cleanly, while administrative and project-type lines lag. But the spread is narrow — the weakest material absorbers here sit around 40–57%, not in the single digits.
 
 ### Full absorption table, FY 2025 (interactive) {.unnumbered}
 

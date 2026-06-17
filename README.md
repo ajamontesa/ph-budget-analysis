@@ -6,8 +6,9 @@ tracing each peso from the Executive's proposal (NEP) through enactment
 (disbursement). Each report covers the Office of the Secretary, current-year
 **New Appropriations only**, FY 2018-2026.
 
-**Live site:** the reports are published via GitHub Pages from the `docs/`
-folder. The landing page (`docs/index.html`) links to every published report.
+**Live site:** <https://ajamontesa.github.io/ph-budget-analysis/index.html> —
+the home page links to every published report. The site is published via GitHub
+Pages from the `docs/` folder.
 
 ## Repository structure
 
@@ -95,13 +96,6 @@ R (≥ 4.2) with `rmarkdown`, `knitr`, `dplyr`, `tidyr`, `ggplot2`, `scales`,
    > one portable file (the decks currently in `docs/slides/` are already built
    > this way — remark.js and images are inlined, so they work even offline).
 7. **Commit and push.** GitHub Pages serves the update.
-
-## Enabling GitHub Pages
-
-Repository settings → Pages → set the source to the `main` branch and the
-`/docs` folder. The site is served at `https://<user>.github.io/<repo>/`.
-The empty `docs/.nojekyll` file tells Pages to serve the HTML and its assets
-as-is.
 
 ## Data notes
 

@@ -227,7 +227,7 @@ This document tracks the budget of the **Department of Health – Office of the 
 
 It is the long-form companion to the DOH-OSEC briefing deck. Where the deck fits each point on a slide, this version keeps the full argument and adds reference tables — most sortable, searchable, and exportable — so a reader can interrogate the figures directly. Every table can be copied or downloaded from its toolbar.
 
-DOH-OSEC tells a different story from a payroll-dominated agency like education. Two forces shape it. The first is **Congress**: unlike most departments, DOH has its budget enlarged by the legislature in every single year of this period, cumulatively by more than ₱210B, and those additions are heavily concentrated in a handful of flagship lines. The second is **absorption**, and specifically a capital-outlay bottleneck — the agency reliably spends its salaries and operating money but struggles to disburse its infrastructure budget, year after year. Most of what follows examines how those two forces interact: money is appropriated faster than the agency's procurement and construction pipeline can spend it.
+Two forces shape DOH-OSEC's budget. The first is **Congress**: DOH has its budget enlarged by the legislature in every single year of this period, cumulatively by more than ₱210B, and those additions are heavily concentrated in a handful of flagship lines. The second is **absorption**, and specifically a capital-outlay bottleneck — the agency reliably spends its salaries and operating money but struggles to disburse its infrastructure budget, year after year. Most of what follows examines how those two forces interact: money is appropriated faster than the agency's procurement and construction pipeline can spend it.
 
 # Executive summary {#exec}
 
@@ -441,7 +441,7 @@ dt_table(all_paps_2026, page = 15,
 
 # Congressional action: NEP → GAA {#augmentation}
 
-DOH is one of the most consistently augmented departments in the budget. The chart ranks the ten P/A/Ps that have received the most cumulative plus-ups (GAA above NEP) over 2018–2026.
+Congress augments DOH year after year. The chart ranks the ten P/A/Ps that have received the most cumulative plus-ups (GAA above NEP) over 2018–2026.
 
 ```{r fig-augmentation, fig.height=5.2}
 top_aug <- pap_year %>% group_by(pap) %>%

@@ -153,16 +153,16 @@ exec <- read_excel(file_path, sheet = EXEC_SHEET) %>% filter(Agency == AGENCY_NA
 # Overview {#overview .unnumbered}
 
 <p class="lead">
-This document profiles the budget of the **National Commission on Indigenous Peoples (NCIP)** — the agency mandated by the Indigenous Peoples' Rights Act (IPRA) to recognize ancestral domains and serve the country's Indigenous Peoples — across nine fiscal years, FY 2018 to FY 2026. NCIP is one of the smallest agencies in this series, and one with a particular data constraint: usable program-level execution records were not available, so this review pairs the **proposed-to-enacted budget at the program level** with **budget utilization measured at the agency aggregate**.
+This document profiles the budget of the **National Commission on Indigenous Peoples (NCIP)** — the agency mandated by the Indigenous Peoples' Rights Act (IPRA) to recognize ancestral domains and serve the country's Indigenous Peoples — across nine fiscal years, FY 2018 to FY 2026. NCIP is a very small agency, and one with a particular data constraint: usable program-level execution records were not available, so this review pairs the **proposed-to-enacted budget at the program level** with **budget utilization measured at the agency aggregate**.
 </p>
 
-Because the program-by-program execution chain cannot be traced, the emphasis here is different from the line-department reviews: what NCIP's budget is *composed of*, how Congress adjusts it, and — at the whole-agency level — how much of what is released actually gets obligated and paid out.
+Because the program-by-program execution chain cannot be traced, the emphasis here is on what NCIP's budget is *composed of*, how Congress adjusts it, and — at the whole-agency level — how much of what is released actually gets obligated and paid out.
 
 Three features define NCIP's budget. First, it is **tiny relative to its mandate**: about ₱1.8B in 2026 to recognize ancestral domains spanning millions of hectares. Second, the agency has been **institutionally restless** — it moved from the Other Executive Offices to being attached to DSWD and back again within seven years, and re-cut its entire program structure in 2025, so almost every trend line in this report contains a break. Third, it is **administration- and personnel-heavy**: roughly half the 2026 budget is general management and policy/planning, and personnel services alone are 54–71% of spending in any given year.
 
 # Executive summary {#exec}
 
-**NCIP's enacted budget has nearly doubled.** From ₱968M (2018 GAA) to ₱1,804M (2026) — about **+86% over eight years**, roughly 8% a year, and the largest enacted budget in the series in 2026.
+**NCIP's enacted budget has nearly doubled.** From ₱968M (2018 GAA) to ₱1,804M (2026) — about **+86% over eight years**, roughly 8% a year, and its largest enacted budget on record.
 
 **The agency keeps moving.** NCIP sat under the **Other Executive Offices (OEOs)**, shifted **under DSWD for FY 2019–2024**, then **returned to the OEOs (FY 2025–2026)** — and adopted a **new P/A/P structure in 2025**. Every trend line below straddles these breaks.
 
@@ -180,7 +180,7 @@ Three features define NCIP's budget. First, it is **tiny relative to its mandate
 
 **Period.** FY 2018 through FY 2026 for the proposed (NEP) and enacted (GAA) budget, at the P/A/P level. Agency-level execution (Allotments, Obligations, Disbursements) covers FY 2011–2025.
 
-**No program-level execution.** Usable **FAR No. 1** (SAAODB) records were not available for NCIP, so there is **no P/A/P-level absorption analysis**. Utilization is shown only at the **agency aggregate**. Some agencies in this series will carry the same constraint until complete execution data can be obtained.
+**No program-level execution.** Usable **FAR No. 1** (SAAODB) records were not available for NCIP, so there is **no P/A/P-level absorption analysis**. Utilization is shown only at the **agency aggregate**.
 
 **Two bases, not directly comparable.** The NEP/GAA figures are **current-year new appropriations only**. The execution figures are DBM's **published agency aggregates, which combine all available funds** — new, automatic, and continuing appropriations. The two series should not be read one-to-one (for example, obligations can exceed a single year's new appropriation because continuing funds are in play).
 

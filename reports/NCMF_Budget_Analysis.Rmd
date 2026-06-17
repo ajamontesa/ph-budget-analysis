@@ -150,16 +150,16 @@ exec <- read_excel(file_path, sheet = EXEC_SHEET) %>% filter(agency_key(Agency) 
 # Overview {#overview .unnumbered}
 
 <p class="lead">
-This document profiles the budget of the **National Commission on Muslim Filipinos (NCMF)** — the agency, formerly the Office on Muslim Affairs, mandated to promote the well-being of Muslim Filipinos and preserve their cultural, religious, and historical heritage — across nine fiscal years, FY 2018 to FY 2026. Like NCIP, NCMF carries a particular data constraint: usable program-level execution records were not available, so this review pairs the **proposed-to-enacted budget at the program level** with **budget utilization measured at the agency aggregate**.
+This document profiles the budget of the **National Commission on Muslim Filipinos (NCMF)** — the agency, formerly the Office on Muslim Affairs, mandated to promote the well-being of Muslim Filipinos and preserve their cultural, religious, and historical heritage — across nine fiscal years, FY 2018 to FY 2026. NCMF carries a particular data constraint: usable program-level execution records were not available, so this review pairs the **proposed-to-enacted budget at the program level** with **budget utilization measured at the agency aggregate**.
 </p>
 
 Because the program-by-program execution chain cannot be traced, the emphasis is on what NCMF's budget is *composed of*, how Congress adjusts it, and — at the whole-agency level — how much of what is released actually gets obligated and paid out.
 
-Three features define NCMF's budget. First, it has **grown fast** — more than doubling since 2018, faster than most small agencies. Second, it is **unusually concentrated**: a single line, the preservation of Muslim cultural centers and heritage, has been roughly **half the entire agency** every year. Third, unlike many peers, NCMF has been **institutionally stable** — one move (from the Other Executive Offices to the DILG, around 2019) and **no change to its five-program structure** — so its trend lines read cleanly from 2018 to 2026.
+Three features define NCMF's budget. First, it has **grown fast** — more than doubling since 2018. Second, it is **unusually concentrated**: a single line, the preservation of Muslim cultural centers and heritage, has been roughly **half the entire agency** every year. Third, NCMF has been **institutionally stable** — one move (from the Other Executive Offices to the DILG, around 2019) and **no change to its five-program structure** — so its trend lines read cleanly from 2018 to 2026.
 
 # Executive summary {#exec}
 
-**NCMF's enacted budget has more than doubled.** From ₱535M (2018 GAA) to ₱1,314M (2026) — about **+145%**, roughly 12% a year, faster than most small agencies, with a steep ramp in 2025–2026.
+**NCMF's enacted budget has more than doubled.** From ₱535M (2018 GAA) to ₱1,314M (2026) — about **+145%**, roughly 12% a year, with a steep ramp in 2025–2026.
 
 **One organizational move, a stable structure.** NCMF (the former Office on Muslim Affairs) shifted from the **Other Executive Offices to the DILG around 2019** and has stayed there — *without* re-cutting its five-program structure, so program lines are comparable across all years.
 
@@ -177,17 +177,17 @@ Three features define NCMF's budget. First, it has **grown fast** — more than 
 
 **Period.** FY 2018 through FY 2026 for the proposed (NEP) and enacted (GAA) budget, at the P/A/P level. Agency-level execution (Allotments, Obligations, Disbursements) covers FY 2011–2025.
 
-**No program-level execution.** Usable **FAR No. 1** (SAAODB) records were not available for NCMF, so there is **no P/A/P-level absorption analysis**. Utilization is shown only at the **agency aggregate** — the same constraint as NCIP, and one that will recur for some agencies until complete execution data can be obtained.
+**No program-level execution.** Usable **FAR No. 1** (SAAODB) records were not available for NCMF, so there is **no P/A/P-level absorption analysis**. Utilization is shown only at the **agency aggregate**.
 
 **Two bases, not directly comparable.** The NEP/GAA figures are **current-year new appropriations only**. The execution figures are DBM's **published agency aggregates, which combine all available funds** — new, automatic, and continuing appropriations. The two series should not be read one-to-one.
 
-**One reorganization, a stable program structure.** NCMF's mother agency changed once (**OEOs → DILG, ~2019**); unlike some peers, its **P/A/P structure stayed stable** throughout, so program lines are comparable across all years.
+**One reorganization, a stable program structure.** NCMF's mother agency changed once (**OEOs → DILG, ~2019**); its **P/A/P structure stayed stable** throughout, so program lines are comparable across all years.
 
 **Expense classes.** Personnel Services (PS), Maintenance & Other Operating Expenses (MOOE), Capital Outlays (CO). NCMF carries no Financial Expenses. **Units are PHP millions** throughout.
 
 # One move to DILG — a stable structure {#reorg}
 
-NCMF changed mother agency once and otherwise kept its programs intact — which makes its trends easier to read than agencies that churn their structure.
+NCMF changed mother agency once and otherwise kept its programs intact — so its trend lines run cleanly across all nine years.
 
 ```{r reorg-timeline, fig.height=3.0}
 tl <- tibble::tribble(
@@ -252,7 +252,7 @@ ggplot(gap, aes(year, change/1e6, fill = direction)) +
   theme_ncmf() + guides(fill = guide_legend(nrow = 1))
 ```
 
-NCMF is one of the few agencies in this series that Congress **reliably augments**: the enacted budget met or exceeded the proposal in eight of nine years, the only cut being FY 2018 (−₱39M). The **+₱148M (+13%) plus-up for FY 2026** is the largest single adjustment in the period.
+Congress **reliably augments** NCMF: the enacted budget met or exceeded the proposal in eight of nine years, the only cut being FY 2018 (−₱39M). The **+₱148M (+13%) plus-up for FY 2026** is the largest single adjustment in the period.
 
 # Where the money goes {#composition}
 

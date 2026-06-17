@@ -59,18 +59,18 @@ source_note <- paste(
   "(Allotments, Obligations, Disbursements) cover FY 2018-2025. Coverage",
   "varies by agency; the DPWH review instead traces appropriations to 1988."
 )
-repo_url <- ""   # optional: link to the GitHub repo, or leave "" to omit
+repo_url <- "https://github.com/ajamontesa/ph-budget-analysis/"   # GitHub repo: full code + datasets
 
 # ---- EDIT THIS: one row per agency ---------------------------------------
 agencies <- tibble::tribble(
   ~short,   ~name,                                                ~unit,                     ~output,            ~status,      ~blurb, ~highlights,
 
   "DAR",    "Department of Agrarian Reform",                      "Office of the Secretary", "dar-osec.html",    "published",
-  "The smallest department, and the one Congress trims rather than augments. A flat \u20b18\u201310B budget for eight years jumps 62% in 2026 \u2014 built almost entirely on foreign-assisted loan projects that are the agency's weakest absorbers.",
+  "A small department, and one Congress tends to trim rather than augment. A flat \u20b18\u201310B budget for eight years jumps 62% in 2026 \u2014 built almost entirely on foreign-assisted loan projects that are the agency's weakest absorbers.",
   "Flat \u20b18\u201310B for 8 years \u2192 \u20b116.8B in 2026 (+62%)  |  Congress is a net subtractor: \u2212\u20b12.4B (2022), \u2212\u20b14.5B (2023)  |  Foreign-assisted projects 10% \u2192 37% of budget, but disburse just 19\u201338%",
 
   "DA",     "Department of Agriculture",                          "OSEC + 9 attached agencies", "da-osec.html",     "published",
-  "The clearest case of appropriation outrunning execution. The OSEC budget nearly quadrupled, but disbursement fell to 69% \u2014 with two giant lines (FMR, which DA never executes, and the LFP/FAP black box) crowding out a rice-dominated operational core. Adds deep-dives by service type and by commodity.",
+  "A striking case of appropriation outrunning execution. The OSEC budget nearly quadrupled, but disbursement fell to 69% \u2014 with two giant lines (FMR, which DA never executes, and the LFP/FAP black box) crowding out a rice-dominated operational core. Adds deep-dives by service type and by commodity.",
   "OSEC GAA \u20b143.9B (2018) \u2192 \u20b1165.5B (2026), 3.8\u00d7; D/A fell to 69%  |  FMR \u20b133B (zero DA execution) + LFP/FAP \u20b172B = 63% of 2026 OSEC  |  Operational core ~75% PSS, ~63% rice; equipment & livestock absorb worst (33\u201341%)",
 
   "DepEd",  "Department of Education",                            "Office of the Secretary", "deped-osec.html",  "published",
@@ -80,7 +80,7 @@ agencies <- tibble::tribble(
   "DOE",    "Department of Energy",                               "Office of the Secretary", "doe.html",         "planned", "", "",
 
   "DENR",   "Department of Environment and Natural Resources",    "Office of the Secretary", "denr-osec.html",   "published",
-  "The one department whose budget has been frozen. Held flat at \u20b116\u201320B for nine years \u2014 a ~30% real-terms cut \u2014 while Congress trims the proposal and guts the reforestation line, and the department shifts from capital works toward payroll.",
+  "A frozen budget: held flat at \u20b116\u201320B for nine years \u2014 a ~30% real-terms cut \u2014 while Congress trims the proposal and guts the reforestation line, and the department shifts from capital works toward payroll.",
   "Flat ~\u20b119B for 9 years \u2014 \u2248\u20b113.6B in 2018 pesos (~30% real cut)  |  Congress trims; Forest Development cut \u20b16.6B\u2192\u20b12.4B  |  Capital Outlays fell 37%\u219212%; administration is the largest line (21%)",
 
   "DOH",    "Department of Health",                               "Office of the Secretary", "doh-osec.html",    "published",
@@ -98,11 +98,11 @@ agencies <- tibble::tribble(
   "TESDA",  "Technical Education and Skills Development Authority","",                        "tesda.html",       "planned", "", "",
 
   "NCIP",   "National Commission on Indigenous Peoples",          "Whole commission (no P/A/P execution)", "ncip.html",        "published",
-  "The smallest agency in the series, carrying an outsized IPRA mandate. With no FAR No. 1, execution is read only at the agency level \u2014 but the budget story is clear: a near-doubling since 2018, a sharp 2025 cut, and an administration-heavy mix, across two reorganizations.",
+  "A very small agency carrying an outsized IPRA mandate. With no FAR No. 1, execution is read only at the agency level \u2014 but the budget story is clear: a near-doubling since 2018, a sharp 2025 cut, and an administration-heavy mix, across two reorganizations.",
   "Budget nearly doubled: \u20b1968M (2018) \u2192 \u20b11,804M (2026), +86%  |  FY2025 cut 25% below proposal, across the board; capital outlay zeroed  |  Admin + policy = 46% of 2026; agency obligation rate 92\u201399%",
 
   "NCMF",   "National Commission on Muslim Filipinos",            "Whole commission (no P/A/P execution)", "ncmf.html",        "published",
-  "Like NCIP, a small commission with no FAR No. 1, so execution is read only at the agency level. The fastest grower in the series (+145% since 2018), and unusually concentrated: a single cultural-heritage line is about half the budget, and Congress reliably tops it up.",
+  "A small commission with no FAR No. 1, so execution is read only at the agency level. A fast grower (+145% since 2018), and unusually concentrated: a single cultural-heritage line is about half the budget, and Congress reliably tops it up.",
   "Budget more than doubled: \u20b1535M (2018) \u2192 \u20b11,314M (2026), +145%  |  One line \u2014 Muslim cultural centers & heritage \u2014 is ~46% of 2026; top 3 = 71%  |  Congress tops up 8 of 9 years; agency obligation rate 86\u201399%"
 )
 
@@ -139,6 +139,9 @@ body { margin:0; font-family:Arial,Helvetica,"IBM Plex Sans",sans-serif;
 .site-header h1 { font-size:30px; font-weight:600; margin:0 0 6px; }
 .site-header .sub { font-size:17px; color:#3a3a3a; margin:0 0 16px; }
 .site-header .intro { font-size:15px; color:#333; max-width:760px; margin:0; }
+.site-header .repo-cta { margin:14px 0 0; font-size:13.5px; }
+.site-header .repo-cta a { color:var(--accent); font-weight:600; text-decoration:none; }
+.site-header .repo-cta a:hover { text-decoration:underline; }
 .sec-label { font-size:12px; letter-spacing:.08em; text-transform:uppercase;
              color:var(--muted); margin:26px 0 12px; font-weight:600; }
 .list { display:flex; flex-direction:column; gap:14px; }
@@ -215,11 +218,12 @@ card <- function(a) {
 
 cards <- apply(agencies, 1, card)
 n_pub <- sum(tolower(agencies$status) == "published")
-repo_link <- if (nzchar(repo_url)) sprintf('<a href="%s">Source repository</a> &middot; ', esc(repo_url)) else ""
+repo_link <- if (nzchar(repo_url)) sprintf('<a href="%s">Code &amp; data on GitHub</a> &middot; ', esc(repo_url)) else ""
+repo_cta  <- if (nzchar(repo_url)) sprintf('<p class="repo-cta"><a href="%s">View the full code &amp; datasets on GitHub &rarr;</a></p>', esc(repo_url)) else ""
 
 cat('<div class="wrap">')
-cat(sprintf('<div class="site-header"><div class="inner"><h1>%s</h1><p class="sub">%s</p><p class="intro">%s</p></div></div>',
-            esc(site_title), esc(site_subtitle), esc(site_intro)))
+cat(sprintf('<div class="site-header"><div class="inner"><h1>%s</h1><p class="sub">%s</p><p class="intro">%s</p>%s</div></div>',
+            esc(site_title), esc(site_subtitle), esc(site_intro), repo_cta))
 cat(sprintf('<div class="sec-label">Published reports &middot; <span class="count">%d available</span></div>', n_pub))
 cat('<div class="list">', paste(cards, collapse = "\n"), '</div>', sep = "\n")
 cat(sprintf('<div class="site-footer"><div class="inner"><p>%s</p><p>%sLast updated %s.</p></div></div>',

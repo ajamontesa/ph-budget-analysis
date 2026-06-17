@@ -215,11 +215,11 @@ This document tracks the budget of the **Department of Agrarian Reform – Offic
 
 It is the long-form companion to the DAR-OSEC briefing deck. Where the deck fits each point on a slide, this version keeps the full argument and adds reference tables — sortable, searchable, and exportable — so a reader can interrogate the figures directly.
 
-DAR is the smallest department in this series, and its budget tells a story the larger agencies do not. For eight straight years it was almost perfectly flat at ₱8–10B; then the 2026 proposal jumps 62% to ₱16.8B. Two features make DAR distinctive. First, **Congress has been a net *subtractor*** here — repeatedly trimming the Executive's proposal rather than augmenting it, the reverse of the pattern at health and social welfare. Second, the agency runs on two very different kinds of money: **routine, domestically-run programs that absorb beautifully (94–99%)**, and **foreign-assisted loan projects that absorb badly (19–38%)**. The 2026 surge is built almost entirely on the second kind — which means the budget is being loaded with precisely the program type DAR has the weakest record of spending.
+DAR is a small department, and its budget tells a distinctive story. For eight straight years it was almost perfectly flat at ₱8–10B; then the 2026 proposal jumps 62% to ₱16.8B. Two features make DAR distinctive. First, **Congress has been a net *subtractor*** here — repeatedly trimming the Executive's proposal rather than augmenting it. Second, the agency runs on two very different kinds of money: **routine, domestically-run programs that absorb beautifully (94–99%)**, and **foreign-assisted loan projects that absorb badly (19–38%)**. The 2026 surge is built almost entirely on the second kind — which means the budget is being loaded with precisely the program type DAR has the weakest record of spending.
 
 # Executive summary {#exec}
 
-**DAR is one of the smallest line departments.** The OSEC budget held at ₱8–10B for eight straight years (2018–2025), then jumps to a proposed ₱16.8B in 2026 — a 62% increase in a single year.
+**DAR-OSEC runs a small budget.** The OSEC budget held at ₱8–10B for eight straight years (2018–2025), then jumps to a proposed ₱16.8B in 2026 — a 62% increase in a single year.
 
 **The 2026 surge is foreign-assisted.** Externally-funded loan projects rise from about 10% of the budget (2025) to **37% (2026)**, led by the World Bank-funded SPLIT land-titling project (₱0.7B → ₱5.1B), which becomes the single largest line in the entire department.
 
@@ -283,7 +283,7 @@ kbl_clean(tbl_evo, font = 13, digits = 1, format.args = list(big.mark = ","), na
 
 ## Congress as a net subtractor
 
-The clearest break from the other agencies is the direction of Congressional adjustment. The table pairs each year's GAA growth with the net change against the Executive's NEP — and that change is *negative* in several years.
+DAR's most distinctive budget feature is the direction of Congressional adjustment. The table pairs each year's GAA growth with the net change against the Executive's NEP — and that change is *negative* in several years.
 
 ```{r tbl-growth}
 wide_yr <- totals_by_year %>% pivot_wider(names_from = metric, values_from = total)
@@ -296,7 +296,7 @@ growth <- wide_yr %>% arrange(year) %>%
 kbl_clean(growth, font = 13, align = "rrrrr", na = "")
 ```
 
-In FY 2022 and FY 2023 the enacted GAA came in ₱2.4B and ₱4.5B below the Executive's proposal — almost entirely by cutting the SPLIT land-titling project. This is the opposite of the dynamic at DOH or DSWD, where Congress consistently *adds*. At DAR, the legislature has repeatedly judged the proposal too large to spend, and trimmed it.
+In FY 2022 and FY 2023 the enacted GAA came in ₱2.4B and ₱4.5B below the Executive's proposal — almost entirely by cutting the SPLIT land-titling project. Rather than treating the proposal as a floor to build on, the legislature has repeatedly judged it too large to spend, and trimmed it.
 
 # Where the money goes {#composition}
 

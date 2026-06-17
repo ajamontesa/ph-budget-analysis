@@ -193,7 +193,7 @@ short_map <- c(
 This document tracks the budget of the **Department of Agriculture (DA)** across nine fiscal years, FY 2018 to FY 2026, following each peso from the Executive's proposal (NEP) to enactment (GAA), release (allotment), commitment (obligation), and final cash payment (disbursement). It covers the **Office of the Secretary (OSEC)** in depth and the **nine attached agencies** in a dedicated section.
 </p>
 
-It is the long-form companion to the DA briefing deck — and the most expanded of the set. The deck necessarily treats DA's operational core as a handful of headline lines; this version opens that core up. In addition to the standard analysis, it adds three deep-dives the slide format could not carry:
+It is the long-form companion to the DA briefing deck. The deck necessarily treats DA's operational core as a handful of headline lines; this version opens that core up. In addition to the standard analysis, it adds three deep-dives the slide format could not carry:
 
 - **The operational core by service type** — aggregating the commodity programs into the six "banner" service components: Production Support Services (PSS), Extension Support, Education and Training Services (ESETS), Market Development Services (MDS), Research and Development (R&D), Provision of Agricultural Equipment and Facilities (PAEF), and Irrigation Network Services (INS).
 - **The operational core by commodity** — re-cutting the same money by what it grows: rice, corn, livestock, high-value crops, organic agriculture, and others — including a full service × commodity cross-tab.
@@ -213,13 +213,13 @@ The headline story is one of rapid growth running ahead of delivery capacity. DA
 
 **Farm-to-Market Roads show zero DA execution every year.** The FMR line carries ₱10–33B of GAA annually but records **zero allotment, obligation, and disbursement** in DA's books for all of 2018–2025. Two explanations are in play — a transfer to DPWH for implementation, and a spill into the *following* year's Continuing Appropriations — and this dataset (Current New Appropriations only) cannot distinguish them. Either way, ~₱33B of the 2026 budget (20% of OSEC) is appropriated to DA but not executed by DA within the year.
 
-**Aggregate absorption has weakened as the budget grew.** Disbursement-to-allotment ran 74–81% from 2018 to 2023, then fell to **70% (2024) and 69% (2025)** — the lowest in the series. The LFP/FAP line, proposed at ₱71.6B for 2026 (≈6× its 2025 GAA) against recent absorption near 50%, is the central delivery risk.
+**Aggregate absorption has weakened as the budget grew.** Disbursement-to-allotment ran 74–81% from 2018 to 2023, then fell to **70% (2024) and 69% (2025)**. The LFP/FAP line, proposed at ₱71.6B for 2026 (≈6× its 2025 GAA) against recent absorption near 50%, is the central delivery risk.
 
 **Congress redirects within DA rather than just adding.** Cumulatively it has added **+₱29B to Farm-to-Market Roads** and **+₱15B to LFP/FAP**, while **cutting −₱15B from Rice PSS** — a deliberate-looking shift from operational commodity subsidies toward infrastructure (much of it implemented outside DA).
 
 **The nine attached agencies are ~11% of the department** and add ₱20.8B in 2026. BFAR is by far the largest; several others (ACPC, FPA, PCAF, PHilMech) are sub-₱0.7B single-purpose bodies with heavy overhead.
 
-> DA is the clearest case in this series of appropriation outrunning execution. The money is increasingly concentrated in two giant lines — one that DA does not appear to spend at all (FMR) and one it spends at barely half (LFP/FAP) — even as its hands-on commodity programs, led by rice, remain comparatively modest and, in the case of equipment and irrigation, hard to disburse.
+> DA is a striking case of appropriation outrunning execution. The money is increasingly concentrated in two giant lines — one that DA does not appear to spend at all (FMR) and one it spends at barely half (LFP/FAP) — even as its hands-on commodity programs, led by rice, remain comparatively modest and, in the case of equipment and irrigation, hard to disburse.
 
 # A note on the data {#data-notes}
 
@@ -280,7 +280,7 @@ growth <- wide_yr %>% arrange(year) %>%
 kbl_clean(growth, font = 13, align = "rrrrr", na = "")
 ```
 
-Congress stayed within about ₱5B of the Executive's proposal in most years — sometimes trimming (2022, 2023, 2025), sometimes adding. The exception is the proposed **FY 2026 +₱31B Congressional add**, the largest in the series, concentrated in the two mega-lines.
+Congress stayed within about ₱5B of the Executive's proposal in most years — sometimes trimming (2022, 2023, 2025), sometimes adding. The exception is the proposed **FY 2026 +₱31B Congressional add**, concentrated in the two mega-lines.
 
 # Where the money goes {#composition}
 
@@ -323,12 +323,12 @@ ggplot(comp_ec, aes(year, amount, fill = expense_class)) +
   scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
   scale_x_continuous(breaks = seq(2018, 2026, 2)) +
   labs(title = "GAA composition by Expense Class, 2018–2026",
-       subtitle = "Capital Outlays are 37–49% of the budget — far higher than most departments, and concentrated in FMR",
+       subtitle = "Capital Outlays are 37–49% of the budget — unusually high, and concentrated in FMR",
        x = NULL, y = NULL) +
   theme_da() + guides(fill = guide_legend(nrow = 1))
 ```
 
-DA is, unusually, a **capital-heavy department**: Capital Outlay runs **37–49% of the GAA** every year — the highest in this series — with Personnel Services a sliver (3–9%) and MOOE the rest. But the CO figure is misleading taken at face value: a large share of it is the **FMR line, which is 100% Capital Outlay and records zero execution**. The table separates the two views.
+DA is, unusually, a **capital-heavy department**: Capital Outlay runs **37–49% of the GAA** every year, with Personnel Services a sliver (3–9%) and MOOE the rest. But the CO figure is misleading taken at face value: a large share of it is the **FMR line, which is 100% Capital Outlay and records zero execution**. The table separates the two views.
 
 ```{r osec-co-split}
 co_tbl <- df_long_all %>% filter(agency == "Office of the Secretary", metric == "GAA",
@@ -774,7 +774,7 @@ kbl_clean(att_sum, font = 12.5, align = "lrrrr", na = "")
 
 **Agricultural Credit Policy Council (ACPC)** tripled from ₱1.1B to ₱3.1B, but is effectively a one-program agency: the **Agro-Industry Modernization Credit and Financing Program (AMCFP)** is about 97% of its budget, with all other lines together under ₱0.1B. Congress has been a slight net *trimmer* here over the period (−₱0.1B cumulative), including a notable ₱1.0B cut to the 2019 NEP. A single-program agency wrapped in management overhead invites the structural question of whether AMCFP needs its own agency at all.
 
-**Philippine Carabao Center (PCC)** more than doubled into 2026 — from ₱0.5B (2018) to ₱2.1B — almost entirely because of a **+₱1.1B Congressional add for a new school milk-feeding program** (a component of DepEd's School-Based Feeding Program) that had essentially no NEP line. That single insertion is now PCC's largest item, eclipsing its core dairy-buffalo breeding and herd build-up work. It assigns a DepEd-style delivery mandate to a small research-and-breeding agency.
+**Philippine Carabao Center (PCC)** more than doubled into 2026 — from ₱0.5B (2018) to ₱2.1B — almost entirely because of a **+₱1.1B Congressional add for a new school milk-feeding program** (a component of DepEd's School-Based Feeding Program) that had essentially no NEP line. That single insertion is now PCC's largest item, eclipsing its core dairy-buffalo breeding and herd build-up work. It assigns a school-feeding delivery mandate to a small research-and-breeding agency.
 
 **National Fisheries Research and Development Institute (NFRDI)** is the newest meaningful unit, with no DA line before 2020, growing to ₱0.74B by 2026. Its mandate is fisheries research distinct from BFAR's operations. Research is about 63% of its budget; general management is a heavy ~31%, characteristic of a young, still-scaling institution. Congress has been almost entirely hands-off, enacting the NEP as proposed in nearly every year.
 
