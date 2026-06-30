@@ -1,0 +1,428 @@
+---
+title: "Philippine Commission on Women"
+subtitle: "Budget evolution and absorptive capacity, FY 2018–2026"
+date: "`r format(Sys.Date(), '%B %Y')`"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    toc_depth: 3
+    number_sections: true
+    code_folding: hide
+    self_contained: true
+    df_print: paged
+    fig_width: 10
+    fig_height: 5.5
+---
+
+```{css, echo=FALSE}
+:root { --ink:#1a1a1a; --muted:#6e6e6e; --accent:#08519C; --rule:#e6e6e6; }
+body, .main-container { font-family: Arial, Helvetica, "IBM Plex Sans", sans-serif; color: var(--ink); }
+.main-container { max-width: 980px; }
+h1, h2, h3, h4 { font-family: Arial, Helvetica, sans-serif; font-weight: 600; }
+h1.title { font-size: 30px; }
+h1 { font-size: 25px; margin-top: 1.6em; padding-top: .3em; border-top: 2px solid var(--rule); }
+h2 { font-size: 20px; margin-top: 1.4em; }
+h3 { font-size: 17px; color: #333; }
+.author, .date { color: var(--muted); }
+p, li { font-size: 15.5px; line-height: 1.62; }
+blockquote { border-left: 3px solid var(--accent); background: #f5f8fc; color: #25405e;
+  font-size: 14.5px; padding: .6em 1em; margin: 1.2em 0; }
+.lead { font-size: 16.5px; color: #2b2b2b; }
+.takeaway { background: #f7f9fb; border: 1px solid var(--rule); border-radius: 6px;
+  padding: .4em 1.1em; margin: 1.1em 0; }
+.takeaway p, .takeaway li { font-size: 14.5px; }
+.caption, .figcaption { color: var(--muted); font-size: 13px; }
+table.dataTable { font-size: 13px; }
+.kbl-note { color: var(--muted); font-size: 12.5px; margin-top: -.5em; }
+hr { border-top: 1px solid var(--rule); }
+.home-link { font-size: 13.5px; }
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                     dpi = 150, fig.align = "center", out.width = "100%")
+
+options(knitr.kable.NA = "")
+library(readxl); library(dplyr); library(tidyr); library(stringr)
+library(ggplot2); library(scales); library(knitr); library(kableExtra); library(DT)
+
+.candidates <- c("../data/Compiled_-_NEP-GAA-SAAODB-ByPAPLabelled.xlsx",
+                 "data/Compiled_-_NEP-GAA-SAAODB-ByPAPLabelled.xlsx",
+                 "Compiled_-_NEP-GAA-SAAODB-ByPAPLabelled.xlsx")
+file_path <- .candidates[file.exists(.candidates)][1]
+stopifnot(!is.na(file_path))
+AGENCY_SHEET <- "PCW"
+
+theme_pcw <- function(base_size = 12) {
+  theme_minimal(base_size = base_size, base_family = "sans") +
+    theme(
+      plot.title = element_text(face = "bold", size = base_size + 2, color = "black"),
+      plot.subtitle = element_text(color = "grey30", size = base_size),
+      plot.caption = element_text(color = "grey40", size = base_size - 3, hjust = 0),
+      panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
+      axis.title = element_text(size = base_size - 1, color = "grey20"),
+      axis.text = element_text(color = "grey20"),
+      legend.position = "bottom", legend.title = element_blank(),
+      legend.text = element_text(size = base_size - 1),
+      strip.text = element_text(face = "bold", size = base_size - 2, lineheight = 0.9))
+}
+
+exec_pal <- c("NEP (proposed)" = "#9E9AC8", "GAA (enacted)" = "#54278F",
+  "Adj. Allotment" = "#08519C", "Obligations" = "#E6550D", "Disbursements" = "#31A354")
+cat_pal <- c(
+  "General Administration and Support"           = "#A6761D",
+  "Gender and Development Mainstreaming Program"  = "#1B9E77")
+absorp_pal <- c("Obligations / Adj. Allotment" = "#3182BD",
+  "Disbursements / Obligations" = "#E6550D", "Disbursements / Adj. Allotment" = "#31A354")
+ec_pal <- c("Personnel Services (PS)" = "#2CA02C",
+  "Maintenance & Other Op. Exp. (MOOE)" = "#FF7F0E", "Capital Outlays (CO)" = "#9467BD")
+bar_fill <- "#08519C"; peso <- "PHP "
+php_m      <- function(x) paste0(peso, scales::comma(x / 1e6, accuracy = 0.1), "M")
+php_m_axis <- function(x) paste0(peso, scales::comma(x / 1e6, accuracy = 1), "M")
+
+dt_table <- function(df, caption = NULL, page = 10, money_cols = NULL, pct_cols = NULL, money_digits = 1) {
+  dt <- datatable(df, rownames = FALSE, caption = caption, extensions = "Buttons",
+    options = list(pageLength = page, lengthMenu = c(10, 20, 50, 100), dom = "Bfrtip",
+      buttons = c("copy", "csv"), scrollX = TRUE, autoWidth = FALSE,
+      columnDefs = list(list(className = "dt-right", targets = which(sapply(df, is.numeric)) - 1))),
+    class = "stripe hover compact")
+  if (!is.null(money_cols)) { mc <- which(names(df) %in% money_cols)
+    if (length(mc)) dt <- formatRound(dt, mc, digits = money_digits, mark = ",") }
+  if (!is.null(pct_cols)) { pc <- which(names(df) %in% pct_cols)
+    if (length(pc)) dt <- formatPercentage(dt, pc, digits = 0) }
+  dt
+}
+kbl_clean <- function(x, font = 14, ...) {
+  x %>% kable(...) %>% kable_styling(full_width = TRUE, font_size = font,
+    bootstrap_options = c("condensed", "striped", "hover"))
+}
+
+# ---- Data load -----------------------------------------------------------
+# PCW was carried under "Other Executive Offices" in FY 2018 and reclassified
+# under DILG from FY 2019. The same P/A/Ps appear once per departmental wrapper;
+# grouping by P/A/P collapses them into one continuous series (verified: no year
+# carries the same line under both wrappers, so the sum never double-counts).
+CODE_COLS <- c("DEPARTMENT", "AGENCY", "PREXC_PROG", "PREXC_SUBPROG")
+raw <- read_excel(file_path, sheet = AGENCY_SHEET) %>%
+  mutate(across(any_of(CODE_COLS), as.character)) %>% filter(!is.na(`P/A/P`))
+
+df_long_all <- raw %>%
+  pivot_longer(cols = matches("^(NEP|GAA|AuthAppro|AdjAppro|AdjAllot|Obligations|Disbursements)_\\d{4}_EXP_(1PS|2MOOE|6CO|TOTAL)$"),
+               names_to = "var", values_to = "amount") %>%
+  separate(var, into = c("metric", "year", "tag", "expense_class"), sep = "_") %>%
+  mutate(year = as.integer(year), amount = as.numeric(amount)) %>%
+  select(-tag) %>% rename(pap = `P/A/P`)
+
+df_long <- df_long_all %>% filter(expense_class == "TOTAL") %>% select(-expense_class) %>%
+  mutate(category = case_when(
+    PREXC_PROG == "1000" ~ "General Administration and Support",
+    PREXC_PROG == "3101" ~ "Gender and Development Mainstreaming Program",
+    TRUE ~ NA_character_))
+
+totals <- df_long %>% group_by(year, metric) %>%
+  summarise(total = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE), .groups = "drop")
+
+pap_year <- df_long %>% group_by(pap, year, metric) %>%
+  summarise(amount = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = amount)
+
+# Aggregate absorptive capacity (execution is in-sheet, denominator = Adj. Allotment)
+absorp_total <- totals %>% pivot_wider(names_from = metric, values_from = total) %>%
+  filter(year %in% 2018:2025) %>%
+  mutate(oblig_allot = Obligations / AdjAllot, disb_oblig = Disbursements / Obligations,
+         disb_allot = Disbursements / AdjAllot)
+```
+
+<p class="home-link"><a href="index.html">← All agencies</a></p>
+
+# Overview {#overview .unnumbered}
+
+<p class="lead">
+This document profiles the budget of the **Philippine Commission on Women (PCW)** — the lead national agency on gender mainstreaming, formally still the *National Commission on the Role of Filipino Women* in the budget code — across nine fiscal years, FY 2018 to FY 2026. PCW is a **small agency that operates at the million-peso scale**, but unlike some commissions its execution can be traced in full: proposed (NEP) and enacted (GAA) appropriations, releases (allotments), commitments (obligations), and cash payments (disbursements) are all available **at the P/A/P level**.
+</p>
+
+PCW's budget is compact enough to read line by line, which makes three things visible at once: how fast it has grown, how Congress shapes it, and how well it converts money into spending. The budget has **nearly doubled** since 2018, almost entirely on the operational side; Congress has been a **consistent net adder** that funds a recurring stream of one-off "Tier 2" lines; and absorption is **mid-band** — solid on payroll, weaker on the operating programs that carry the mandate.
+
+The agency runs on **two PREXC programs** — General Administration and Support, and the Gender and Development (GAD) Mainstreaming Program — the latter carrying the substantive work. One structural note frames everything that follows: PCW was reclassified from the **Other Executive Offices to the DILG in 2019**, and is profiled here as a single continuous series across that move.
+
+# Executive summary {#exec}
+
+**PCW's budget has nearly doubled.** The enacted GAA grew from **₱111.8M (2018) to a proposed ₱204.9M (2026)** — about **+83%**. The largest *durable* step-up came in **FY 2024**, when the GAA rose ₱30M year-on-year (₱140M → ₱171M) and stayed up.
+
+**Congress is a consistent net adder.** The enacted GAA met or exceeded the Executive's NEP in **seven of nine years** (the exceptions, 2020 and 2025, were flat, never cut). Across the period **every** P/A/P-level Congressional adjustment has been an *increase* — there are no cuts.
+
+**The 2026 add went almost entirely to one line.** Congress lifted **Technical Assistance and Capacity-Building on GAD** from a ₱36.4M NEP to a **₱65.4M GAA (+₱29M)** — now the agency's **largest single P/A/P**, about a third of the 2026 budget.
+
+**Five long-running lines carry the mandate.** Technical Assistance, GAD Policy & Plan Development, Planning & Monitoring under the Magna Carta of Women, the GAD Data Bank, and General Management have run continuously since 2018. Most other lines are **one-off Congressional inserts**.
+
+**Absorption is mid-band and softening.** Disbursement-to-allotment averaged about **80% (2018–2024)**, then fell to **75% in 2025** — driven by MOOE, which disbursed only **67%** as MOOE allotments **doubled** (₱52M → ₱112M). The **2021 dip to 68%** was a one-year event; the agency recovered to **91% in 2023**.
+
+> PCW is a small, fast-growing, MOOE-heavy gender agency that Congress reliably tops up — but the money is increasingly concentrated in operating lines it absorbs least well, so the central question is delivery, not funding.
+
+# A note on the data {#data-notes}
+
+**Period.** FY 2018 through FY 2026 for the proposed (NEP) and enacted (GAA) budget, at the P/A/P level. Execution (Adjusted Allotments, Obligations, Disbursements) is available at the P/A/P level for **FY 2018–2025**; FY 2026 reflects NEP/GAA only.
+
+**Full P/A/P execution.** Unlike some small commissions, PCW's execution records are complete at the program/activity/project level, so this review computes **absorptive capacity line by line**, not just in aggregate.
+
+**Departmental reclassification.** PCW was carried under the **Other Executive Offices (OEOs)** through FY 2018 and reclassified under the **Department of the Interior and Local Government (DILG)** from FY 2019. The same long-running P/A/Ps therefore appear under two departmental wrappers in the workbook; they are **aggregated here into one continuous PCW series** (no year carries the same line under both wrappers, so the totals never double-count).
+
+**Scale.** PCW operates at the **million-peso** scale; all figures are in **PHP millions**.
+
+**Absorptive capacity.** Ratios use **Adjusted Allotments** as the denominator: O/A = obligations ÷ allotment; D/O = disbursements ÷ obligations; D/A = disbursements ÷ allotment. Expense classes are Personnel Services (PS), Maintenance & Other Operating Expenses (MOOE), and Capital Outlays (CO).
+
+# The aggregate budget {#aggregate}
+
+## A budget that nearly doubled
+
+```{r evolution, fig.height=5}
+evo <- totals %>% filter(metric %in% c("NEP","GAA","AdjAllot","Obligations","Disbursements")) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA","AdjAllot","Obligations","Disbursements"),
+    labels = c("NEP (proposed)","GAA (enacted)","Adj. Allotment","Obligations","Disbursements")))
+ggplot(evo, aes(year, total, color = metric, group = metric)) +
+  geom_line(linewidth = 1.0) + geom_point(size = 2) +
+  scale_color_manual(values = exec_pal) +
+  scale_y_continuous(labels = php_m_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "PCW budget, NEP through disbursements, FY 2018–2026",
+       subtitle = "Enacted funding grew ~83% (₱112M → ₱205M); the FY 2024 step-up is the largest durable increase",
+       x = NULL, y = NULL, caption = "FY 2026 reflects NEP/GAA only; execution not yet available.") +
+  theme_pcw() + guides(color = guide_legend(nrow = 1))
+```
+
+The five lines move together: what is proposed is largely enacted, released, and — with a recurring gap — spent. The enacted budget steps up in FY 2021, FY 2023, and again decisively in **FY 2024**, where the increase held rather than reversing. The persistent vertical gap between the allotment and disbursement lines is the absorption story, taken up below.
+
+```{r tbl-evolution}
+totals %>% filter(metric %in% c("NEP","GAA","AdjAllot","Obligations","Disbursements")) %>%
+  mutate(value = total/1e6) %>% select(year, metric, value) %>%
+  pivot_wider(names_from = year, values_from = value) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA","AdjAllot","Obligations","Disbursements"),
+    labels = c("NEP","GAA","Adj. Allotment","Obligations","Disbursements"))) %>%
+  arrange(metric) %>% rename(`PHP M` = metric) %>%
+  kbl_clean(font = 13, digits = 1, format.args = list(big.mark = ","), na = "")
+```
+
+## Where Congress adjusts the budget
+
+```{r nep-gaa-gap, fig.height=4.4}
+gap <- totals %>% filter(metric %in% c("NEP","GAA")) %>% pivot_wider(names_from = metric, values_from = total) %>%
+  mutate(change = GAA - NEP, direction = ifelse(change >= 0, "Net increase (GAA ≥ NEP)", "Net decrease (GAA < NEP)"))
+ggplot(gap, aes(year, change/1e6, fill = direction)) +
+  geom_col(width = 0.7) +
+  geom_text(aes(label = ifelse(abs(change) < 1e5, "", sprintf("%+.0f", change/1e6)),
+                vjust = ifelse(change >= 0, -0.4, 1.2)), size = 3.2, color = "grey20") +
+  scale_fill_manual(values = c("Net increase (GAA ≥ NEP)" = "#1B9E77", "Net decrease (GAA < NEP)" = "#D95F02")) +
+  scale_x_continuous(breaks = 2018:2026) +
+  scale_y_continuous(labels = function(v) paste0(peso, v, "M"), expand = expansion(mult = c(0.10, 0.20))) +
+  labs(title = "Enacted minus proposed (GAA − NEP), by year",
+       subtitle = "Congress adds in seven of nine years and never cuts; the +₱29M FY 2026 add is the largest",
+       x = NULL, y = NULL) +
+  theme_pcw() + guides(fill = guide_legend(nrow = 1))
+```
+
+PCW is reliably **topped up**: the enacted budget exceeded the proposal in seven of nine years and matched it (no change) in the other two — **2020 and 2025**. The legislature never trimmed the agency in the period. The **+₱29M plus-up for FY 2026** is the largest single adjustment.
+
+# Where the money goes {#composition}
+
+## Composition by PREXC program
+
+```{r composition, fig.height=5}
+comp <- df_long %>% filter(metric == "GAA", year <= 2026, !is.na(amount), !is.na(category)) %>%
+  group_by(year, category) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(category = factor(category, levels = names(cat_pal)))
+ggplot(comp, aes(year, amount, fill = category)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = cat_pal, labels = function(x) str_wrap(x, 34)) +
+  scale_y_continuous(labels = php_m_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "Composition of the GAA by PREXC program, 2018–2026",
+       subtitle = "The Gender and Development Mainstreaming Program is 60–80% of the budget; administration is the residual",
+       x = NULL, y = NULL) +
+  theme_pcw() + guides(fill = guide_legend(nrow = 1))
+```
+
+The green **GAD Mainstreaming Program** is the budget — 60–80% of the total in every year — with **General Administration and Support** the residual. This is the expected shape for a mandate-delivery agency: most of the money sits in the substantive program, not overhead.
+
+## Composition by expense class
+
+```{r comp-ec, fig.height=5}
+ec_levels <- c("Personnel Services (PS)","Maintenance & Other Op. Exp. (MOOE)","Capital Outlays (CO)")
+comp_ec <- df_long_all %>% filter(metric == "GAA", year <= 2026, expense_class %in% c("1PS","2MOOE","6CO")) %>%
+  group_by(year, expense_class) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(expense_class = factor(expense_class, levels = c("1PS","2MOOE","6CO"), labels = ec_levels))
+ggplot(comp_ec, aes(year, amount, fill = expense_class)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = ec_pal) +
+  scale_y_continuous(labels = php_m_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "GAA composition by expense class, 2018–2026",
+       subtitle = "MOOE has grown to ~70% as program operations scaled; the personnel share fell from 30% to 26%",
+       x = NULL, y = NULL) +
+  theme_pcw() + guides(fill = guide_legend(nrow = 1))
+```
+
+PCW is an **MOOE agency**: maintenance-and-operating expenses run around two-thirds to seven-tenths of the budget, because the GAD mandate is delivered through technical assistance, advocacy, and capacity-building rather than payroll or infrastructure. The personnel share drifted down from **30% (2018) to 26% (2026)** as the operating programs scaled; capital outlays are a thin, volatile sliver.
+
+```{r tbl-ec-share}
+comp_ec %>% group_by(year) %>% mutate(share = round(amount/sum(amount)*100)) %>% ungroup() %>%
+  select(expense_class, year, share) %>% pivot_wider(names_from = year, values_from = share) %>%
+  rename(`Expense class (% of GAA)` = expense_class) %>% kbl_clean(font = 12.5, na = "")
+```
+
+## The largest P/A/Ps
+
+```{r top-paps, fig.height=4.6}
+top_paps <- pap_year %>% filter(year == 2026, !is.na(GAA), GAA > 0) %>% arrange(desc(GAA)) %>%
+  mutate(pap = factor(pap, levels = rev(pap)))
+ggplot(top_paps, aes(pap, GAA)) +
+  geom_col(fill = bar_fill, width = 0.72) +
+  geom_text(aes(label = php_m(GAA)), hjust = -0.1, size = 3.2, color = "grey20") +
+  coord_flip() + scale_x_discrete(labels = function(x) str_wrap(x, 52)) +
+  scale_y_continuous(labels = php_m_axis, expand = expansion(mult = c(0, .28)), limits = c(0, NA)) +
+  labs(title = "Every P/A/P in the FY 2026 GAA",
+       subtitle = "Technical Assistance is now the largest line — Congress added ₱29M to it over the NEP",
+       x = NULL, y = NULL) +
+  theme_pcw() + theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"))
+```
+
+After the 2026 plus-up, **Technical Assistance and Capacity-Building on GAD (₱65.4M)** is the largest line, ahead of **General Management (₱57.6M)**. The substantive core — Planning & Monitoring under the Magna Carta (₱31.4M), GAD Policy & Plan Development (₱22.4M), and the GAD Data Bank (₱19.8M) — fills out the rest, with ICT infrastructure a small capital line.
+
+### Full P/A/P ranking, FY 2026 (interactive) {.unnumbered}
+
+```{r tbl-allpaps}
+pap_year %>% filter(year == 2026, !is.na(GAA)) %>%
+  left_join(pap_year %>% filter(year == 2025) %>% transmute(pap, GAA25 = GAA), by = "pap") %>%
+  transmute(`P/A/P` = pap, `NEP 2026 (M)` = NEP/1e6, `GAA 2026 (M)` = GAA/1e6,
+            `GAA 2025 (M)` = GAA25/1e6, `Net add 2026 (M)` = (GAA - NEP)/1e6) %>%
+  arrange(desc(`GAA 2026 (M)`)) %>%
+  dt_table(page = 10, money_cols = c("NEP 2026 (M)","GAA 2026 (M)","GAA 2025 (M)","Net add 2026 (M)"))
+```
+
+# Where Congress adjusts — and the "Tier 2" pattern {#augmentation}
+
+Because every Congressional move at PCW is an *add*, the interesting question is *which* lines get them. The chart sums each P/A/P's enacted-minus-proposed difference across the whole period.
+
+```{r augmentation, fig.height=4.8}
+aug <- pap_year %>% group_by(pap) %>%
+  summarise(nep = sum(NEP, na.rm = TRUE), gaa = sum(GAA, na.rm = TRUE), .groups = "drop") %>%
+  mutate(change = gaa - nep) %>% filter(abs(change) >= 1e6) %>% arrange(desc(change)) %>%
+  mutate(pap = factor(pap, levels = rev(pap)))
+ggplot(aug, aes(pap, change/1e6)) +
+  geom_col(fill = "#1B9E77", width = 0.7) +
+  geom_text(aes(label = sprintf("%+.1fM", change/1e6)), hjust = -0.12, size = 3.0, color = "grey20") +
+  coord_flip() + scale_x_discrete(labels = function(x) str_wrap(x, 50)) +
+  scale_y_continuous(labels = function(v) paste0(peso, v, "M"), expand = expansion(mult = c(0, 0.22))) +
+  labs(title = "Cumulative NEP-to-GAA change by P/A/P, 2018–2026",
+       subtitle = "Every Congressional move has been a net add — there are no cuts in the period",
+       x = NULL, y = NULL) +
+  theme_pcw() + theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"))
+```
+
+Two patterns sit side by side. Most of the augmentation flows to the **core operational lines** — steady year-on-year top-ups to Technical Assistance and the other continuing programs. But a meaningful share goes to **one-off "Tier 2" inserts**: the **Continuation of the PCW-NMFO Mindanao Field Office (+₱15.5M)** was a single FY 2023 add for a regional pilot not in the Executive's proposal, and FY 2022 carried three **₱5M one-offs** — Capacity-Building for VAWC Responders, *Handog kay Juana*, and Capacity-Building for Women Entrepreneurs. Roughly half of PCW's distinct P/A/Ps over the period are single-year inserts, so part of the GAD agenda is shaped through ad-hoc Congressional initiative rather than the regular Executive plan.
+
+# Absorptive capacity {#absorption}
+
+## Aggregate
+
+```{r absorp-agg, fig.height=4.8}
+absorp_long <- absorp_total %>% select(year, oblig_allot, disb_oblig, disb_allot) %>%
+  pivot_longer(-year, names_to = "ratio", values_to = "value") %>% filter(!is.na(value)) %>%
+  mutate(ratio = factor(ratio, levels = c("oblig_allot","disb_oblig","disb_allot"),
+    labels = c("Obligations / Adj. Allotment","Disbursements / Obligations","Disbursements / Adj. Allotment")))
+ggplot(absorp_long, aes(year, value, color = ratio, group = ratio)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 2) +
+  scale_color_manual(values = absorp_pal) +
+  scale_y_continuous(labels = percent_format(accuracy = 1), limits = c(0.6, 1.0), breaks = seq(0.6, 1, 0.1)) +
+  scale_x_continuous(breaks = 2018:2025) +
+  labs(title = "PCW absorptive capacity, FY 2018–2025",
+       subtitle = "D/A averages ~80%; the 2021 dip (68%) and the 2025 softening (75%) are both MOOE-driven",
+       x = NULL, y = NULL) +
+  theme_pcw() + guides(color = guide_legend(nrow = 1))
+```
+
+Disbursement-to-allotment sits around **80% on average** and recovered to a high of **91% in 2023**. Two soft years stand out: **2021 (68%)**, a one-off tied to weak MOOE and capital execution, and **2025 (75%)**, the widest gap in three years. In both cases obligations held up better than cash payments — the agency *commits* most of its allotment but lags in paying it out.
+
+## By expense class
+
+```{r absorp-ec, fig.height=5}
+absorp_ec <- df_long_all %>% filter(metric %in% c("AdjAllot","Disbursements"),
+    expense_class %in% c("1PS","2MOOE","6CO"), year %in% 2018:2025) %>%
+  group_by(year, metric, expense_class) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = amount) %>%
+  mutate(da = ifelse(AdjAllot > 0, Disbursements/AdjAllot, NA_real_),
+         expense_class = factor(expense_class, levels = c("1PS","2MOOE","6CO"),
+           labels = c("Personnel Services (PS)","Maintenance & Other Op. Exp. (MOOE)","Capital Outlays (CO)")))
+ggplot(absorp_ec, aes(year, da, color = expense_class, group = expense_class)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 1.8) +
+  scale_color_manual(values = ec_pal) +
+  scale_y_continuous(labels = percent_format(accuracy = 1), limits = c(0, 1.05), breaks = seq(0, 1, 0.25)) +
+  scale_x_continuous(breaks = 2018:2025) +
+  labs(title = "Disbursement-to-allotment by expense class, FY 2018–2025",
+       subtitle = "Personnel absorbs at 86–99% every year; MOOE and capital outlays carry the volatility",
+       x = NULL, y = NULL) +
+  theme_pcw() + guides(color = guide_legend(nrow = 1))
+```
+
+The split is clean: **personnel disburses at 86–99%** every year — salaries go out reliably — while **MOOE and capital outlays carry all the volatility**. The aggregate weakness in 2025 is a MOOE story: MOOE allotments **doubled from ₱52M (2022) to ₱112M (2025)**, but disbursed at only **67%**. The agency is being handed more operating money than it is currently converting into spending.
+
+## Strongest and weakest absorbers, FY 2025
+
+```{r absorb-tables}
+abs25 <- pap_year %>% filter(year == 2025, !is.na(AdjAllot), AdjAllot >= 1e6) %>%
+  transmute(`P/A/P` = pap, `Allotment (M)` = AdjAllot/1e6,
+            `O/A` = Obligations/AdjAllot, `D/O` = Disbursements/Obligations, `D/A` = Disbursements/AdjAllot) %>%
+  arrange(desc(`D/A`))
+abs25 %>% dt_table(page = 10, money_cols = "Allotment (M)", pct_cols = c("O/A","D/O","D/A"))
+```
+
+The strongest absorbers are the policy and infrastructure lines — **GAD Policy & Plan Development (88% D/A)** and **ICT Network Infrastructure (87%)** — with **General Management at 78%**, solid for an admin line. The weakest are the **two largest operational lines**: **Technical Assistance (64% D/A)** and **Planning & Monitoring under the Magna Carta (62%)**. Both show healthy disbursement-to-obligation (~83%) but lower obligation-to-allotment (75–77%) — the agency *commits* a smaller share of these allotments in the first place, pointing to capacity constraints in deploying field and advisory work rather than a payments problem. That matters directly for FY 2026, where the doubled Technical Assistance line becomes the budget's largest.
+
+## The five long-running operational lines
+
+```{r five-lines, fig.height=5.6}
+trend_paps <- c(
+  "General Management and Supervision",
+  "Provision of Technical Assistance, Advisory and Capacity-Building Services on Gender and Development",
+  "Planning, Management and Monitoring of Gender Mainstreaming under the Magna Carta of Women",
+  "Provision of Gender and Development (GAD) Policy and Plan Development and Advocacy Services",
+  "Maintenance of a Data Bank on Gender and Development (GAD) for Women")
+trend_lab <- c("General Management","Technical Assistance","Planning/Monitoring (Magna Carta)",
+               "GAD Policy & Plan Development","GAD Data Bank")
+trend_dat <- pap_year %>% filter(pap %in% trend_paps) %>%
+  select(pap, year, GAA, AdjAllot, Disbursements) %>%
+  pivot_longer(c(GAA, AdjAllot, Disbursements), names_to = "metric", values_to = "amount") %>%
+  filter(!is.na(amount)) %>%
+  mutate(metric = factor(metric, levels = c("GAA","AdjAllot","Disbursements"),
+           labels = c("GAA (enacted)","Adj. Allotment","Disbursements")),
+         pap = factor(pap, levels = trend_paps, labels = trend_lab))
+ggplot(trend_dat, aes(year, amount, color = metric, group = metric)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 1.5) +
+  facet_wrap(~ pap, ncol = 3, scales = "free_y") + expand_limits(y = 0) +
+  scale_color_manual(values = c("GAA (enacted)" = "#54278F","Adj. Allotment" = "#08519C","Disbursements" = "#31A354")) +
+  scale_y_continuous(labels = php_m, breaks = pretty_breaks(4)) +
+  scale_x_continuous(breaks = c(2018, 2022, 2026)) +
+  labs(title = "The five long-running operational lines, 2018–2026",
+       subtitle = "Technical Assistance is the standout 2026 mover — a single ₱29M add nearly doubled the line",
+       x = NULL, y = NULL) +
+  theme_pcw() + guides(color = guide_legend(nrow = 1))
+```
+
+The five continuing lines are the backbone of the agency. Most grow gently; **Technical Assistance** is the exception, jumping in 2026 on the Congressional add — a line whose enacted budget now runs well ahead of the disbursements it managed in prior years, which is exactly why its absorption bears watching.
+
+# Questions for discussion {#discussion}
+
+1. **Can the agency absorb the doubled Technical Assistance line?** Congress lifted it to ₱65M for 2026, but its FY 2025 disbursement-to-allotment was only 64%. What capacity-building activities does the add target, and is the delivery machinery in place?
+2. **The MOOE absorption gap.** MOOE allotments more than doubled to ₱112M by 2025 but disbursed at 67%. Is this a procurement bottleneck, a staffing constraint, or a program-design issue?
+3. **The "Tier 2" insert pattern.** Roughly half of PCW's P/A/Ps over the period are one-off Congressional inserts. Are these strengthening the GAD agenda, or fragmenting it into ad-hoc initiatives that lapse with each budget cycle?
+4. **The departmental reclassification.** PCW moved from the Other Executive Offices to the DILG in 2019. Has placing a gender-policy agency inside a public-order department strengthened mainstreaming across LGUs, or created tension with its mandate?
+5. **The ₱205M ceiling.** Set against the breadth of the Magna Carta of Women, is ₱205M an adequate operating budget for the lead national agency on gender mainstreaming — particularly when its parent department operates on a budget orders of magnitude larger?
+
+---
+
+<p class="caption">
+Underlying data: DBM-published budget and execution data for the Philippine Commission on Women (Current New Appropriations only), FY 2018–2026; execution measures (Adjusted Allotments, Obligations, Disbursements) cover FY 2018–2025. PCW was reclassified from the Other Executive Offices to the DILG starting FY 2019 and is presented here as one continuous series. Prepared as the long-form companion to the PCW budget briefing.
+</p>
