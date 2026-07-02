@@ -25,6 +25,7 @@ budget-analysis/
 │   ├── DepEd_OSEC_Budget_Analysis.Rmd
 │   ├── DENR_OSEC_Budget_Analysis.Rmd
 │   ├── DOH_OSEC_Budget_Analysis.Rmd
+│   ├── DOLE_Budget_Analysis.Rmd
 │   ├── DSWD_OSEC_Budget_Analysis.Rmd
 │   ├── DPWH_Budget_Analysis.Rmd
 │   ├── NCIP_Budget_Analysis.Rmd
@@ -37,6 +38,7 @@ budget-analysis/
     ├── deped-osec.html
     ├── denr-osec.html
     ├── doh-osec.html
+    ├── dole.html
     ├── dswd-osec.html
     ├── dpwh.html
     ├── ncip.html
@@ -48,6 +50,7 @@ budget-analysis/
         ├── DepEd_OSEC_Budget_Analysis.html
         ├── DENR_OSEC_Budget_Analysis.html
         ├── DOH_OSEC_Budget_Analysis.html
+        ├── DOLE_Budget_Analysis.html
         ├── DSWD_OSEC_Budget_Analysis.html
         ├── NCIP_Budget_Analysis.html
         ├── NCMF_Budget_Analysis.html

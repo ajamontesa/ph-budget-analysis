@@ -87,6 +87,10 @@ agencies <- tibble::tribble(
   "An aggressively Congress-augmented budget where the binding constraint is a capital-outlay bottleneck \u2014 the infrastructure pipeline (HFEP) cannot disburse what it is given.",
   "GAA nearly tripled: \u20b1107B (2018) \u2192 \u20b1298B (2026)  |  \u20b1210B cumulative plus-ups; MAIFIP + HFEP = 73%  |  Capital Outlays disburse at only 14\u201337% and falling",
 
+  "DOLE",   "Department of Labor and Employment",                 "Whole department + attached agencies", "dole.html",        "published",
+  "A large labor department that is, to a first approximation, one program: TUPAD emergency employment is about 70% of it. The budget surged during COVID and stayed high, Congress adds heavily (almost all to TUPAD), and in 2023 three agencies left for the new Department of Migrant Workers. Execution is read at the agency level only.",
+  "TUPAD \u2248 \u20b125B \u2014 about 70% of the department (excl. TESDA)  |  COVID surge: \u20b111B (2018) \u2192 \u20b151B (2022) \u2192 ~\u20b130\u201340B since  |  Congress adds +\u20b156B to TUPAD cumulatively; OWWA/POEA/NMP \u2192 DMW in 2023",
+
   "DSWD",   "Department of Social Welfare and Development",       "Office of the Secretary", "dswd-osec.html",   "published",
   "An almost pure cash-transfer budget \u2014 4Ps, Protective Services, and the Social Pension \u2014 where Congress reshapes the portfolio from within: trimming 4Ps, scaling up Protective Services, and inventing AKAP by appropriation alone.",
   "GAA nearly doubled: \u20b1141B (2018) \u2192 \u20b1264B (2026)  |  Three cash programs = 74\u201388% of the budget; 93\u201395% MOOE  |  Congress redirects: Protective Services +\u20b1116B, 4Ps \u2212\u20b183B",
@@ -128,6 +132,7 @@ slides_paths <- c(
   DENR  = "slides/DENR_OSEC_Budget_Analysis.html",
   DOH   = "slides/DOH_OSEC_Budget_Analysis.html",
   DSWD  = "slides/DSWD_OSEC_Budget_Analysis.html",
+  DOLE  = "slides/DOLE_Budget_Analysis.html",
   NCIP  = "slides/NCIP_Budget_Analysis.html",
   NCMF  = "slides/NCMF_Budget_Analysis.html",
   PCW   = "slides/PCW_Budget_Analysis.html"

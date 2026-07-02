@@ -1,0 +1,672 @@
+---
+title: "Department of Labor and Employment"
+subtitle: "Budget evolution and agency-level utilization, FY 2018–2026"
+date: "`r format(Sys.Date(), '%B %Y')`"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    toc_depth: 3
+    number_sections: true
+    code_folding: hide
+    self_contained: true
+    df_print: paged
+    fig_width: 10
+    fig_height: 5.5
+---
+
+```{css, echo=FALSE}
+:root { --ink:#1a1a1a; --muted:#6e6e6e; --accent:#08519C; --rule:#e6e6e6; }
+body, .main-container { font-family: Arial, Helvetica, "IBM Plex Sans", sans-serif; color: var(--ink); }
+.main-container { max-width: 980px; }
+h1, h2, h3, h4 { font-family: Arial, Helvetica, sans-serif; font-weight: 600; }
+h1.title { font-size: 30px; }
+h1 { font-size: 25px; margin-top: 1.6em; padding-top: .3em; border-top: 2px solid var(--rule); }
+h2 { font-size: 20px; margin-top: 1.4em; }
+h3 { font-size: 17px; color: #333; }
+.author, .date { color: var(--muted); }
+p, li { font-size: 15.5px; line-height: 1.62; }
+blockquote { border-left: 3px solid var(--accent); background: #f5f8fc; color: #25405e;
+  font-size: 14.5px; padding: .6em 1em; margin: 1.2em 0; }
+.lead { font-size: 16.5px; color: #2b2b2b; }
+.takeaway { background: #f7f9fb; border: 1px solid var(--rule); border-radius: 6px;
+  padding: .4em 1.1em; margin: 1.1em 0; }
+.takeaway p, .takeaway li { font-size: 14.5px; }
+.caption, .figcaption { color: var(--muted); font-size: 13px; }
+table.dataTable { font-size: 13px; }
+.kbl-note { color: var(--muted); font-size: 12.5px; margin-top: -.5em; }
+hr { border-top: 1px solid var(--rule); }
+.home-link { font-size: 13.5px; }
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                     dpi = 150, fig.align = "center", out.width = "100%")
+options(knitr.kable.NA = "")
+library(readxl); library(dplyr); library(tidyr); library(stringr)
+library(ggplot2); library(scales); library(knitr); library(kableExtra); library(DT)
+
+.candidates <- c("../data/Compiled_-_NEP-GAA-NoFAR1.xlsx", "data/Compiled_-_NEP-GAA-NoFAR1.xlsx",
+                 "Compiled_-_NEP-GAA-NoFAR1.xlsx")
+file_path <- .candidates[file.exists(.candidates)][1]
+stopifnot(!is.na(file_path))
+AGENCY_SHEET <- "DOLE"; EXEC_SHEET <- "SAAODB"
+
+theme_dole <- function(base_size = 12) {
+  theme_minimal(base_size = base_size, base_family = "sans") +
+    theme(
+      plot.title = element_text(face = "bold", size = base_size + 2, color = "black"),
+      plot.subtitle = element_text(color = "grey30", size = base_size),
+      plot.caption = element_text(color = "grey40", size = base_size - 3, hjust = 0),
+      panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
+      axis.title = element_text(size = base_size - 1, color = "grey20"),
+      axis.text = element_text(color = "grey20"),
+      legend.position = "bottom", legend.title = element_blank(),
+      legend.text = element_text(size = base_size - 1),
+      strip.text = element_text(face = "bold", size = base_size - 1))
+}
+
+exec_pal <- c("NEP (proposed)" = "#9E9AC8", "GAA (enacted)" = "#54278F",
+  "Allotments" = "#08519C", "Obligations" = "#E6550D", "Disbursements" = "#31A354")
+absorp_pal <- c("Obligations / Allotment" = "#3182BD",
+  "Disbursements / Obligations" = "#E6550D", "Disbursements / Allotment" = "#31A354")
+ec_pal <- c("Personnel Services (PS)" = "#2CA02C", "Maintenance & Other Op. Exp. (MOOE)" = "#FF7F0E",
+  "Financial Expenses (FE)" = "#1F77B4", "Capital Outlays (CO)" = "#9467BD")
+osec_pal <- c(
+  "General Administration & Support" = "#A6761D", "Support to Operations" = "#E6AB02",
+  "Employment Facilitation" = "#1B9E77", "Labor Relations & Standards" = "#7570B3",
+  "Workers' Protection & Welfare (incl. TUPAD)" = "#D95F02")
+agency_pal <- c(
+  "Office of the Secretary" = "#08519C", "Professional Regulation Commission" = "#3182BD",
+  "National Labor Relations Commission" = "#6BAED6", "Overseas Workers Welfare Administration" = "#E6550D",
+  "Philippine Overseas Employment Administration" = "#FD8D3C",
+  "National Conciliation and Mediation Board" = "#31A354",
+  "National Wages and Productivity Commission" = "#74C476",
+  "National Maritime Polytechnic" = "#9E9AC8", "Institute for Labor Studies" = "#969696")
+bar_fill <- "#08519C"; peso <- "PHP "
+
+# Adaptive unit: billions for large aggregates, millions for the smaller agencies.
+php_fmt <- function(values) {
+  vmax <- suppressWarnings(max(abs(values), na.rm = TRUE))
+  if (is.finite(vmax) && vmax >= 5e9) function(x) paste0(peso, comma(x/1e9, accuracy = 0.1), "B")
+  else function(x) paste0(peso, comma(x/1e6, accuracy = 1), "M")
+}
+php_lab <- php_fmt
+
+dt_table <- function(df, caption = NULL, page = 10, money_cols = NULL, pct_cols = NULL, money_digits = 0) {
+  dt <- datatable(df, rownames = FALSE, caption = caption, extensions = "Buttons",
+    options = list(pageLength = page, lengthMenu = c(10, 20, 50, 100), dom = "Bfrtip",
+      buttons = c("copy", "csv"), scrollX = TRUE, autoWidth = FALSE,
+      columnDefs = list(list(className = "dt-right", targets = which(sapply(df, is.numeric)) - 1))),
+    class = "stripe hover compact")
+  if (!is.null(money_cols)) { mc <- which(names(df) %in% money_cols)
+    if (length(mc)) dt <- formatRound(dt, mc, digits = money_digits, mark = ",") }
+  if (!is.null(pct_cols)) { pc <- which(names(df) %in% pct_cols)
+    if (length(pc)) dt <- formatPercentage(dt, pc, digits = 1) }
+  dt
+}
+
+# ---- Config & data load ----------------------------------------------------
+CODE_COLS <- c("DEPARTMENT", "AGENCY", "PREXC_PROG", "PREXC_SUBPROG")
+raw <- read_excel(file_path, sheet = AGENCY_SHEET) %>% mutate(across(any_of(CODE_COLS), as.character))
+
+TESDA_TAB <- "Technical Education and Skills Development Authority"
+agency_meta <- tibble::tribble(
+  ~tab_name,                                        ~short,  ~group,     ~last_year,
+  "Office of the Secretary",                         "OSEC",  "osec",     2026,
+  "Institute for Labor Studies",                     "ILS",   "current",  2026,
+  "National Conciliation and Mediation Board",       "NCMB",  "current",  2026,
+  "National Labor Relations Commission",             "NLRC",  "current",  2026,
+  "National Wages and Productivity Commission",      "NWPC",  "current",  2026,
+  "Professional Regulation Commission",              "PRC",   "current",  2026,
+  "National Maritime Polytechnic",                   "NMP",   "dmw",      2022,
+  "Philippine Overseas Employment Administration",   "POEA",  "dmw",      2022,
+  "Overseas Workers Welfare Administration",         "OWWA",  "dmw",      2022)
+
+saodb_name     <- function(x) dplyr::recode(x, "Office of the Secretary" = "DOLE Office of the Secretary")
+tab_from_saodb <- function(x) dplyr::recode(x, "DOLE Office of the Secretary" = "Office of the Secretary")
+
+df_long_all <- raw %>% filter(!is.na(`P/A/P`)) %>%
+  pivot_longer(cols = matches("^(NEP|GAA|AuthAppro|AdjAppro|AdjAllot|Obligations|Disbursements)_\\d{4}_EXP_(1PS|2MOOE|3FE|6CO|TOTAL)$"),
+               names_to = "var", values_to = "amount") %>%
+  separate(var, into = c("metric", "year", "tag", "expense_class"), sep = "_") %>%
+  mutate(year = as.integer(year), amount = as.numeric(amount)) %>%
+  select(-tag) %>% rename(agency = UACS_AGY_DSC, dept = UACS_DPT_DSC, pap = `P/A/P`)
+
+df_long <- df_long_all %>% filter(expense_class == "TOTAL") %>% select(-expense_class)
+
+osec_cat <- function(prog) dplyr::case_when(
+  prog == "1000" ~ "General Administration & Support",
+  prog == "2000" ~ "Support to Operations",
+  prog == "3101" ~ "Employment Facilitation",
+  prog == "3201" ~ "Labor Relations & Standards",
+  prog == "3301" ~ "Workers' Protection & Welfare (incl. TUPAD)",
+  TRUE ~ NA_character_)
+
+# Execution (SAAODB, PHP thousands, all-funds) for all DOLE agencies
+exec_all <- read_excel(file_path, sheet = EXEC_SHEET) %>%
+  filter(Agency %in% saodb_name(agency_meta$tab_name)) %>%
+  pivot_longer(cols = matches("^\\d{4}$"), names_to = "year", values_to = "amt_k") %>%
+  mutate(year = as.integer(year), amount = amt_k * 1e3) %>% filter(!is.na(amount)) %>%
+  group_by(Agency, year, Particular) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = Particular, values_from = amount) %>% rename(Obligations = `Obligations Incurred`) %>%
+  mutate(tab_name = tab_from_saodb(Agency),
+         oblig_allot = Obligations / Allotments, disb_oblig = Disbursements / Obligations,
+         disb_allot = Disbursements / Allotments) %>% arrange(tab_name, year)
+
+ag_meta <- function(sh) agency_meta %>% filter(short == sh)
+
+agency_evo_plot <- function(sh, subtitle = "NEP (proposed) vs GAA (enacted)") {
+  m <- ag_meta(sh)
+  d <- df_long %>% filter(agency == m$tab_name, metric %in% c("NEP","GAA"), !is.na(amount)) %>%
+    group_by(year, metric) %>% summarise(total = sum(amount), .groups = "drop") %>%
+    mutate(metric = factor(metric, c("NEP","GAA"), c("NEP (proposed)","GAA (enacted)")))
+  ggplot(d, aes(year, total, color = metric, group = metric)) +
+    geom_line(linewidth = 1) + geom_point(size = 2) + scale_color_manual(values = exec_pal) +
+    scale_y_continuous(labels = php_fmt(d$total), limits = c(0, NA), breaks = pretty_breaks(5), expand = expansion(mult = c(0, .05))) +
+    scale_x_continuous(breaks = seq(2018, m$last_year, by = 2)) +
+    labs(title = m$tab_name, subtitle = subtitle, x = NULL, y = NULL) +
+    theme_dole() + guides(color = guide_legend(nrow = 1))
+}
+agency_top_paps <- function(sh, n = 7) {
+  m <- ag_meta(sh)
+  d <- df_long %>% filter(agency == m$tab_name, metric == "GAA", year == m$last_year, !is.na(amount), amount > 0) %>%
+    group_by(pap) %>% summarise(amount = sum(amount), .groups = "drop") %>% arrange(desc(amount)) %>%
+    slice_head(n = n) %>% mutate(pap = factor(pap, levels = rev(pap)))
+  lab <- php_lab(d$amount)
+  ggplot(d, aes(pap, amount)) + geom_col(fill = bar_fill, width = 0.72) +
+    geom_text(aes(label = lab(amount)), hjust = -0.1, size = 3, color = "grey20") + coord_flip() +
+    scale_x_discrete(labels = function(x) str_wrap(x, 48)) +
+    scale_y_continuous(labels = php_fmt(d$amount), expand = expansion(mult = c(0, .28)), limits = c(0, NA)) +
+    labs(title = paste0(m$short, ": largest P/A/Ps (FY ", m$last_year, " GAA)"), x = NULL, y = NULL) +
+    theme_dole() + theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"))
+}
+agency_exec_ratio_plot <- function(sh) {
+  m <- ag_meta(sh)
+  d <- exec_all %>% filter(tab_name == m$tab_name) %>% select(year, oblig_allot, disb_oblig, disb_allot) %>%
+    pivot_longer(-year, names_to = "ratio", values_to = "v") %>% filter(!is.na(v)) %>%
+    mutate(ratio = factor(ratio, c("oblig_allot","disb_oblig","disb_allot"),
+      c("Obligations / Allotment","Disbursements / Obligations","Disbursements / Allotment")))
+  yr <- range(d$year)
+  ggplot(d, aes(year, v, color = ratio, group = ratio)) +
+    geom_line(linewidth = 0.9) + geom_point(size = 1.8) + scale_color_manual(values = absorp_pal) +
+    scale_y_continuous(labels = percent_format(accuracy = 1), limits = c(0.5, 1.02), breaks = seq(0.5, 1, 0.1)) +
+    scale_x_continuous(breaks = seq(yr[1], yr[2], by = 2)) +
+    labs(title = paste0(m$short, ": absorptive capacity (all-funds, FY ", yr[1], "–", yr[2], ")"), x = NULL, y = NULL) +
+    theme_dole() + guides(color = guide_legend(nrow = 1))
+}
+agency_exec_dt <- function(sh, from = 2018) {
+  m <- ag_meta(sh)
+  exec_all %>% filter(tab_name == m$tab_name, year >= from) %>%
+    transmute(Year = year, `Allotments (M)` = Allotments/1e6, `Obligations (M)` = Obligations/1e6,
+              `Disbursements (M)` = Disbursements/1e6, `O/A` = oblig_allot, `D/O` = disb_oblig, `D/A` = disb_allot) %>%
+    dt_table(page = 10, money_cols = c("Allotments (M)","Obligations (M)","Disbursements (M)"),
+             pct_cols = c("O/A","D/O","D/A"))
+}
+```
+
+<p class="home-link"><a href="index.html">← All agencies</a></p>
+
+# Overview {#overview .unnumbered}
+
+<p class="lead">
+This document profiles the budget of the **Department of Labor and Employment (DOLE)** — the whole department, its **Office of the Secretary (OSEC)** and its **attached agencies** — across nine fiscal years, FY 2018 to FY 2026. DOLE is a large, multi-agency department, so this review is organized like a portfolio: the department in aggregate, then OSEC, then each attached agency in turn, and finally a cross-agency look at how well each spends what it is given.
+</p>
+
+Two features shape everything that follows. First, DOLE's budget is **overwhelmingly one program** — Livelihood and Emergency Employment, better known as **TUPAD** — which alone is roughly **70% of the department**. Second, the department has been **reorganized twice around 2023**: three agencies (OWWA, POEA, and the National Maritime Polytechnic) moved to the new **Department of Migrant Workers (DMW)**, while TESDA's classification shifted the other way. To keep the department's own story clean, **TESDA is excluded throughout** (it warrants its own review), and the three DMW-bound agencies are shown **through 2022 as pre-DMW history**.
+
+One important limitation: usable **P/A/P-level execution data was not available**, so how well the budget is *spent* is measured at the **agency aggregate** only. The intent is to obtain program-level execution later; until then, this review draws as much as it can from the appropriations detail and the agency-level utilization record.
+
+# Executive summary {#exec}
+
+**DOLE is a labor department built around one enormous program.** A single P/A/P — **Livelihood and Emergency Employment (TUPAD)** — is about **₱25B, roughly 70%** of the whole department (excluding TESDA) and about **85% of OSEC**.
+
+**The budget ballooned during COVID and stayed elevated.** Department appropriations (excl. TESDA) went from **₱11B (2018 GAA) to a peak of ₱51B (2022)**, settling around **₱30–40B** since.
+
+**Congress adds heavily, and almost entirely to one line.** Enacted budgets have run well above proposals — most strikingly **+₱15B in FY 2024**, the largest in the period. Cumulatively across 2018–2026, Congress added **+₱56B to TUPAD**; the largest recurring cut is **Youth Employability (−₱1.2B)**.
+
+**The department was reshaped twice.** **OWWA, POEA, and NMP** moved to the new **Department of Migrant Workers in 2023**; **TESDA** shifted classification the same year (covered separately, excluded here). The 2023 break means totals dip as the DMW trio leaves — a structural change layered on top of real budget change.
+
+**Execution is generally strong but uneven.** **NLRC** obligates and disburses almost everything (~100% / ~99%) and **NWPC** runs high (~99% / ~96%); **PRC** and (pre-DMW) **POEA** lag on cash, with disbursement-to-allotment often in the 70s–80s%.
+
+**OWWA's pre-DMW surge was dramatic** — from ₱0.9B (2018) to **₱13B (2022)** on pandemic OFW assistance — just before it left the department.
+
+> DOLE ex-TESDA is, to a first approximation, TUPAD plus a set of well-run smaller agencies. The central questions are about concentration, the durability of the COVID-era ramp, and — once the DMW trio is gone — whether the leaner department has the right mix.
+
+# A note on the data {#data-notes}
+
+**Period.** FY 2018–2026 for the proposed (NEP) and enacted (GAA) budget at the P/A/P level; agency-level execution (Allotments, Obligations, Disbursements) covers FY 2011–2025.
+
+**No P/A/P-level execution.** Usable **FAR No. 1** records were unavailable, so absorption is shown at the **agency aggregate** only — there is no program-level absorption analysis. This is the main gap this review would fill with better data.
+
+**Two bases, not directly comparable.** NEP/GAA are **current-year new appropriations**. Execution figures are DBM's **agency aggregates across all available funds** (new + automatic + continuing). The two series should not be read one-to-one.
+
+**TESDA is excluded** from all department totals and has no section here: its classification shifted during the period and it warrants its own review.
+
+**The DMW trio** (OWWA, POEA, National Maritime Polytechnic) transferred to the **Department of Migrant Workers in 2023**; their DOLE data ends at **2022** and is presented as pre-DMW history. No cross-reference to a DMW review is implied — simply that these agencies left DOLE.
+
+**Expense classes.** PS, MOOE, **Financial Expenses (FE)**, and CO — DOLE carries a small FE line that most departments do not. **Units adapt per chart** (PHP billions for the department and OSEC, millions for smaller agencies).
+
+# How DOLE's roster changed {#roster}
+
+DOLE was reorganized twice around 2023, so it helps to fix the moving parts before reading the trends.
+
+```{r org-timeline, fig.height=3.4}
+tl <- tibble::tribble(
+  ~track, ~label, ~start, ~end, ~fill,
+  "Core department",  "OSEC + ILS, NCMB, NLRC, NWPC, PRC (throughout)", 2018, 2026.4, "#08519C",
+  "Left for DMW",     "OWWA, POEA, NMP → Dept. of Migrant Workers",     2018, 2023,   "#E6550D",
+  "TESDA (separate)", "Classification shifted in 2023 (excluded here)",  2023, 2026.4, "#969696")
+ggplot(tl, aes(y = track)) +
+  geom_segment(aes(x = start, xend = end, yend = track, color = fill), linewidth = 12, lineend = "butt") +
+  scale_color_identity() +
+  geom_text(aes(x = (start + end) / 2, label = label), color = "white", fontface = "bold", size = 3.2) +
+  scale_x_continuous(breaks = 2018:2026, limits = c(2017.7, 2026.6)) +
+  labs(title = "Two reorganizations bracket the period",
+       subtitle = "DMW spun off in 2023 (taking three agencies); TESDA's classification shifted the same year",
+       x = NULL, y = NULL) +
+  theme_dole() + theme(panel.grid.major.y = element_blank(),
+        axis.text.y = element_text(face = "bold", color = "grey20"))
+```
+
+**The 2023 break matters:** department totals dip as the DMW trio leaves, so any year-to-year comparison across 2022–2023 mixes a structural change with a real budget change.
+
+# The department at a glance {#department}
+
+## Department budget over time (excluding TESDA)
+
+```{r dept-evo, fig.height=4.8}
+dept <- df_long %>% filter(agency != TESDA_TAB, metric %in% c("NEP","GAA"), !is.na(amount)) %>%
+  group_by(year, metric) %>% summarise(total = sum(amount), .groups = "drop") %>%
+  mutate(metric = factor(metric, c("NEP","GAA"), c("NEP (proposed)","GAA (enacted)")))
+ggplot(dept, aes(year, total, color = metric, group = metric)) +
+  geom_line(linewidth = 1) + geom_point(size = 2) + scale_color_manual(values = exec_pal) +
+  scale_y_continuous(labels = php_fmt(dept$total), limits = c(0, NA), breaks = pretty_breaks(6), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "DOLE current-year appropriations (excl. TESDA), FY 2018–2026",
+       subtitle = "A COVID-era surge to ₱51B (2022), then settling around ₱30–40B; note the 2023 DMW spin-off",
+       x = NULL, y = NULL, caption = "Current-year new appropriations. Source: DBM NEP & GAA.") +
+  theme_dole() + guides(color = guide_legend(nrow = 1))
+```
+
+The department roughly **quintupled** at its 2022 peak relative to 2018, then stepped back down — partly because the pandemic scale-up eased, partly because the DMW trio left in 2023. The enacted (GAA) line sits consistently above the proposed (NEP) line: Congress tops DOLE up every year.
+
+## Composition by agency
+
+```{r dept-comp, fig.height=4.9}
+comp <- df_long %>% filter(agency != TESDA_TAB, metric == "GAA", !is.na(amount), amount > 0) %>%
+  group_by(year, agency) %>% summarise(amount = sum(amount), .groups = "drop") %>%
+  mutate(agency = factor(agency, levels = names(agency_pal)))
+ggplot(comp, aes(year, amount, fill = agency)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = agency_pal, labels = function(x) str_wrap(x, 26)) +
+  scale_y_continuous(labels = php_fmt(comp$amount), breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "GAA composition by agency, 2018–2026",
+       subtitle = "The Office of the Secretary is the overwhelming majority; OWWA's 2022 bulge then exits with DMW",
+       x = NULL, y = NULL) +
+  theme_dole() + guides(fill = guide_legend(nrow = 3, byrow = TRUE)) +
+  theme(legend.text = element_text(size = 9), legend.key.size = unit(0.4, "cm"))
+```
+
+**OSEC is the department** — the deep-blue block is around 85% of the total in most years. The one exception to OSEC's dominance is **OWWA's 2021–2022 bulge** (orange), the pandemic OFW-assistance surge, which then disappears from DOLE entirely in 2023.
+
+## The attached agencies, on their own scale
+
+```{r dept-comp-attached, fig.height=4.9}
+comp2 <- df_long %>% filter(!agency %in% c(TESDA_TAB, "Office of the Secretary"), metric == "GAA", !is.na(amount), amount > 0) %>%
+  group_by(year, agency) %>% summarise(amount = sum(amount), .groups = "drop") %>%
+  mutate(agency = factor(agency, levels = names(agency_pal)))
+ggplot(comp2, aes(year, amount, fill = agency)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = agency_pal, labels = function(x) str_wrap(x, 26)) +
+  scale_y_continuous(labels = php_fmt(comp2$amount), breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "GAA composition of attached agencies only (excl. OSEC & TESDA)",
+       subtitle = "OWWA dominates until it leaves in 2023; PRC and NLRC anchor the continuing roster",
+       x = NULL, y = NULL) +
+  theme_dole() + guides(fill = guide_legend(nrow = 3, byrow = TRUE)) +
+  theme(legend.text = element_text(size = 9), legend.key.size = unit(0.4, "cm"))
+```
+
+With OSEC set aside, the attached agencies are modest — a few billion pesos combined. **OWWA** towers over the rest until 2022; after its exit, **PRC** (the professions' licensing body) and **NLRC** (labor arbitration) anchor the continuing roster.
+
+## The department's largest P/A/Ps (FY 2026)
+
+```{r dept-top-paps, fig.height=5.0}
+dtp <- df_long %>% filter(agency != TESDA_TAB, metric == "GAA", year == 2026, !is.na(amount), amount > 0) %>%
+  mutate(label = paste0(str_trunc(pap, 46), "  (", str_trunc(agency, 22), ")")) %>%
+  group_by(label) %>% summarise(amount = sum(amount), .groups = "drop") %>%
+  arrange(desc(amount)) %>% slice_head(n = 10) %>% mutate(label = factor(label, levels = rev(label)))
+lab <- php_lab(dtp$amount)
+ggplot(dtp, aes(label, amount)) + geom_col(fill = bar_fill, width = 0.72) +
+  geom_text(aes(label = lab(amount)), hjust = -0.1, size = 3, color = "grey20") + coord_flip() +
+  scale_x_discrete(labels = function(x) str_wrap(x, 54)) +
+  scale_y_continuous(labels = php_fmt(dtp$amount), expand = expansion(mult = c(0, .2)), limits = c(0, NA)) +
+  labs(title = "Ten largest P/A/Ps department-wide (FY 2026 GAA)",
+       subtitle = "One line — Livelihood & Emergency Employment (TUPAD) — dwarfs everything else combined",
+       x = NULL, y = NULL) +
+  theme_dole() + theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"))
+```
+
+The scale gap is the point: TUPAD is larger than every other line in the department **combined**. Everything else — general management, employment facilitation, labor-standards enforcement, the attached agencies' core functions — shares what is left.
+
+### Every P/A/P in the FY 2026 budget (interactive) {.unnumbered}
+
+```{r tbl-all-paps}
+df_long %>% filter(agency != TESDA_TAB, year == 2026, metric %in% c("NEP","GAA"), !is.na(amount)) %>%
+  group_by(agency, pap, metric) %>% summarise(amount = sum(amount), .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = amount) %>%
+  transmute(Agency = agency, `P/A/P` = pap, `NEP (M)` = NEP/1e6, `GAA (M)` = GAA/1e6,
+            `Net add (M)` = (GAA - NEP)/1e6) %>% arrange(desc(`GAA (M)`)) %>%
+  dt_table(page = 10, money_cols = c("NEP (M)","GAA (M)","Net add (M)"))
+```
+
+## Where Congress adjusts the budget
+
+```{r dept-gap, fig.height=4.4}
+gap <- df_long %>% filter(agency != TESDA_TAB, metric %in% c("NEP","GAA"), !is.na(amount)) %>%
+  group_by(year, metric) %>% summarise(total = sum(amount), .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = total) %>%
+  mutate(change = GAA - NEP, direction = ifelse(change >= 0, "Net increase (GAA > NEP)", "Net decrease (GAA < NEP)"))
+ggplot(gap, aes(year, change/1e9, fill = direction)) +
+  geom_col(width = 0.7) +
+  geom_text(aes(label = sprintf("%+.1f", change/1e9), vjust = ifelse(change >= 0, -0.4, 1.2)), size = 3.1, color = "grey20") +
+  scale_fill_manual(values = c("Net increase (GAA > NEP)" = "#1B9E77", "Net decrease (GAA < NEP)" = "#D95F02")) +
+  scale_x_continuous(breaks = 2018:2026) +
+  scale_y_continuous(labels = function(v) paste0(peso, v, "B"), expand = expansion(mult = c(0.12, 0.15))) +
+  labs(title = "Enacted minus proposed (GAA − NEP), PHP billions",
+       subtitle = "Congress consistently tops DOLE up; the +₱15B FY 2024 add is the largest in the period",
+       x = NULL, y = NULL) +
+  theme_dole() + guides(fill = guide_legend(nrow = 1))
+```
+
+Every year the enacted budget lands **above** the proposal — DOLE is reliably augmented, never cut in aggregate. The additions are large (₱3–15B) and, as the next chart shows, remarkably concentrated.
+
+## Which P/A/Ps does Congress augment?
+
+```{r dept-aug, fig.height=5.0}
+aug <- df_long %>% filter(agency != TESDA_TAB, metric %in% c("NEP","GAA")) %>%
+  mutate(lab = paste0(str_trunc(pap, 40), " [", str_trunc(agency, 16), "]")) %>%
+  group_by(lab, year, metric) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = amount, values_fill = 0) %>%
+  mutate(delta = GAA - NEP) %>% group_by(lab) %>% summarise(delta = sum(delta), .groups = "drop")
+aug_plot <- bind_rows(aug %>% slice_max(delta, n = 8), aug %>% slice_min(delta, n = 5)) %>%
+  filter(abs(delta) > 1e6) %>%
+  mutate(dir = ifelse(delta >= 0, "Increased by Congress", "Cut by Congress"),
+         lab = factor(lab, levels = lab[order(delta)]))
+ggplot(aug_plot, aes(delta/1e9, lab, fill = dir)) +
+  geom_col(width = 0.72) +
+  geom_text(aes(label = sprintf("%+.1f", delta/1e9), hjust = ifelse(delta >= 0, -0.12, 1.12)), size = 3, color = "grey20") +
+  scale_fill_manual(values = c("Increased by Congress" = "#1B9E77", "Cut by Congress" = "#D95F02")) +
+  scale_x_continuous(labels = function(v) paste0(peso, v, "B"), expand = expansion(mult = c(0.16, 0.16))) +
+  scale_y_discrete(labels = function(x) str_wrap(x, 46)) +
+  labs(title = "P/A/Ps most changed by Congress, cumulative FY 2018–2026 (GAA − NEP)",
+       subtitle = "One line absorbs almost all the augmentation: +₱56B added to Livelihood & Emergency Employment (TUPAD)",
+       x = NULL, y = NULL) +
+  theme_dole() + theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85")) +
+  guides(fill = guide_legend(nrow = 1))
+```
+
+Congress's insertions to DOLE are, overwhelmingly, **emergency-employment money**: TUPAD alone drew **+₱56B** in cumulative additions over the period. The largest recurring cut is **Youth Employability (−₱1.2B)**, which the legislature has repeatedly pared back from the Executive's proposal.
+
+# Office of the Secretary {#osec}
+
+OSEC is around **85% of the department**, so its shape is DOLE's shape. It grew from **₱7.2B (2018) to a peak of ₱33B (2022)** and stands at **₱30B in 2026** — the pandemic scale-up of emergency employment, which never came back down.
+
+```{r osec-evo, fig.height=4.6}
+agency_evo_plot("OSEC")
+```
+
+## OSEC composition by program
+
+```{r osec-prog, fig.height=5.0}
+op <- df_long %>% filter(agency == "Office of the Secretary", metric == "GAA", !is.na(amount), amount > 0) %>%
+  mutate(category = osec_cat(PREXC_PROG)) %>% filter(!is.na(category)) %>%
+  group_by(year, category) %>% summarise(amount = sum(amount), .groups = "drop") %>%
+  mutate(category = factor(category, levels = names(osec_pal)))
+ggplot(op, aes(year, amount, fill = category)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = osec_pal, labels = function(x) str_wrap(x, 28)) +
+  scale_y_continuous(labels = php_fmt(op$amount), breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "OSEC GAA by program, 2018–2026",
+       subtitle = "Workers' Protection & Welfare — which houses TUPAD — is the overwhelming bulk",
+       x = NULL, y = NULL) +
+  theme_dole() + guides(fill = guide_legend(nrow = 2, byrow = TRUE))
+```
+
+The orange **Workers' Protection & Welfare** program, which houses TUPAD, is almost the entire OSEC budget. Employment Facilitation (job-matching and overseas-employment services), Labor Relations & Standards (inspection and compliance), and administration together make up the modest remainder.
+
+## OSEC composition by expense class
+
+```{r osec-ec, fig.height=4.8}
+osec_ec <- df_long_all %>% filter(agency == "Office of the Secretary", metric == "GAA", year <= 2026,
+    expense_class %in% c("1PS","2MOOE","3FE","6CO")) %>%
+  group_by(year, expense_class) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(expense_class = factor(expense_class, levels = c("1PS","2MOOE","3FE","6CO"),
+    labels = c("Personnel Services (PS)","Maintenance & Other Op. Exp. (MOOE)","Financial Expenses (FE)","Capital Outlays (CO)")))
+ggplot(osec_ec, aes(year, amount, fill = expense_class)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = ec_pal) +
+  scale_y_continuous(labels = php_fmt(osec_ec$amount), breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "OSEC GAA by expense class, 2018–2026",
+       subtitle = "Almost entirely MOOE — TUPAD is cash assistance, which classifies as an operating expense",
+       x = NULL, y = NULL) +
+  theme_dole() + guides(fill = guide_legend(nrow = 1))
+```
+
+Because TUPAD is essentially **cash assistance for short-term work**, it books as MOOE — so OSEC is an overwhelmingly **MOOE** budget, with personnel a thin slice and capital outlays smaller still.
+
+## OSEC largest P/A/Ps and execution
+
+```{r osec-paps, fig.height=4.8}
+agency_top_paps("OSEC", n = 8)
+```
+
+**Livelihood & Emergency Employment (TUPAD) is ~₱25B of OSEC's ~₱30B** — about 85%. Everything else — general management, employment facilitation, youth employability, labor-laws compliance — shares the remainder.
+
+```{r osec-exec, fig.height=4.2}
+agency_exec_ratio_plot("OSEC")
+```
+
+At the agency level OSEC obligates almost all of its allotment (mid-90s%) and disburses in the high-80s% — solid for a budget this large and this concentrated in a program that pays out in many small tranches.
+
+### OSEC execution, all years (interactive) {.unnumbered}
+
+```{r osec-exec-tbl}
+agency_exec_dt("OSEC")
+```
+
+# The continuing attached agencies {#attached}
+
+Five agencies remain within DOLE throughout the period. They are small relative to OSEC but, with one exception, execute well.
+
+## Institute for Labor Studies (ILS)
+
+The department's smallest unit — a policy-research arm — roughly doubling from **₱36M (2018) to ₱78M (2026)**. General Management is about 70% of its budget; execution is solid (obligation ~99%, cash ~88%).
+
+```{r ils-evo, fig.height=4.0}
+agency_evo_plot("ILS")
+```
+
+```{r ils-tbl}
+agency_exec_dt("ILS")
+```
+
+## National Conciliation and Mediation Board (NCMB)
+
+Handles labor-dispute conciliation and mediation; grew from **₱212M (2018) to ₱371M (2026)**. Execution is high (obligation ~92%, cash ~88%); the largest single line is General Management.
+
+```{r ncmb-evo, fig.height=4.0}
+agency_evo_plot("NCMB")
+```
+
+```{r ncmb-tbl}
+agency_exec_dt("NCMB")
+```
+
+## National Labor Relations Commission (NLRC)
+
+The department's **labor-arbitration body** and one of its larger attached agencies: **₱1.1B (2018) → ₱1.8B (2026)**. It is a **model executor** — obligating essentially all of its allotment (~100%) and disbursing ~99%. Arbitration of labor cases is about half its budget.
+
+```{r nlrc-evo, fig.height=4.0}
+agency_evo_plot("NLRC")
+```
+
+```{r nlrc-paps, fig.height=3.8}
+agency_top_paps("NLRC", n = 6)
+```
+
+```{r nlrc-tbl}
+agency_exec_dt("NLRC")
+```
+
+## National Wages and Productivity Commission (NWPC)
+
+Sets the framework for regional minimum wages and productivity; **₱209M (2018) → ₱357M (2026)**. Strong execution (obligation ~99%, cash ~96%); wage-policy development is its largest line.
+
+```{r nwpc-evo, fig.height=4.0}
+agency_evo_plot("NWPC")
+```
+
+```{r nwpc-tbl}
+agency_exec_dt("NWPC")
+```
+
+## Professional Regulation Commission (PRC)
+
+The **licensure and regulation body for the professions** — the largest continuing attached agency, tripling from **₱0.8B (2018) to ₱2.5B (2026)**. Obligation rates are healthy (~90%+), but **cash utilization has been volatile** — disbursement-to-allotment has swung from the high-50s to the low-90s%, recovering to the mid-80s recently. It is the most variable disburser among the continuing agencies, which makes it the one to watch as it grows.
+
+```{r prc-evo, fig.height=4.0}
+agency_evo_plot("PRC")
+```
+
+```{r prc-paps, fig.height=3.8}
+agency_top_paps("PRC", n = 6)
+```
+
+```{r prc-tbl}
+agency_exec_dt("PRC")
+```
+
+# The agencies that moved to DMW {#dmw}
+
+Three agencies transferred to the new **Department of Migrant Workers in 2023**. Their DOLE data ends at **2022**; this section is their pre-DMW history, included because it is part of DOLE's story for most of the period.
+
+## Overseas Workers Welfare Administration (OWWA)
+
+**The most dramatic trajectory in the department:** ₱0.9B (2018) surging to **₱13B (2022)** on pandemic-era OFW repatriation and welfare assistance — before transferring to DMW. Welfare services were about 94% of its 2022 budget; obligation ~90%, cash ~83%.
+
+```{r owwa-evo, fig.height=4.0}
+agency_evo_plot("OWWA")
+```
+
+```{r owwa-paps, fig.height=3.6}
+agency_top_paps("OWWA", n = 5)
+```
+
+```{r owwa-tbl}
+agency_exec_dt("OWWA")
+```
+
+## Philippine Overseas Employment Administration (POEA)
+
+Regulated overseas recruitment and deployment before being folded into DMW: **₱0.5B (2018) → ₱0.7B (2022)**. Obligation was steady (~94%) but **cash utilization was weak** — disbursement-to-allotment sat in the high-60s to mid-70s%, among the department's slowest disbursers.
+
+```{r poea-evo, fig.height=4.0}
+agency_evo_plot("POEA")
+```
+
+```{r poea-tbl}
+agency_exec_dt("POEA")
+```
+
+## National Maritime Polytechnic (NMP)
+
+A small maritime training and research institute: **₱99M (2018) → ₱135M (2022)**. Steady execution (obligation ~96%, cash ~88%); maritime training and assessment is its core line.
+
+```{r nmp-evo, fig.height=4.0}
+agency_evo_plot("NMP")
+```
+
+```{r nmp-tbl}
+agency_exec_dt("NMP")
+```
+
+# Cross-agency execution {#execution}
+
+With no P/A/P-level execution data, the sharpest cross-agency question is a simple one: **who spends what they are given?**
+
+## Obligation vs. cash utilization (FY 2024)
+
+```{r exec-compare, fig.height=4.8}
+cmp <- exec_all %>% filter(year == 2024, tab_name != TESDA_TAB) %>%
+  left_join(agency_meta, by = "tab_name") %>% filter(!is.na(short)) %>%
+  select(short, oblig_allot, disb_allot) %>%
+  pivot_longer(-short, names_to = "ratio", values_to = "v") %>%
+  mutate(ratio = factor(ratio, c("oblig_allot","disb_allot"),
+    c("Obligations / Allotment","Disbursements / Allotment")))
+ord <- cmp %>% filter(ratio == "Disbursements / Allotment") %>% arrange(v) %>% pull(short)
+cmp <- cmp %>% mutate(short = factor(short, levels = ord))
+ggplot(cmp, aes(short, v, fill = ratio)) +
+  geom_col(position = position_dodge(width = 0.7), width = 0.65) +
+  scale_fill_manual(values = c("Obligations / Allotment" = "#3182BD", "Disbursements / Allotment" = "#31A354")) +
+  scale_y_continuous(labels = percent_format(accuracy = 1), limits = c(0, 1.05), expand = expansion(mult = c(0, .02))) +
+  labs(title = "Obligation vs. cash-utilization rates by agency (FY 2024, all-funds)",
+       subtitle = "Most agencies obligate what they are given; the gap to actual disbursement is where delays hide",
+       x = NULL, y = NULL, caption = "Excludes the DMW trio (no 2024 data under DOLE) and TESDA. Ordered by cash-utilization rate.") +
+  theme_dole() + guides(fill = guide_legend(nrow = 1))
+```
+
+The pattern is consistent: agencies **obligate** most of their allotment (blue bars near the top), and the story is in the **gap down to disbursement** (green). NLRC and NWPC close that gap almost entirely; OSEC, NCMB, ILS, and PRC leave a larger cash tail.
+
+## Cash utilization over time (continuing agencies)
+
+```{r exec-trend, fig.height=4.8}
+keep <- agency_meta %>% filter(group %in% c("osec","current")) %>% pull(tab_name)
+tr <- exec_all %>% filter(tab_name %in% keep, !is.na(disb_allot)) %>% left_join(agency_meta, by = "tab_name")
+ggplot(tr, aes(year, disb_allot, color = short, group = short)) +
+  geom_line(linewidth = 0.8) + geom_point(size = 1.5) +
+  scale_y_continuous(labels = percent_format(accuracy = 1), limits = c(0.4, 1.02), breaks = seq(0.4, 1, 0.2)) +
+  scale_x_continuous(breaks = seq(2016, 2025, 2), limits = c(2016, 2025)) +
+  scale_color_brewer(palette = "Dark2") +
+  labs(title = "Cash utilization over time, continuing agencies (FY 2016–2025)",
+       subtitle = "NLRC and NWPC run high and steady; PRC's disbursement rate is the most volatile",
+       x = NULL, y = NULL) +
+  theme_dole() + guides(color = guide_legend(nrow = 1))
+```
+
+**NLRC and NWPC** run high and steady; **PRC** is the visibly volatile line, dropping into the 60s in some years before recovering. That volatility matters more as PRC grows toward ₱2.5B.
+
+### Execution for every DOLE agency, all years (interactive) {.unnumbered}
+
+```{r exec-all-tbl}
+exec_all %>% filter(tab_name != TESDA_TAB) %>%
+  transmute(Agency = tab_name, Year = year, `Allotments (M)` = Allotments/1e6,
+            `Obligations (M)` = Obligations/1e6, `Disbursements (M)` = Disbursements/1e6,
+            `O/A` = oblig_allot, `D/O` = disb_oblig, `D/A` = disb_allot) %>%
+  arrange(Agency, Year) %>%
+  dt_table(page = 15, money_cols = c("Allotments (M)","Obligations (M)","Disbursements (M)"),
+           pct_cols = c("O/A","D/O","D/A"))
+```
+
+<p class="kbl-note">Agency-level, all-funds basis (new + automatic + continuing appropriations). O/A = obligations ÷ allotment; D/O = disbursements ÷ obligations; D/A = disbursements ÷ allotment. Not comparable to the current-year NEP/GAA appropriations series above.</p>
+
+# Questions for discussion {#discussion}
+
+1. **One program, most of a department.** TUPAD is ~70% of DOLE ex-TESDA and about ₱25B a year. Is a short-term emergency-employment program the right center of gravity for the labor department — and is a single P/A/P transparent enough for spending this large?
+2. **The COVID ratchet.** The department's budget roughly quintupled at its 2022 peak and never fully came back down. Is the elevated level now structural, and is it buying durable employment outcomes rather than repeated short-term placements?
+3. **Congress's ₱15B hand.** Legislated add-ons to DOLE are large and concentrated in livelihood funds (+₱56B cumulative to TUPAD). How should that shape debates about insertions and local discretion?
+4. **Slow disbursers.** PRC and (pre-DMW) POEA obligate their budgets but are slower to disburse. What explains the cash lag, and does it matter for service delivery?
+5. **Life after DMW.** With OWWA, POEA, and NMP gone, DOLE is more concentrated in OSEC than ever. Does the remaining department have the right mix of functions and funding — and what would P/A/P-level execution data reveal that the agency aggregates cannot?
+
+---
+
+<p class="caption">
+Underlying data: DBM NEP & GAA documents (current-year new appropriations, P/A/P level), FY 2018–2026; DBM-published execution aggregates (all available funds, agency level), FY 2011–2025. TESDA is excluded (its classification shifted during the period and it warrants its own review); OWWA, POEA & NMP are shown through 2022 (transferred to the Department of Migrant Workers in 2023). No FAR No. 1 (P/A/P-level execution) was available, so absorption is reported only at the agency aggregate, on a basis not directly comparable to the appropriations series. Prepared as the long-form companion to the DOLE budget briefing.
+</p>
