@@ -157,13 +157,17 @@ Because the program-by-program execution chain cannot be traced, the emphasis is
 
 Three features define NCMF's budget. First, it has **grown fast** — more than doubling since 2018. Second, it is **unusually concentrated**: a single line, the preservation of Muslim cultural centers and heritage, has been roughly **half the entire agency** every year. Third, NCMF has been **institutionally stable** — one move (from the Other Executive Offices to the DILG, around 2019) and **no change to its five-program structure** — so its trend lines read cleanly from 2018 to 2026.
 
+Growth, though, is only half the picture. Set against the community NCMF serves — roughly **7.0 million Muslim Filipinos** by the 2020 census, and by NCMF's own estimate considerably more — the 2026 budget works out to about **₱188 per person per year**, or roughly fifty centavos a day. The questions this review raises are therefore less about whether the agency spends what it receives (it largely does) than about **whether what it receives is adequate to the mandate, and whether the spending reaches the communities it is meant for**.
+
 # Executive summary {#exec}
 
 **NCMF's enacted budget has more than doubled.** From ₱535M (2018 GAA) to ₱1,314M (2026) — about **+145%**, roughly 12% a year, with a steep ramp in 2025–2026.
 
+**But the scale remains modest against the population it serves.** Spread across the roughly **7.0 million Muslim Filipinos** counted in the 2020 census, the 2026 budget is about **₱188 per person per year** — about fifty centavos a day — and closer to **₱110** if the community is as large as NCMF itself estimates.
+
 **One organizational move, a stable structure.** NCMF (the former Office on Muslim Affairs) shifted from the **Other Executive Offices to the DILG around 2019** and has stayed there — *without* re-cutting its five-program structure, so program lines are comparable across all years.
 
-**Half the budget is a single line.** Preservation of **Muslim cultural centers, heritage, holidays and festivities** has been **46–60% of the agency every year**, reaching ₱603M in 2026. With Hajj operations (₱104M) and Madrasah/Shari'ah education (₱142M), cultural and religious services define the budget.
+**Half the budget is a single line.** Preservation of **Muslim cultural centers, heritage, holidays and festivities** has been **46–60% of the agency every year**, reaching ₱603M in 2026. With Hajj operations (₱104M) and Madrasah/Shari'ah education (₱142M), cultural, religious and educational services are the core of the budget — the functions the agency exists to deliver.
 
 **Congress reliably tops up NCMF.** Enacted budgets matched or beat the proposal in eight of nine years; the **+₱148M (+13%) add for FY 2026** is the largest in the period.
 
@@ -171,7 +175,7 @@ Three features define NCMF's budget. First, it has **grown fast** — more than 
 
 **Execution is strong.** Agency-level obligation rates run **86–99%**, and NCMF disburses nearly everything it obligates — except **2019 (68% cash utilization)**, the OEO→DILG transition year.
 
-> NCMF is a small, fast-growing, culturally-focused agency with a stable structure and strong execution — but with so much of its budget in one undifferentiated heritage line, the sharpest questions are about concentration and transparency.
+> NCMF is a small, fast-growing agency with a stable structure that spends what it is given. The open questions are about **adequacy and reach**: whether an envelope of roughly fifty centavos per Muslim Filipino per day matches the mandate, and whether communities can see the spending arriving.
 
 # A note on the data {#data-notes}
 
@@ -182,6 +186,8 @@ Three features define NCMF's budget. First, it has **grown fast** — more than 
 **Two bases, not directly comparable.** The NEP/GAA figures are **current-year new appropriations only**. The execution figures are DBM's **published agency aggregates, which combine all available funds** — new, automatic, and continuing appropriations. The two series should not be read one-to-one.
 
 **One reorganization, a stable program structure.** NCMF's mother agency changed once (**OEOs → DILG, ~2019**); its **P/A/P structure stayed stable** throughout, so program lines are comparable across all years.
+
+**Population figures.** Per-person comparisons use the **2020 Census of Population and Housing**, which recorded **6,981,710 Filipinos (6.4%) reporting Islam** as their religious affiliation. NCMF has estimated the share at **10–11%**, citing under-registration and incomplete coverage of Muslim communities in official surveys. Per-person amounts here therefore use the census count and should be read as an **upper bound** — if the community is larger, the budget per person is smaller.
 
 **Expense classes.** Personnel Services (PS), Maintenance & Other Operating Expenses (MOOE), Capital Outlays (CO). NCMF carries no Financial Expenses. **Units are PHP millions** throughout.
 
@@ -234,6 +240,30 @@ totals %>% filter(metric %in% c("NEP","GAA")) %>% mutate(value = total/1e6) %>%
   mutate(metric = factor(metric, levels = c("NEP","GAA"))) %>% arrange(metric) %>% rename(`PHP M` = metric) %>%
   kbl_clean(font = 13, digits = 0, format.args = list(big.mark = ","), na = "")
 ```
+
+## The budget per Muslim Filipino
+
+Growth reads differently once the budget is set against the population NCMF exists to serve.
+
+```{r per-capita, fig.height=4.4}
+CENSUS_MUSLIM <- 6981710   # 2020 Census of Population and Housing (6.4% reporting Islam)
+pc <- totals %>% filter(metric == "GAA", !is.na(total)) %>%
+  transmute(year, per_person = total / CENSUS_MUSLIM)
+ggplot(pc, aes(year, per_person)) +
+  geom_col(fill = bar_fill, width = 0.7) +
+  geom_text(aes(label = sprintf("%.0f", per_person)), vjust = -0.5, size = 3.2, color = "grey20") +
+  scale_x_continuous(breaks = 2018:2026) +
+  scale_y_continuous(labels = function(v) paste0(peso, v), expand = expansion(mult = c(0, 0.12))) +
+  labs(title = "NCMF budget per Muslim Filipino per year, FY 2018–2026",
+       subtitle = "Even after doubling, the 2026 budget is about ₱188 per person — roughly fifty centavos a day",
+       x = NULL, y = NULL,
+       caption = "GAA ÷ 6,981,710 (2020 Census). NCMF estimates the community is larger, which would lower these figures.") +
+  theme_ncmf()
+```
+
+On the census count, NCMF's budget has risen from about **₱77 per Muslim Filipino in 2018 to ₱188 in 2026**. That is real growth — it has more than doubled — but the level remains small: roughly **fifty centavos per person per day** to cover cultural and heritage services, Hajj administration, Madrasah and Shari'ah education, livelihood programs, and the agency's own operations.
+
+The census figure is also the *generous* reading. NCMF has estimated that Muslim Filipinos are **10–11% of the population** rather than the 6.4% recorded in 2020, pointing to under-registration and incomplete survey coverage. On that basis the same budget would work out to roughly **₱110–120 per person per year**. Whichever figure is used, the per-person envelope is the context for everything that follows: NCMF spends what it is given reliably, so the binding question is how far that amount can stretch.
 
 ## Where Congress adjusts the budget
 
@@ -316,7 +346,7 @@ ggplot(top_paps, aes(pap, GAA)) +
   theme_ncmf() + theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"))
 ```
 
-The concentration is the headline: a single P/A/P — **preservation of Muslim cultural centers, heritage, holidays and festivities (₱603M)** — is nearly half the budget, more than three times the next line, General Management (₱193M). Institutional support for Madrasah/Shari'ah education (₱142M) and Hajj operations (₱104M) follow. The top three lines alone are 71% of the agency.
+The budget is highly concentrated: a single P/A/P — **preservation of Muslim cultural centers, heritage, holidays and festivities (₱603M)** — is nearly half the total, more than three times the next line, General Management (₱193M). Institutional support for Madrasah/Shari'ah education (₱142M) and Hajj operations (₱104M) follow. The top three lines alone are 71% of the agency.
 
 ### Full P/A/P ranking, FY 2026 (interactive) {.unnumbered}
 
@@ -348,7 +378,7 @@ ggplot(heritage, aes(year, amount, color = metric, group = metric)) +
   theme_ncmf() + guides(color = guide_legend(nrow = 1))
 ```
 
-The line grew from **₱299M (2018) to ₱603M (2026)** — a 102% rise — holding a 46–60% share throughout. Two things follow. First, because so much rides on one line, **its sub-components — which centers, which festivities, what upkeep — are not visible** in the budget data, a transparency question for a program this large. Second, together with Hajj operations and Madrasah/Shari'ah education, **cultural and religious services define NCMF's budget**, while the livelihood programs (Endowment, Muslim MSEs, Halal) remain barely 5% of the total.
+The line grew from **₱299M (2018) to ₱603M (2026)** — a 102% rise — holding a 46–60% share throughout. Two things follow. First, because so much rides on one line, **its sub-components — which centers, which regions, which festivities, what upkeep — are not visible** in the budget documents, so communities cannot easily tell whether the money is reaching them. Second, together with Hajj operations and Madrasah/Shari'ah education, **cultural, religious and educational services are the core of NCMF's budget** — the functions the agency exists to deliver — while the livelihood programs (Endowment, Muslim MSEs, Halal) remain barely 5% of the total.
 
 # Overall budget utilization {#utilization}
 
@@ -406,14 +436,16 @@ exec %>% transmute(Year = year, `Allotments (M)` = Allotments/1e6, `Obligations 
 
 # Questions for discussion {#discussion}
 
-1. **One line, half the budget.** The Muslim cultural centers / heritage / festivities P/A/P is ~46% of the 2026 budget and rising in peso terms. Is this concentration the right priority — and is a single, undifferentiated line transparent enough for a program this large?
-2. **Hajj as a state function.** NCMF administers Hajj operations (₱104M in 2026). How should a secular state budget for, and account for, facilitating a religious pilgrimage?
-3. **Education versus the population.** Institutional support for Madrasah education, Shari'ah and Qur'an programs is ₱142M. Is that adequate given the size of the Muslim Filipino school-age population?
-4. **The economic-empowerment gap.** Endowment, Muslim MSEs and Halal — the livelihood programs — are barely 5% of the budget (~₱62M). Should economic empowerment carry more weight relative to cultural preservation?
-5. **The missing execution detail.** With no FAR No. 1, we can see NCMF spends what it is given overall, but not *which* programs lag. What would program-level execution data reveal about delivery on the cultural, education, and livelihood lines?
+1. **Is the envelope big enough?** NCMF's FY 2026 budget works out to roughly **₱188 per Muslim Filipino per year** — about fifty centavos a day — and closer to **₱110** if the community is as large as NCMF itself estimates. Does that match the scale of the mandate?
+2. **Are Hajj services meeting what pilgrims actually need?** Hajj operations receive ₱104M in 2026. Is that enough for accreditation and oversight of organizers, welfare and medical support, and protection against illegal recruitment — and what do pilgrims themselves experience?
+3. **Is Madrasah education keeping up?** Institutional support for Madrasah education, Shari'ah and Qur'an programs is ₱142M. Does that meet the demand for quality Islamic and Arabic-language education among Muslim Filipino learners?
+4. **Are the livelihood programs scaled to need?** Endowment, Muslim MSEs and Halal together are about **5% of the budget (~₱62M)**. Halal certification in particular is a growing economic opportunity. Should these grow — and should they grow *alongside* cultural and religious services rather than out of them?
+5. **Does the spending reach every community?** Half the budget sits in one undifferentiated line. Can communities see which centers, regions and activities it funds — including those far from the traditional centers, and Muslim Filipinos living outside Mindanao?
+6. **What is missing entirely?** Which needs of Muslim Filipino communities does this budget simply not address?
+7. **What would program-level execution data show?** With no FAR No. 1, we can see that NCMF spends what it is given overall, but not *which* programs lag. Program-level records would show whether the cultural, education and livelihood lines are delivering at the same rate.
 
 ---
 
 <p class="caption">
-Underlying data: DBM NEP & GAA documents (current-year new appropriations, P/A/P level), FY 2018–2026; DBM-published execution aggregates (all available funds, agency level), FY 2011–2025. No FAR No. 1 (P/A/P-level execution) was available for NCMF, so absorption is reported only at the agency aggregate, on a basis not directly comparable to the appropriations series. Prepared as the long-form companion to the NCMF budget briefing.
+Underlying data: DBM NEP & GAA documents (current-year new appropriations, P/A/P level), FY 2018–2026; DBM-published execution aggregates (all available funds, agency level), FY 2011–2025. Per-person figures use the 2020 Census of Population and Housing (6,981,710 Filipinos, 6.4%, reporting Islam); NCMF has estimated the share at 10–11%, so per-person amounts should be read as an upper bound. No FAR No. 1 (P/A/P-level execution) was available for NCMF, so absorption is reported only at the agency aggregate, on a basis not directly comparable to the appropriations series. Prepared as the long-form companion to the NCMF budget briefing.
 </p>
