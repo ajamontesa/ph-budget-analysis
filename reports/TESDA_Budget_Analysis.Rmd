@@ -1,0 +1,425 @@
+---
+title: "Technical Education and Skills Development Authority"
+subtitle: "Budget evolution and agency-level utilization, FY 2018–2026"
+date: "`r format(Sys.Date(), '%B %Y')`"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    toc_depth: 3
+    number_sections: true
+    code_folding: hide
+    self_contained: true
+    df_print: paged
+    fig_width: 10
+    fig_height: 5.5
+---
+
+```{css, echo=FALSE}
+:root { --ink:#1a1a1a; --muted:#6e6e6e; --accent:#08519C; --rule:#e6e6e6; }
+body, .main-container { font-family: Arial, Helvetica, "IBM Plex Sans", sans-serif; color: var(--ink); }
+.main-container { max-width: 980px; }
+h1, h2, h3, h4 { font-family: Arial, Helvetica, sans-serif; font-weight: 600; }
+h1.title { font-size: 30px; }
+h1 { font-size: 25px; margin-top: 1.6em; padding-top: .3em; border-top: 2px solid var(--rule); }
+h2 { font-size: 20px; margin-top: 1.4em; }
+h3 { font-size: 17px; color: #333; }
+.author, .date { color: var(--muted); }
+p, li { font-size: 15.5px; line-height: 1.62; }
+blockquote { border-left: 3px solid var(--accent); background: #f5f8fc; color: #25405e;
+  font-size: 14.5px; padding: .6em 1em; margin: 1.2em 0; }
+.lead { font-size: 16.5px; color: #2b2b2b; }
+.takeaway { background: #f7f9fb; border: 1px solid var(--rule); border-radius: 6px;
+  padding: .4em 1.1em; margin: 1.1em 0; }
+.takeaway p, .takeaway li { font-size: 14.5px; }
+.caption, .figcaption { color: var(--muted); font-size: 13px; }
+table.dataTable { font-size: 13px; }
+.kbl-note { color: var(--muted); font-size: 12.5px; margin-top: -.5em; }
+hr { border-top: 1px solid var(--rule); }
+.home-link { font-size: 13.5px; }
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                     dpi = 150, fig.align = "center", out.width = "100%")
+options(knitr.kable.NA = "")
+library(readxl); library(dplyr); library(tidyr); library(stringr)
+library(ggplot2); library(scales); library(knitr); library(kableExtra); library(DT)
+
+.candidates <- c("../data/Compiled_-_NEP-GAA-NoFAR1.xlsx", "data/Compiled_-_NEP-GAA-NoFAR1.xlsx",
+                 "Compiled_-_NEP-GAA-NoFAR1.xlsx")
+file_path <- .candidates[file.exists(.candidates)][1]
+stopifnot(!is.na(file_path))
+AGENCY_SHEET <- "TESDA"; EXEC_SHEET <- "SAAODB"
+
+theme_tesda <- function(base_size = 12) {
+  theme_minimal(base_size = base_size, base_family = "sans") +
+    theme(
+      plot.title = element_text(face = "bold", size = base_size + 2, color = "black"),
+      plot.subtitle = element_text(color = "grey30", size = base_size),
+      plot.caption = element_text(color = "grey40", size = base_size - 3, hjust = 0),
+      panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
+      axis.title = element_text(size = base_size - 1, color = "grey20"),
+      axis.text = element_text(color = "grey20"),
+      legend.position = "bottom", legend.title = element_blank(),
+      legend.text = element_text(size = base_size - 1),
+      strip.text = element_text(face = "bold", size = base_size - 1.5, lineheight = 0.9))
+}
+
+exec_pal <- c("NEP (proposed)" = "#9E9AC8", "GAA (enacted)" = "#54278F",
+  "Allotments" = "#08519C", "Obligations" = "#E6550D", "Disbursements" = "#31A354")
+cat_pal <- c(
+  "General Administration & Support"        = "#A6761D",
+  "Support to Operations (IT & Management)" = "#E6AB02",
+  "TVET Policy Formulation"                 = "#7570B3",
+  "Standards, Assessment & Certification"   = "#E7298A",
+  "TVET Provision & Scholarships"           = "#1B9E77")
+absorp_pal <- c("Obligations / Allotment" = "#3182BD",
+  "Disbursements / Obligations" = "#E6550D", "Disbursements / Allotment" = "#31A354")
+ec_pal <- c("Personnel Services (PS)" = "#2CA02C",
+  "Maintenance & Other Op. Exp. (MOOE)" = "#FF7F0E", "Capital Outlays (CO)" = "#9467BD")
+bar_fill <- "#08519C"; peso <- "PHP "
+php_b      <- function(x) paste0(peso, comma(x/1e9, accuracy = 0.01), "B")
+php_b_axis <- function(x) paste0(peso, comma(x/1e9, accuracy = 1), "B")
+
+dt_table <- function(df, caption = NULL, page = 10, money_cols = NULL, pct_cols = NULL, money_digits = 2) {
+  dt <- datatable(df, rownames = FALSE, caption = caption, extensions = "Buttons",
+    options = list(pageLength = page, lengthMenu = c(10, 20, 50, 100), dom = "Bfrtip",
+      buttons = c("copy", "csv"), scrollX = TRUE, autoWidth = FALSE,
+      columnDefs = list(list(className = "dt-right", targets = which(sapply(df, is.numeric)) - 1))),
+    class = "stripe hover compact")
+  if (!is.null(money_cols)) { mc <- which(names(df) %in% money_cols)
+    if (length(mc)) dt <- formatRound(dt, mc, digits = money_digits, mark = ",") }
+  if (!is.null(pct_cols)) { pc <- which(names(df) %in% pct_cols)
+    if (length(pc)) dt <- formatPercentage(dt, pc, digits = 0) }
+  dt
+}
+kbl_clean <- function(x, font = 14, ...) {
+  x %>% kable(...) %>% kable_styling(full_width = TRUE, font_size = font,
+    bootstrap_options = c("condensed", "striped", "hover"))
+}
+
+# ---- Data load -----------------------------------------------------------
+# TESDA changed mother agency twice (OEOs -> DTI -> DOLE), so its P/A/Ps appear
+# under three departmental wrappers over time. Grouping by P/A/P collapses them
+# into one continuous series (verified: no year carries a line under two
+# wrappers, so the sum never double-counts). The agency tab and the SAAODB tab
+# may spell the agency differently, so match on a normalised name.
+CODE_COLS <- c("DEPARTMENT", "AGENCY", "PREXC_PROG", "PREXC_SUBPROG")
+raw <- read_excel(file_path, sheet = AGENCY_SHEET) %>%
+  mutate(across(any_of(CODE_COLS), as.character)) %>% filter(!is.na(`P/A/P`))
+AGENCY_NAME <- raw$UACS_AGY_DSC[!is.na(raw$UACS_AGY_DSC)][1]
+agency_key  <- function(x) str_trim(str_remove(x, "\\s*\\(.*\\)\\s*$"))
+
+df_long_all <- raw %>%
+  pivot_longer(cols = matches("^(NEP|GAA|AuthAppro|AdjAppro|AdjAllot|Obligations|Disbursements)_\\d{4}_EXP_(1PS|2MOOE|6CO|TOTAL)$"),
+               names_to = "var", values_to = "amount") %>%
+  separate(var, into = c("metric", "year", "tag", "expense_class"), sep = "_") %>%
+  mutate(year = as.integer(year), amount = as.numeric(amount)) %>%
+  select(-tag) %>% rename(agency = UACS_AGY_DSC, dept = UACS_DPT_DSC, pap = `P/A/P`)
+
+df_long <- df_long_all %>% filter(expense_class == "TOTAL") %>% select(-expense_class) %>%
+  mutate(category = case_when(
+    PREXC_PROG == "1000" ~ "General Administration & Support",
+    PREXC_PROG == "2000" ~ "Support to Operations (IT & Management)",
+    PREXC_PROG == "3101" ~ "TVET Policy Formulation",
+    PREXC_PROG == "3102" ~ "Standards, Assessment & Certification",
+    PREXC_PROG == "3103" ~ "TVET Provision & Scholarships",
+    TRUE ~ NA_character_))
+
+totals <- df_long %>% group_by(year, metric) %>%
+  summarise(total = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE), .groups = "drop")
+
+pap_year <- df_long %>% group_by(pap, year, metric) %>%
+  summarise(amount = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = amount)
+
+exec <- read_excel(file_path, sheet = EXEC_SHEET) %>%
+  filter(agency_key(Agency) == agency_key(AGENCY_NAME)) %>%
+  pivot_longer(cols = matches("^\\d{4}$"), names_to = "year", values_to = "amt_k") %>%
+  mutate(year = as.integer(year), amount = amt_k * 1e3) %>% filter(!is.na(amount)) %>%
+  group_by(year, Particular) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = Particular, values_from = amount) %>% rename(Obligations = `Obligations Incurred`) %>%
+  mutate(oblig_allot = Obligations / Allotments, disb_oblig = Disbursements / Obligations,
+         disb_allot = Disbursements / Allotments) %>% arrange(year)
+```
+
+<p class="home-link"><a href="index.html">← All agencies</a></p>
+
+# Overview {#overview .unnumbered}
+
+<p class="lead">
+This document profiles the budget of the **Technical Education and Skills Development Authority (TESDA)** — the government's authority for technical-vocational education and training (TVET) — across nine fiscal years, FY 2018 to FY 2026. TESDA is a **fast-growing, multi-billion-peso agency**, but it carries the same data constraint as several commissions: usable program-level execution records were not available, so this review pairs the **proposed-to-enacted budget at the program level** with **budget utilization measured at the agency aggregate**.
+</p>
+
+Because the program-by-program execution chain cannot be traced, the emphasis is on what TESDA's budget is *composed of*, how Congress adjusts it, and — at the whole-agency level — how much of what is released actually gets obligated and paid out.
+
+Three features define TESDA's budget. First, it has **grown very fast** — enacted funding more than **tripled**, from ₱7.6B (2018) to ₱26.1B (2026). Second, it is, in budget terms, a **scholarships-and-training operation**: two P/A/Ps that fund TVET provision and scholarships are about **92% of the 2026 budget**, and the agency is **86% MOOE**. Third, the money is **growing faster than it is being spent** — cash utilization has slid as the budget has climbed, opening a widening absorptive-capacity gap. Layered over all of this, TESDA has had **three mother agencies in nine years**, though its five-program structure never changed.
+
+# Executive summary {#exec}
+
+**TESDA is a fast-growing agency.** The government's TVET authority, its enacted funding **more than tripled, from ₱7.6B (2018) to ₱26.1B (2026)** — about **+245%**, or ~17% a year.
+
+**In budget terms it is a scholarships-and-training operation.** Two P/A/Ps that fund TVET provision and scholarships are about **92% of the 2026 budget** (the provision program as a whole is ~94%), and the agency is **86% MOOE** — grants and training, with very little going to personnel or capital.
+
+**Congress is a major driver of that growth.** Legislated add-ons total roughly **+₱17B cumulatively** over 2018–2026 — almost all to scholarship provision, including **+₱6.2B in 2024 and +₱6.1B in 2026** — while the TVET-innovation line was trimmed (−₱1.8B).
+
+**The money is growing faster than it is being spent.** Cash utilization (disbursements-to-allotment) slid from ~84% (2018) to **68% (2024)**, and to just **48% in 2025** — a widening absorptive-capacity gap (the newest year may still be settling).
+
+**Three homes in nine years.** TESDA sat under the OEOs (2018), moved to the **DTI (2019–2022)**, and reverted to the **DOLE (2023)** — while its five-program structure stayed stable throughout.
+
+> TESDA is a fast-growing skills agency that Congress keeps enlarging, almost entirely through scholarship provision. The pressing questions are whether the growth is producing outcomes rather than slots — and whether the agency can spend money that is arriving faster than it can disburse it.
+
+# A note on the data {#data-notes}
+
+**Period.** FY 2018 through FY 2026 for the proposed (NEP) and enacted (GAA) budget, at the P/A/P level. Agency-level execution (Allotments, Obligations, Disbursements) covers FY 2011–2025.
+
+**No program-level execution.** Usable **FAR No. 1** (SAAODB) records were not available for TESDA, so there is **no P/A/P-level absorption analysis**. Utilization is shown only at the **agency aggregate** — the gap this review would most like to close with better data.
+
+**Two bases, not directly comparable.** The NEP/GAA figures are **current-year new appropriations only**. The execution figures are DBM's **published agency aggregates, which combine all available funds** — new, automatic, and continuing appropriations. The two series should not be read one-to-one.
+
+**Three reorganizations, a stable structure.** TESDA's mother agency changed twice — **OEOs → DTI (~2019) → DOLE (~2023)**. Its P/A/P structure is otherwise stable, so program lines are comparable across all years. (Because the moves straddle departmental wrappers in the source workbook, the agency is aggregated here into one continuous series; no year is double-counted.)
+
+**Recent-year execution** may reflect disbursements still in progress at the reporting cut-off, so the newest year's cash-utilization rate can understate the eventual total.
+
+**Expense classes.** Personnel Services (PS), Maintenance & Other Operating Expenses (MOOE), Capital Outlays (CO). TESDA carries no Financial Expenses. **Units are PHP billions** throughout.
+
+# Three mother agencies, one stable structure {#reorg}
+
+TESDA changed departments twice but kept the same five programs, so its budget series is comparable across the moves.
+
+```{r reorg-timeline, fig.height=3.3}
+tl <- tibble::tribble(
+  ~track, ~label, ~start, ~end, ~fill,
+  "Mother agency",   "OEOs",              2018, 2019,   "#1B4965",
+  "Mother agency",   "Under DTI",         2019, 2023,   "#B2493B",
+  "Mother agency",   "Reverted to DOLE",  2023, 2026.4, "#54278F",
+  "P/A/P structure", "Five programs, led by TVET Provision & Scholarships", 2018, 2026.4, "#1B9E77")
+ggplot(tl, aes(y = track)) +
+  geom_segment(aes(x = start, xend = end, yend = track, color = fill), linewidth = 13, lineend = "butt") +
+  scale_color_identity() +
+  geom_text(aes(x = (start + end) / 2, label = label), color = "white", fontface = "bold", size = 3.4) +
+  scale_x_continuous(breaks = 2018:2026, limits = c(2017.7, 2026.6)) +
+  labs(title = "TESDA changed departments twice in nine years",
+       subtitle = "Placement based on where each year's enacted (GAA) appropriations are recorded", x = NULL, y = NULL) +
+  theme_tesda() + theme(panel.grid.major.y = element_blank(),
+        axis.text.y = element_text(face = "bold", color = "grey20"))
+```
+
+The structure stayed put even as the department changed, so the budget series is comparable across the moves. The steepest growth, as the next chart shows, came after the 2023 return to DOLE.
+
+# The aggregate budget {#aggregate}
+
+## A tripling in eight years
+
+```{r evolution, fig.height=5}
+evo <- totals %>% filter(metric %in% c("NEP","GAA")) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA"), labels = c("NEP (proposed)","GAA (enacted)")))
+ggplot(evo, aes(year, total, color = metric, group = metric)) +
+  geom_line(linewidth = 1.0) + geom_point(size = 2) +
+  scale_color_manual(values = exec_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "TESDA current-year appropriations, FY 2018–2026",
+       subtitle = "Enacted funding tripled — ₱7.6B to ₱26.1B — with the steepest climbs after the 2023 return to DOLE",
+       x = NULL, y = NULL, caption = "Current-year new appropriations. Source: DBM NEP & GAA.") +
+  theme_tesda() + guides(color = guide_legend(nrow = 1))
+```
+
+Two things stand out. Growth is **heavily back-loaded** — the budget roughly doubled *again* between 2022 (₱13.8B) and 2026 (₱26.1B). And the enacted (GAA) line usually sits **above** the proposed (NEP) line, often by billions: TESDA's expansion is as much a *Congressional* story as an Executive one.
+
+```{r tbl-evolution}
+totals %>% filter(metric %in% c("NEP","GAA")) %>% mutate(value = total/1e9) %>%
+  select(year, metric, value) %>% pivot_wider(names_from = year, values_from = value) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA"))) %>% arrange(metric) %>% rename(`PHP B` = metric) %>%
+  kbl_clean(font = 13, digits = 1, format.args = list(big.mark = ","), na = "")
+```
+
+## Where Congress adjusts the budget
+
+```{r nep-gaa-gap, fig.height=4.4}
+gap <- totals %>% filter(metric %in% c("NEP","GAA")) %>% pivot_wider(names_from = metric, values_from = total) %>%
+  mutate(change = GAA - NEP, direction = ifelse(change >= 0, "Net increase (GAA > NEP)", "Net decrease (GAA < NEP)"))
+ggplot(gap, aes(year, change/1e9, fill = direction)) +
+  geom_col(width = 0.7) +
+  geom_text(aes(label = sprintf("%+.1f", change/1e9), vjust = ifelse(change >= 0, -0.4, 1.2)), size = 3.1, color = "grey20") +
+  scale_fill_manual(values = c("Net increase (GAA > NEP)" = "#1B9E77", "Net decrease (GAA < NEP)" = "#D95F02")) +
+  scale_x_continuous(breaks = 2018:2026) +
+  scale_y_continuous(labels = function(v) paste0(peso, v, "B"), expand = expansion(mult = c(0.12, 0.16))) +
+  labs(title = "Enacted minus proposed (GAA − NEP), PHP billions",
+       subtitle = "Congress adds to TESDA in most years — +₱6.2B (2024) and +₱6.1B (2026) are the largest",
+       x = NULL, y = NULL) +
+  theme_tesda() + guides(fill = guide_legend(nrow = 1))
+```
+
+Congress augments TESDA in most years, and the additions are large — the **+₱6.2B (2024)** and **+₱6.1B (2026)** plus-ups are each nearly the size of the entire agency in 2018. There are two cut years (2019 and 2022), but the cumulative direction is decisively upward.
+
+## Which P/A/Ps does Congress augment?
+
+```{r aug, fig.height=4.8}
+aug <- df_long %>% filter(metric %in% c("NEP","GAA")) %>%
+  group_by(pap, year, metric) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = amount, values_fill = 0) %>%
+  mutate(delta = GAA - NEP) %>% group_by(pap) %>% summarise(delta = sum(delta), .groups = "drop")
+aug_plot <- bind_rows(aug %>% slice_max(delta, n = 6), aug %>% slice_min(delta, n = 4)) %>%
+  filter(abs(delta) > 1e7) %>%
+  mutate(dir = ifelse(delta >= 0, "Increased by Congress", "Cut by Congress"),
+         pap = factor(pap, levels = pap[order(delta)]))
+ggplot(aug_plot, aes(delta/1e9, pap, fill = dir)) +
+  geom_col(width = 0.72) +
+  geom_text(aes(label = sprintf("%+.1f", delta/1e9), hjust = ifelse(delta >= 0, -0.12, 1.12)), size = 3, color = "grey20") +
+  scale_fill_manual(values = c("Increased by Congress" = "#1B9E77", "Cut by Congress" = "#D95F02")) +
+  scale_x_continuous(labels = function(v) paste0(peso, v, "B"), expand = expansion(mult = c(0.18, 0.18))) +
+  scale_y_discrete(labels = function(x) str_wrap(str_trunc(x, 54), 34)) +
+  labs(title = "P/A/Ps most changed by Congress, cumulative FY 2018–2026 (GAA − NEP)",
+       subtitle = "Congress pours ~₱18B into scholarship provision — and trims the TVET-innovation line by ₱1.8B",
+       x = NULL, y = NULL) +
+  theme_tesda() + theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"),
+        axis.text.y = element_text(size = 9, lineheight = 0.9)) +
+  guides(fill = guide_legend(nrow = 1))
+```
+
+The augmentation is overwhelmingly **scholarship provision** — roughly **+₱18B** across the two big provision lines over the period. Against that, the one line Congress has consistently *cut* is **Supporting Innovation in the Philippine TVET system (−₱1.8B)** — so the legislature has poured money into scaling current programs while paring back the line meant to modernize them.
+
+# Where the money goes {#composition}
+
+## Composition by PREXC program
+
+```{r composition, fig.height=5}
+comp <- df_long %>% filter(metric == "GAA", year <= 2026, !is.na(amount), !is.na(category)) %>%
+  group_by(year, category) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(category = factor(category, levels = names(cat_pal)))
+ggplot(comp, aes(year, amount, fill = category)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = cat_pal, labels = function(x) str_wrap(x, 30)) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "Composition of the GAA by PREXC program, 2018–2026",
+       subtitle = "TVET Provision & Scholarships is ~94% of the budget; everything else is a thin sliver",
+       x = NULL, y = NULL) +
+  theme_tesda() + guides(fill = guide_legend(nrow = 2, byrow = TRUE)) +
+  theme(legend.text = element_text(size = 9), legend.key.size = unit(0.4, "cm"))
+```
+
+The green **TVET Provision & Scholarships** program is the budget: it is around 94% of the total in 2026 and has driven essentially all the growth. Policy formulation (purple), standards/assessment/certification (pink), IT and management support (gold), and administration (brown) together are a thin band along the bottom — the functions that set and safeguard the *quality* of training are a small fraction of the money that funds its *volume*.
+
+## Composition by expense class
+
+```{r comp-ec, fig.height=5}
+ec_levels <- c("Personnel Services (PS)","Maintenance & Other Op. Exp. (MOOE)","Capital Outlays (CO)")
+comp_ec <- df_long_all %>% filter(metric == "GAA", year <= 2026, expense_class %in% c("1PS","2MOOE","6CO")) %>%
+  group_by(year, expense_class) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(expense_class = factor(expense_class, levels = c("1PS","2MOOE","6CO"), labels = ec_levels))
+ggplot(comp_ec, aes(year, amount, fill = expense_class)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = ec_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "GAA composition by expense class, 2018–2026",
+       subtitle = "86% MOOE — scholarships and training grants — with a thin personnel line and almost no capital",
+       x = NULL, y = NULL) +
+  theme_tesda() + guides(fill = guide_legend(nrow = 1))
+```
+
+TESDA is overwhelmingly an **MOOE** agency: 86% of the 2026 budget is maintenance-and-operating spending, because scholarships and training grants classify as operating expenses. Personnel is about 13%, and **capital outlay is negligible (~1%)** — a striking figure for a skills agency, and one worth weighing against the need for training centers and equipment.
+
+## The largest P/A/Ps
+
+```{r top-paps, fig.height=4.8}
+top_paps <- pap_year %>% filter(year == 2026, !is.na(GAA), GAA > 0) %>% arrange(desc(GAA)) %>%
+  slice_head(n = 8) %>% mutate(pap = factor(pap, levels = rev(pap)))
+ggplot(top_paps, aes(pap, GAA)) +
+  geom_col(fill = bar_fill, width = 0.72) +
+  geom_text(aes(label = php_b(GAA)), hjust = -0.1, size = 3.2, color = "grey20") +
+  coord_flip() + scale_x_discrete(labels = function(x) str_wrap(x, 50)) +
+  scale_y_continuous(labels = php_b_axis, expand = expansion(mult = c(0, .22)), limits = c(0, NA)) +
+  labs(title = "Largest P/A/Ps by FY 2026 GAA",
+       subtitle = "Two scholarship-and-provision lines (₱15.0B + ₱9.0B) are almost the entire agency",
+       x = NULL, y = NULL) +
+  theme_tesda() + theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"))
+```
+
+Two lines carry the agency: the **implementation of quality TVET provision (₱15.0B)** and the **development and evaluation of technical education and scholarships (₱9.0B)** — together about ₱24B of the ₱26B budget. The remaining lines — standards development, IT support, general management, policy formulation — are each well under ₱1B.
+
+### Full P/A/P ranking, FY 2026 (interactive) {.unnumbered}
+
+```{r tbl-allpaps}
+pap_year %>% filter(year == 2026, !is.na(GAA)) %>%
+  left_join(pap_year %>% filter(year == 2025) %>% transmute(pap, GAA25 = GAA), by = "pap") %>%
+  transmute(`P/A/P` = pap, `NEP 2026 (B)` = NEP/1e9, `GAA 2026 (B)` = GAA/1e9,
+            `GAA 2025 (B)` = GAA25/1e9, `Net add 2026 (B)` = (GAA - NEP)/1e9) %>%
+  arrange(desc(`GAA 2026 (B)`)) %>%
+  dt_table(page = 10, money_cols = c("NEP 2026 (B)","GAA 2026 (B)","GAA 2025 (B)","Net add 2026 (B)"))
+```
+
+# Overall budget utilization {#utilization}
+
+With no program-level execution data, utilization can only be read at the **agency aggregate**, and on a different basis from the appropriations above (all available funds, not just current-year new appropriations). On that basis TESDA's central issue is clear: **the budget is outrunning the agency's ability to spend it**.
+
+## Execution over time
+
+```{r exec-levels, fig.height=4.8}
+el <- exec %>% select(year, Allotments, Obligations, Disbursements) %>%
+  pivot_longer(-year, names_to = "stage", values_to = "amount") %>% filter(!is.na(amount)) %>%
+  mutate(stage = factor(stage, levels = c("Allotments","Obligations","Disbursements")))
+ggplot(el, aes(year, amount, color = stage, group = stage)) +
+  geom_line(linewidth = 1.0) + geom_point(size = 2) +
+  scale_color_manual(values = exec_pal) +
+  scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2011, 2025, 2)) +
+  labs(title = "Budget execution, FY 2011–2025 (all available funds)",
+       subtitle = "As allotments climb, disbursements fall further behind — the gap is widest in 2024–2025",
+       x = NULL, y = NULL, caption = "Includes new, automatic & continuing appropriations; not comparable to the NEP/GAA series.") +
+  theme_tesda() + guides(color = guide_legend(nrow = 1))
+```
+
+For years the three lines tracked reasonably closely. But as allotments surged after 2023, **disbursements failed to keep pace** — the vertical gap between what is released and what is actually paid out widens sharply in 2024 and 2025.
+
+## Absorptive capacity
+
+```{r absorp, fig.height=4.8}
+absorp_long <- exec %>% select(year, oblig_allot, disb_oblig, disb_allot) %>%
+  pivot_longer(-year, names_to = "ratio", values_to = "value") %>% filter(!is.na(value)) %>%
+  mutate(ratio = factor(ratio, levels = c("oblig_allot","disb_oblig","disb_allot"),
+    labels = c("Obligations / Allotment","Disbursements / Obligations","Disbursements / Allotment")))
+ggplot(absorp_long, aes(year, value, color = ratio, group = ratio)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 2) +
+  scale_color_manual(values = absorp_pal) +
+  scale_y_continuous(labels = percent_format(accuracy = 1), limits = c(0.4, 1.02), breaks = seq(0.4, 1, 0.1)) +
+  scale_x_continuous(breaks = seq(2011, 2025, 2)) +
+  labs(title = "TESDA absorptive capacity, FY 2011–2025",
+       subtitle = "Cash utilization fell from ~84% (2018) to 68% (2024) and just 48% (2025), even as the budget tripled",
+       x = NULL, y = NULL) +
+  theme_tesda() + guides(color = guide_legend(nrow = 1))
+```
+
+The absorption story is the sharpest concern in this review. TESDA **obligates** most of its allotment (mostly 84–92%), but **disbursement-to-allotment has fallen steadily** — from about **84% in 2018 to 68% in 2024 and just 48% in 2025**. In other words, as the scholarship budget has tripled, an increasing share of it is committed but not actually paid out within the year. Some of the most recent figure may reflect disbursements still settling after the reporting cut-off, but the multi-year trend is unmistakable: **the money is arriving faster than TESDA can spend it.**
+
+### Execution at a glance (interactive) {.unnumbered}
+
+```{r exec-table}
+exec %>% transmute(Year = year, `Allotments (B)` = Allotments/1e9, `Obligations (B)` = Obligations/1e9,
+            `Disbursements (B)` = Disbursements/1e9, `O/A` = oblig_allot, `D/O` = disb_oblig, `D/A` = disb_allot) %>%
+  dt_table(page = 15, money_cols = c("Allotments (B)","Obligations (B)","Disbursements (B)"),
+           pct_cols = c("O/A","D/O","D/A"))
+```
+
+<p class="kbl-note">PHP billions, all-funds basis. O/A = obligations ÷ allotment; D/O = disbursements ÷ obligations; D/A = disbursements ÷ allotment. Not comparable to the NEP/GAA appropriations series above.</p>
+
+# Questions for discussion {#discussion}
+
+1. **Is the growth turning into outcomes?** The budget tripled to ₱26B. Is it producing more — and better-employed — TVET graduates, or mainly more enrolment slots and scholarship stipends? The budget alone can't tell us.
+2. **Can TESDA spend what it is given?** Cash utilization has fallen toward half in the most recent year. Are scholarships and training funds reaching learners on time, and what is causing the disbursement lag as the budget grows?
+3. **Scholarships vs. everything else.** About 94% of the budget sits in provision lines. Can learners and training providers see which scholarship programs, regions and trades the money funds — and are standards, assessment and *innovation* adequately resourced alongside it?
+4. **Congress's ₱17B hand.** Legislated add-ons are enormous and concentrated in scholarship provision, while the innovation line was cut. Is scaling current programs the right priority relative to modernizing the TVET system?
+5. **Almost no capital.** Capital outlay is negligible even at ₱26B. For a skills agency, is under-investment in training centers and equipment a constraint on quality?
+6. **What would program-level execution data show?** With no FAR No. 1, we can see that TESDA's overall disbursement has lagged, but not *which* scholarship or training lines are stalling. Program-level records would show exactly where the money is getting stuck.
+
+---
+
+<p class="caption">
+Underlying data: DBM NEP & GAA documents (current-year new appropriations, P/A/P level), FY 2018–2026; DBM-published execution aggregates (all available funds, agency level), FY 2011–2025. TESDA's mother agency changed twice over the period (Other Executive Offices → DTI → DOLE); it is presented here as one continuous series. No FAR No. 1 (P/A/P-level execution) was available for TESDA, so absorption is reported only at the agency aggregate, on a basis not directly comparable to the appropriations series. Prepared as the long-form companion to the TESDA budget briefing.
+</p>

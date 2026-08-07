@@ -99,7 +99,9 @@ agencies <- tibble::tribble(
   "A different angle: with no P/A/P-level execution data, this review traces DPWH's budget back to 1988 and maps how Congress redirects money \u2014 every year \u2014 from the Central Office toward named district engineering offices.",
   "Footprint doubled to a mid-teens budget share; 2026 GAA collapses below 8%  |  2019 line-item veto: \u20b195.4B struck, \u20b174B from the Central Office  |  A four-signal screen flags Batangas 4th, Sorsogon, Abra & Bulacan 1st",
 
-  "TESDA",  "Technical Education and Skills Development Authority","",                        "tesda.html",       "planned", "", "",
+  "TESDA",  "Technical Education and Skills Development Authority","Whole authority (no P/A/P execution)", "tesda.html",       "published",
+  "The government's technical-vocational training authority \u2014 a fast-growing, \u20b126B agency that is, in budget terms, a scholarships-and-training operation (two lines are ~92% of it). Congress drives much of the growth (+\u20b117B), but disbursement is falling behind: cash utilization slid to 48% in 2025. Three mother agencies in nine years.",
+  "Enacted budget tripled: \u20b17.6B (2018) \u2192 \u20b126.1B (2026), +245%  |  86% MOOE (scholarships/training); Congress adds +\u20b117B, mostly to provision  |  Absorption falling: D/A 84% (2018) \u2192 68% (2024) \u2192 48% (2025); OEO\u2192DTI\u2192DOLE",
 
   "NCIP",   "National Commission on Indigenous Peoples",          "Whole commission (no P/A/P execution)", "ncip.html",        "published",
   "A very small agency carrying an outsized IPRA mandate. With no FAR No. 1, execution is read only at the agency level \u2014 but the budget story is clear: a near-doubling since 2018, a sharp 2025 cut, and an administration-heavy mix, across two reorganizations.",
@@ -137,6 +139,7 @@ slides_paths <- c(
   DOH   = "slides/DOH_OSEC_Budget_Analysis.html",
   DSWD  = "slides/DSWD_OSEC_Budget_Analysis.html",
   DOLE  = "slides/DOLE_Budget_Analysis.html",
+  TESDA = "slides/TESDA_Budget_Analysis.html",
   NCIP  = "slides/NCIP_Budget_Analysis.html",
   NCMF  = "slides/NCMF_Budget_Analysis.html",
   PCW   = "slides/PCW_Budget_Analysis.html",
