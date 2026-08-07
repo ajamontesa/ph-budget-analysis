@@ -103,6 +103,10 @@ agencies <- tibble::tribble(
   "The government's technical-vocational training authority \u2014 a fast-growing, \u20b126B agency that is, in budget terms, a scholarships-and-training operation (two lines are ~92% of it). Congress drives much of the growth (+\u20b117B), but disbursement is falling behind: cash utilization slid to 48% in 2025. Three mother agencies in nine years.",
   "Enacted budget tripled: \u20b17.6B (2018) \u2192 \u20b126.1B (2026), +245%  |  86% MOOE (scholarships/training); Congress adds +\u20b117B, mostly to provision  |  Absorption falling: D/A 84% (2018) \u2192 68% (2024) \u2192 48% (2025); OEO\u2192DTI\u2192DOLE",
 
+  "CHED",   "Commission on Higher Education",                     "Whole commission (no P/A/P execution)", "ched.html",        "published",
+  "A large but stagnant \u20b147B budget that is, in effect, a free-tuition fund: student subsidies are ~96% of it, and one line (free higher education) is ~79% on its own. The regulatory core is ~2%. Congress swings it violently (+\u20b137B in 2018, \u2212\u20b120B in 2022), and execution is chronically weak \u2014 often only 40\u201360% disbursed.",
+  "Flat budget: \u20b149.4B (2018) \u2192 \u20b147.5B (2026)  |  Free tuition (UAQTEA) is \u20b137.6B, ~79% of the agency; regulation ~2%  |  Violent Congress swings (+\u20b137B / \u2212\u20b120B); cash utilization often 40\u201360%",
+
   "NCIP",   "National Commission on Indigenous Peoples",          "Whole commission (no P/A/P execution)", "ncip.html",        "published",
   "A very small agency carrying an outsized IPRA mandate. With no FAR No. 1, execution is read only at the agency level \u2014 but the budget story is clear: a near-doubling since 2018, a sharp 2025 cut, and an administration-heavy mix, across two reorganizations.",
   "Budget nearly doubled: \u20b1968M (2018) \u2192 \u20b11,804M (2026), +86%  |  FY2025 cut 25% below proposal, across the board; capital outlay zeroed  |  Admin + policy = 46% of 2026; agency obligation rate 92\u201399%",
@@ -140,6 +144,7 @@ slides_paths <- c(
   DSWD  = "slides/DSWD_OSEC_Budget_Analysis.html",
   DOLE  = "slides/DOLE_Budget_Analysis.html",
   TESDA = "slides/TESDA_Budget_Analysis.html",
+  CHED  = "slides/CHED_Budget_Analysis.html",
   NCIP  = "slides/NCIP_Budget_Analysis.html",
   NCMF  = "slides/NCMF_Budget_Analysis.html",
   PCW   = "slides/PCW_Budget_Analysis.html",

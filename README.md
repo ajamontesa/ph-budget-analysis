@@ -29,6 +29,7 @@ budget-analysis/
 │   ├── DSWD_OSEC_Budget_Analysis.Rmd
 │   ├── DPWH_Budget_Analysis.Rmd
 │   ├── TESDA_Budget_Analysis.Rmd
+│   ├── CHED_Budget_Analysis.Rmd
 │   ├── NCIP_Budget_Analysis.Rmd
 │   ├── NCMF_Budget_Analysis.Rmd
 │   ├── PCW_Budget_Analysis.Rmd
@@ -44,6 +45,7 @@ budget-analysis/
     ├── dswd-osec.html
     ├── dpwh.html
     ├── tesda.html
+    ├── ched.html
     ├── ncip.html
     ├── ncmf.html
     ├── pcw.html
@@ -56,6 +58,7 @@ budget-analysis/
         ├── DOH_OSEC_Budget_Analysis.html
         ├── DOLE_Budget_Analysis.html
         ├── TESDA_Budget_Analysis.html
+        ├── CHED_Budget_Analysis.html
         ├── DSWD_OSEC_Budget_Analysis.html
         ├── NCIP_Budget_Analysis.html
         ├── NCMF_Budget_Analysis.html
