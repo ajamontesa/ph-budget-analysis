@@ -1,0 +1,441 @@
+---
+title: "National Youth Commission"
+subtitle: "Budget evolution and agency-level utilization, FY 2018–2026"
+date: "`r format(Sys.Date(), '%B %Y')`"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    toc_depth: 3
+    number_sections: true
+    code_folding: hide
+    self_contained: true
+    df_print: paged
+    fig_width: 10
+    fig_height: 5.5
+---
+
+```{css, echo=FALSE}
+:root { --ink:#1a1a1a; --muted:#6e6e6e; --accent:#08519C; --rule:#e6e6e6; }
+body, .main-container { font-family: Arial, Helvetica, "IBM Plex Sans", sans-serif; color: var(--ink); }
+.main-container { max-width: 980px; }
+h1, h2, h3, h4 { font-family: Arial, Helvetica, sans-serif; font-weight: 600; }
+h1.title { font-size: 30px; }
+h1 { font-size: 25px; margin-top: 1.6em; padding-top: .3em; border-top: 2px solid var(--rule); }
+h2 { font-size: 20px; margin-top: 1.4em; }
+h3 { font-size: 17px; color: #333; }
+.author, .date { color: var(--muted); }
+p, li { font-size: 15.5px; line-height: 1.62; }
+blockquote { border-left: 3px solid var(--accent); background: #f5f8fc; color: #25405e;
+  font-size: 14.5px; padding: .6em 1em; margin: 1.2em 0; }
+.lead { font-size: 16.5px; color: #2b2b2b; }
+.takeaway { background: #f7f9fb; border: 1px solid var(--rule); border-radius: 6px;
+  padding: .4em 1.1em; margin: 1.1em 0; }
+.takeaway p, .takeaway li { font-size: 14.5px; }
+.caption, .figcaption { color: var(--muted); font-size: 13px; }
+table.dataTable { font-size: 13px; }
+.kbl-note { color: var(--muted); font-size: 12.5px; margin-top: -.5em; }
+hr { border-top: 1px solid var(--rule); }
+.home-link { font-size: 13.5px; }
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                     dpi = 150, fig.align = "center", out.width = "100%")
+
+options(knitr.kable.NA = "")
+library(readxl); library(dplyr); library(tidyr); library(stringr)
+library(ggplot2); library(scales); library(knitr); library(kableExtra); library(DT)
+
+.candidates <- c("../data/Compiled_-_NEP-GAA-NoFAR1.xlsx", "data/Compiled_-_NEP-GAA-NoFAR1.xlsx",
+                 "Compiled - NEP-GAA-NoFAR1.xlsx", "Compiled_-_NEP-GAA-NoFAR1.xlsx")
+file_path <- .candidates[file.exists(.candidates)][1]
+stopifnot(!is.na(file_path))
+AGENCY_SHEET <- "NYC"; EXEC_SHEET <- "SAAODB"
+
+theme_nyc <- function(base_size = 12) {
+  theme_minimal(base_size = base_size, base_family = "sans") +
+    theme(
+      plot.title = element_text(face = "bold", size = base_size + 2, color = "black"),
+      plot.subtitle = element_text(color = "grey30", size = base_size),
+      plot.caption = element_text(color = "grey40", size = base_size - 3, hjust = 0),
+      panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
+      axis.title = element_text(size = base_size - 1, color = "grey20"),
+      axis.text = element_text(color = "grey20"),
+      legend.position = "bottom", legend.title = element_blank(),
+      legend.text = element_text(size = base_size - 1),
+      strip.text = element_text(face = "bold", size = base_size - 1.5, lineheight = 0.9))
+}
+
+exec_pal <- c("NEP (proposed)" = "#9E9AC8", "GAA (enacted)" = "#54278F",
+  "Allotments" = "#08519C", "Obligations" = "#E6550D", "Disbursements" = "#31A354")
+cat_pal <- c(
+  "General Administration and Support"                   = "#A6761D",
+  "Youth Development (policy, coordination & assistance)" = "#1B9E77")
+absorp_pal <- c("Obligations / Allotment" = "#3182BD",
+  "Disbursements / Obligations" = "#E6550D", "Disbursements / Allotment" = "#31A354")
+ec_pal <- c("Personnel Services (PS)" = "#2CA02C",
+  "Maintenance & Other Op. Exp. (MOOE)" = "#FF7F0E", "Capital Outlays (CO)" = "#9467BD")
+bar_fill <- "#08519C"; peso <- "PHP "
+php_m      <- function(x) paste0(peso, scales::comma(x / 1e6, accuracy = 1), "M")
+php_m_axis <- function(x) paste0(peso, scales::comma(x / 1e6, accuracy = 1), "M")
+
+dt_table <- function(df, caption = NULL, page = 10, money_cols = NULL, pct_cols = NULL, money_digits = 0) {
+  dt <- datatable(df, rownames = FALSE, caption = caption, extensions = "Buttons",
+    options = list(pageLength = page, lengthMenu = c(10, 20, 50, 100), dom = "Bfrtip",
+      buttons = c("copy", "csv"), scrollX = TRUE, autoWidth = FALSE,
+      columnDefs = list(list(className = "dt-right", targets = which(sapply(df, is.numeric)) - 1))),
+    class = "stripe hover compact")
+  if (!is.null(money_cols)) { mc <- which(names(df) %in% money_cols)
+    if (length(mc)) dt <- formatRound(dt, mc, digits = money_digits, mark = ",") }
+  if (!is.null(pct_cols)) { pc <- which(names(df) %in% pct_cols)
+    if (length(pc)) dt <- formatPercentage(dt, pc, digits = 0) }
+  dt
+}
+kbl_clean <- function(x, font = 14, ...) {
+  x %>% kable(...) %>% kable_styling(full_width = TRUE, font_size = font,
+    bootstrap_options = c("condensed", "striped", "hover"))
+}
+
+# ---- Data load -----------------------------------------------------------
+CODE_COLS <- c("DEPARTMENT", "AGENCY", "PREXC_PROG", "PREXC_SUBPROG")
+raw <- read_excel(file_path, sheet = AGENCY_SHEET) %>% mutate(across(any_of(CODE_COLS), as.character))
+AGENCY_NAME <- raw$UACS_AGY_DSC[!is.na(raw$UACS_AGY_DSC)][1]
+# The agency tab and the SAAODB tab don't always spell the agency identically
+# (a trailing "(Office on Muslim Affairs)" appears on one but not the other);
+# normalise by dropping a trailing parenthetical so the execution filter matches.
+agency_key <- function(x) str_trim(str_remove(x, "\\s*\\(.*\\)\\s*$"))
+
+df_long_all <- raw %>% filter(!is.na(`P/A/P`)) %>%
+  pivot_longer(cols = matches("^(NEP|GAA|AuthAppro|AdjAppro|AdjAllot|Obligations|Disbursements)_\\d{4}_EXP_(1PS|2MOOE|6CO|TOTAL)$"),
+               names_to = "var", values_to = "amount") %>%
+  separate(var, into = c("metric", "year", "tag", "expense_class"), sep = "_") %>%
+  mutate(year = as.integer(year), amount = as.numeric(amount)) %>%
+  select(-tag) %>% rename(agency = UACS_AGY_DSC, pap = `P/A/P`)
+
+df_long <- df_long_all %>% filter(expense_class == "TOTAL") %>% select(-expense_class) %>%
+  mutate(category = case_when(
+    PREXC_PROG == "1000" ~ "General Administration and Support",
+    PREXC_PROG == "3101" ~ "Youth Development (policy, coordination & assistance)",
+    TRUE ~ NA_character_))
+
+totals <- df_long %>% group_by(year, metric) %>%
+  summarise(total = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE), .groups = "drop")
+pap_year <- df_long %>% group_by(pap, year, metric) %>%
+  summarise(amount = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = metric, values_from = amount)
+
+exec <- read_excel(file_path, sheet = EXEC_SHEET) %>% filter(agency_key(Agency) == agency_key(AGENCY_NAME)) %>%
+  pivot_longer(cols = matches("^\\d{4}$"), names_to = "year", values_to = "amt_k") %>%
+  mutate(year = as.integer(year), amount = amt_k * 1e3) %>% filter(!is.na(amount)) %>%
+  group_by(year, Particular) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = Particular, values_from = amount) %>% rename(Obligations = `Obligations Incurred`) %>%
+  arrange(year) %>%
+  mutate(oblig_allot = Obligations / Allotments, disb_oblig = Disbursements / Obligations,
+         disb_allot = Disbursements / Allotments)
+```
+
+
+
+<p class="home-link"><a href="index.html">← All agencies</a></p>
+
+# Overview {#overview .unnumbered}
+
+<p class="lead">
+This document profiles the budget of the **National Youth Commission (NYC)** — the government's sole policy-making, coordinating, and monitoring body for Filipino youth, created under the Youth in Nation-Building Act (RA 8044) — across nine fiscal years, FY 2018 to FY 2026. NYC is one of the **smallest agencies in the national budget**, and it carries the same data constraint as several other commissions: usable program-level execution records were not available, so this review pairs the **proposed-to-enacted budget at the program level** with **budget utilization measured at the agency aggregate**.
+</p>
+
+Because the program-by-program execution chain cannot be traced, the emphasis is on what NYC's budget is *composed of*, how Congress adjusts it, and — at the whole-agency level — how much of what is released actually gets obligated and paid out.
+
+Two features define NYC's budget. First, it is **small and highly volatile**: the enacted budget mostly sits between ₱120M and ₱315M, but in FY 2025 it **nearly tripled to ₱632M** before reverting. Second, it is **almost one program** — youth-development policy and coordination is about 92% of the budget, so the agency is unusually easy to read.
+
+Set against the population it serves, NYC is tiny. With **31.4 million Filipinos aged 15–30** (2020 census, the RA 8044 definition of youth), the 2026 budget works out to about **₱10 per young person per year**. So the questions this review raises are less about whether the agency spends what it receives than about **whether the envelope is adequate to a national mandate — and, when a windfall does arrive, whether NYC can absorb it**.
+
+# Executive summary {#exec}
+
+**NYC is among the smallest agencies in the national budget.** The government's sole policy-making and coordinating body for Filipino youth, its enacted budget has mostly sat between **₱120M and ₱315M**, reaching ₱315M in 2026.
+
+**Against the country's youth, that is tiny.** With **31.4 million Filipinos aged 15–30** (2020 census), the 2026 budget is about **₱10 per young person per year**.
+
+**FY 2025 was extraordinary.** Congress enacted **₱632M against a ₱242M proposal** — a **+₱391M (+162%)** jump that nearly tripled the agency for one year, then reverted to ₱315M in 2026.
+
+**The surge outran the agency's capacity to spend.** In 2025 NYC obligated only **69%** of its allotment and disbursed just **58%** — its weakest execution on record.
+
+**Almost everything is one program.** Youth-development policy and coordination is about **92% of the 2026 budget**, and the agency is **MOOE-heavy** (program spending) rather than personnel-heavy.
+
+**One organizational move.** NYC shifted from the Office of the President's cluster to the **DILG** around 2018–2020, and has otherwise kept a stable two-program structure.
+
+> NYC is a very small, one-program agency that Congress only ever adds to. The FY 2025 windfall showed both the upside and the limit: the money arrived, but well under two-thirds of it went out the door. The open questions are **adequacy and absorptive capacity**.
+
+# A note on the data {#data-notes}
+
+**Period.** FY 2018 through FY 2026 for the proposed (NEP) and enacted (GAA) budget, at the P/A/P level. Agency-level execution (Allotments, Obligations, Disbursements) covers FY 2011–2025.
+
+**No program-level execution.** Usable **FAR No. 1** (SAAODB) records were not available for NYC, so there is **no P/A/P-level absorption analysis**. Utilization is shown only at the **agency aggregate** — the gap this review would most like to close with better data.
+
+**Two bases, not directly comparable.** The NEP/GAA figures are **current-year new appropriations only**. The execution figures are DBM's **published agency aggregates, which combine all available funds** — new, automatic, and continuing appropriations. The two series should not be read one-to-one.
+
+**One reorganization, a stable structure.** NYC's mother agency moved from the **Other Executive Offices to the DILG** around 2018–2020; its two-program structure is otherwise stable, so program lines are comparable across years. (Because the move straddles departmental wrappers in the source workbook, the agency is aggregated here into one continuous series; no year is double-counted.)
+
+**Population figures.** Per-person comparisons use the **2020 Census of Population and Housing**, which counted **31.40 million Filipinos aged 15–30** — the definition of "youth" under RA 8044.
+
+**Expense classes.** Personnel Services (PS), Maintenance & Other Operating Expenses (MOOE), Capital Outlays (CO). NYC carries no Financial Expenses. **Units are PHP millions** throughout.
+
+# One move to DILG, one core program {#reorg}
+
+NYC moved mother agency once and otherwise kept a simple two-program structure, so its trend lines read cleanly.
+
+```{r reorg-timeline, fig.height=3.0}
+tl <- tibble::tribble(
+  ~track,            ~label,                          ~start, ~end,   ~fill,
+  "Mother agency",   "OP cluster / OEOs",              2018,   2020,   "#1B4965",
+  "Mother agency",   "Under DILG",                     2020,   2026.4, "#54278F",
+  "P/A/P structure", "Two programs: Gen. Admin + Youth Development",  2018,   2026.4, "#1B9E77")
+ggplot(tl, aes(y = track)) +
+  geom_segment(aes(x = start, xend = end, yend = track, color = fill), linewidth = 13, lineend = "butt") +
+  scale_color_identity() +
+  geom_text(aes(x = (start + end) / 2, label = label), color = "white", fontface = "bold", size = 3.4) +
+  scale_x_continuous(breaks = 2018:2026, limits = c(2017.7, 2026.6)) +
+  labs(title = "NYC moved to the DILG and kept a simple structure",
+       subtitle = "Placement based on where each year's enacted (GAA) appropriations are recorded", x = NULL, y = NULL) +
+  theme_nyc() + theme(panel.grid.major.y = element_blank(),
+        axis.text.y = element_text(face = "bold", color = "grey20"))
+```
+
+With one operating program throughout, almost all of NYC's budget flows through youth-development policy and coordination — which makes the composition and the FY 2025 anomaly easy to trace.
+
+# The aggregate budget {#aggregate}
+
+## Small, and highly volatile
+
+```{r evolution, fig.height=5}
+evo <- totals %>% filter(metric %in% c("NEP","GAA")) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA"), labels = c("NEP (proposed)","GAA (enacted)")))
+ggplot(evo, aes(year, total, color = metric, group = metric)) +
+  geom_line(linewidth = 1.0) + geom_point(size = 2) +
+  scale_color_manual(values = exec_pal) +
+  scale_y_continuous(labels = php_m_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "NYC current-year appropriations, FY 2018–2026",
+       subtitle = "A small budget with one enormous spike — the FY 2025 enacted figure is more than triple its neighbours",
+       x = NULL, y = NULL, caption = "Current-year new appropriations. Source: DBM NEP & GAA.") +
+  theme_nyc() + guides(color = guide_legend(nrow = 1))
+```
+
+Two things stand out. Across most of the period the enacted budget is flat-to-drifting between ₱120M and ₱315M — small even by commission standards. And then there is **FY 2025**, where the enacted figure leaps to ₱632M, more than triple its neighbours, before falling back. That single year dominates the chart and the analysis.
+
+```{r tbl-evolution}
+totals %>% filter(metric %in% c("NEP","GAA")) %>% mutate(value = total/1e6) %>%
+  select(year, metric, value) %>% pivot_wider(names_from = year, values_from = value) %>%
+  mutate(metric = factor(metric, levels = c("NEP","GAA"))) %>% arrange(metric) %>% rename(`PHP M` = metric) %>%
+  kbl_clean(font = 13, digits = 0, format.args = list(big.mark = ","), na = "")
+```
+
+## The budget per young Filipino
+
+```{r per-capita, fig.height=4.4}
+YOUTH <- 31400000   # 2020 Census: Filipinos aged 15-30 (RA 8044 definition of youth)
+pc <- totals %>% filter(metric == "GAA", !is.na(total)) %>% transmute(year, per_person = total / YOUTH)
+ggplot(pc, aes(year, per_person)) +
+  geom_col(fill = bar_fill, width = 0.7) +
+  geom_text(aes(label = sprintf("%.0f", per_person)), vjust = -0.5, size = 3.2, color = "grey20") +
+  scale_x_continuous(breaks = 2018:2026) +
+  scale_y_continuous(labels = function(v) paste0(peso, v), expand = expansion(mult = c(0, 0.14))) +
+  labs(title = "NYC budget per young Filipino per year, FY 2018–2026",
+       subtitle = "Even the FY 2025 spike reached only ₱20 per young person; the 2026 budget is about ₱10",
+       x = NULL, y = NULL,
+       caption = "GAA ÷ 31,400,000 Filipinos aged 15–30 (2020 Census, RA 8044 definition).") +
+  theme_nyc()
+```
+
+The per-person figures put the agency's scale in perspective. In a normal year NYC has roughly **₱4–₱10 per young Filipino** to work with; even the exceptional FY 2025 budget amounted to only about **₱20 per youth**. This is the context for the adequacy question: whether an envelope of a few pesos per young person a year is enough to sustain a credible national policy and coordinating body for roughly a third of the population.
+
+## FY 2025: a one-year tripling
+
+The single most important feature of NYC's budget is the FY 2025 spike, so it is worth unpacking line by line.
+
+```{r y2025, fig.height=4.3}
+y3 <- pap_year %>% filter(year %in% c(2024, 2025, 2026), !is.na(GAA), GAA > 0) %>%
+  mutate(pap = str_trunc(pap, 46), yearf = factor(year))
+ord <- y3 %>% filter(year == 2025) %>% arrange(GAA) %>% pull(pap)
+y3 <- y3 %>% mutate(pap = factor(pap, levels = unique(c(ord, y3$pap))))
+ggplot(y3, aes(pap, GAA, fill = yearf)) +
+  geom_col(position = position_dodge(width = 0.75), width = 0.7) + coord_flip() +
+  scale_fill_manual(values = c("2024" = "#BDBDBD", "2025" = "#54278F", "2026" = "#9E9AC8")) +
+  scale_y_continuous(labels = php_m_axis, expand = expansion(mult = c(0, .1))) +
+  labs(title = "What drove the FY 2025 surge (GAA by P/A/P)",
+       subtitle = "A big top-up to the core policy program, a spike in administration, and a one-off Assistance line",
+       x = NULL, y = NULL) +
+  theme_nyc() + theme(axis.text.y = element_text(size = 9, lineheight = 0.9)) +
+  guides(fill = guide_legend(nrow = 1))
+```
+
+The ₱632M enacted budget for FY 2025 came from three moves, all above the Executive's ₱242M proposal:
+
+- the core **youth-development policy program jumped to ₱464M** (from ₱152M the year before);
+- **General Management** spiked to ₱116M (from ₱18M proposed); and
+- a brand-new, one-year-only **"Assistance to Youth Individuals and Organizations"** line appeared at ₱50M.
+
+**FY 2025 was a national election year**, and all three additions receded in the FY 2026 enacted budget. But one change proved durable: the core policy program settled at **₱290M in 2026**, still nearly double its ₱152M level of 2024. So beneath the one-off spike, NYC's operating program has stepped up — while the extraordinary top-ups came and went with the election cycle.
+
+## Where Congress adjusts the budget
+
+```{r nep-gaa-gap, fig.height=4.4}
+gap <- totals %>% filter(metric %in% c("NEP","GAA")) %>% pivot_wider(names_from = metric, values_from = total) %>%
+  mutate(change = GAA - NEP, direction = ifelse(change >= 0, "Net increase (GAA ≥ NEP)", "Net decrease (GAA < NEP)"))
+ggplot(gap, aes(year, change/1e6, fill = direction)) +
+  geom_col(width = 0.7) +
+  geom_text(aes(label = ifelse(abs(change) < 1e5, "", sprintf("%+.0f", change/1e6)),
+                vjust = ifelse(change >= 0, -0.4, 1.2)), size = 3.2, color = "grey20") +
+  scale_fill_manual(values = c("Net increase (GAA ≥ NEP)" = "#1B9E77", "Net decrease (GAA < NEP)" = "#D95F02")) +
+  scale_x_continuous(breaks = 2018:2026) +
+  scale_y_continuous(labels = function(v) paste0(peso, v, "M"), expand = expansion(mult = c(0.10, 0.18))) +
+  labs(title = "Enacted minus proposed (GAA − NEP), by year",
+       subtitle = "Congress only ever adds to NYC — and the +₱391M for FY 2025 dwarfs every other year",
+       x = NULL, y = NULL) +
+  theme_nyc() + guides(fill = guide_legend(nrow = 1))
+```
+
+In every year the enacted budget lands at or above the proposal — Congress **only ever adds** to NYC, never cuts. Most additions are modest (₱5–66M), which makes the **+₱391M for FY 2025** all the more striking: a single-year augmentation larger than the agency's entire budget in any normal year.
+
+# Where the money goes {#composition}
+
+## Composition by PREXC program
+
+```{r composition, fig.height=5}
+comp <- df_long %>% filter(metric == "GAA", year <= 2026, !is.na(amount), !is.na(category)) %>%
+  group_by(year, category) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(category = factor(category, levels = names(cat_pal)))
+ggplot(comp, aes(year, amount, fill = category)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = cat_pal, labels = function(x) str_wrap(x, 34)) +
+  scale_y_continuous(labels = php_m_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "Composition of the GAA by PREXC program, 2018–2026",
+       subtitle = "Youth-development policy & coordination is ~92% of the budget; administration is the rest",
+       x = NULL, y = NULL) +
+  theme_nyc() + guides(fill = guide_legend(nrow = 1))
+```
+
+The green **Youth Development** program — policy formulation, coordination, and assistance — is essentially the whole agency, around 92% in 2026, with **General Administration and Support** the small remainder. The FY 2025 bulge is visible here too, in both bands: the surge lifted the core program *and* administration before both fell back.
+
+## Composition by expense class
+
+```{r comp-ec, fig.height=5}
+ec_levels <- c("Personnel Services (PS)","Maintenance & Other Op. Exp. (MOOE)","Capital Outlays (CO)")
+comp_ec <- df_long_all %>% filter(metric == "GAA", year <= 2026, expense_class %in% c("1PS","2MOOE","6CO")) %>%
+  group_by(year, expense_class) %>% summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  mutate(expense_class = factor(expense_class, levels = c("1PS","2MOOE","6CO"), labels = ec_levels))
+ggplot(comp_ec, aes(year, amount, fill = expense_class)) +
+  geom_col(width = 0.75, color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = ec_pal) +
+  scale_y_continuous(labels = php_m_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  labs(title = "GAA composition by expense class, 2018–2026",
+       subtitle = "An MOOE agency — the budget funds programs and activities, not a large payroll",
+       x = NULL, y = NULL) +
+  theme_nyc() + guides(fill = guide_legend(nrow = 1))
+```
+
+NYC is an **MOOE agency**: the bulk of its budget is maintenance-and-operating spending — the conferences, programs, grants, coordination, and advocacy that a policy body runs — rather than personnel. The FY 2025 windfall came almost entirely as MOOE, which is part of why it was hard to disburse in a single year.
+
+## The largest P/A/Ps
+
+```{r top-paps, fig.height=4.4}
+top_paps <- pap_year %>% filter(year == 2026, !is.na(GAA), GAA > 0) %>% arrange(desc(GAA)) %>%
+  mutate(pap = factor(pap, levels = rev(pap)))
+ggplot(top_paps, aes(pap, GAA)) +
+  geom_col(fill = bar_fill, width = 0.7) +
+  geom_text(aes(label = php_m(GAA)), hjust = -0.1, size = 3.2, color = "grey20") +
+  coord_flip() + scale_x_discrete(labels = function(x) str_wrap(x, 50)) +
+  scale_y_continuous(labels = php_m_axis, expand = expansion(mult = c(0, .28)), limits = c(0, NA)) +
+  labs(title = "Every P/A/P in the FY 2026 GAA",
+       subtitle = "One policy-and-coordination line (₱290M) is almost the entire agency",
+       x = NULL, y = NULL) +
+  theme_nyc() + theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"))
+```
+
+In a normal year NYC's budget is just a handful of lines. The **core youth-development policy and coordination program (₱290M)** is almost everything; General Management (₱25M) and a small personnel-benefits line make up the rest. The one-off Assistance line that appeared in 2025 is gone.
+
+### Full P/A/P ranking, FY 2026 (interactive) {.unnumbered}
+
+```{r tbl-allpaps}
+pap_year %>% filter(year == 2026, !is.na(GAA)) %>%
+  left_join(pap_year %>% filter(year == 2025) %>% transmute(pap, GAA25 = GAA), by = "pap") %>%
+  transmute(`P/A/P` = pap, `NEP 2026 (M)` = NEP/1e6, `GAA 2026 (M)` = GAA/1e6,
+            `GAA 2025 (M)` = GAA25/1e6, `Net add 2026 (M)` = (GAA - NEP)/1e6) %>%
+  arrange(desc(`GAA 2026 (M)`)) %>%
+  dt_table(page = 10, money_cols = c("NEP 2026 (M)","GAA 2026 (M)","GAA 2025 (M)","Net add 2026 (M)"))
+```
+
+# Overall budget utilization {#utilization}
+
+With no program-level execution data, utilization can only be read at the **agency aggregate**, and on a different basis from the appropriations above (all available funds, not just current-year new appropriations). On that basis NYC is a **middling absorber in normal years and a weak one in 2025**.
+
+## Execution over time
+
+```{r exec-levels, fig.height=4.8}
+el <- exec %>% select(year, Allotments, Obligations, Disbursements) %>%
+  pivot_longer(-year, names_to = "stage", values_to = "amount") %>% filter(!is.na(amount)) %>%
+  mutate(stage = factor(stage, levels = c("Allotments","Obligations","Disbursements")))
+ggplot(el, aes(year, amount, color = stage, group = stage)) +
+  geom_line(linewidth = 1.0) + geom_point(size = 2) +
+  scale_color_manual(values = exec_pal) +
+  scale_y_continuous(labels = php_m_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
+  scale_x_continuous(breaks = seq(2011, 2025, 2)) +
+  labs(title = "Budget execution, FY 2011–2025 (all available funds)",
+       subtitle = "The three lines track fairly closely — until 2025, when disbursements fall far below allotments",
+       x = NULL, y = NULL, caption = "Includes new, automatic & continuing appropriations; not comparable to the NEP/GAA series.") +
+  theme_nyc() + guides(color = guide_legend(nrow = 1))
+```
+
+For most of the period the three lines move together at a modest level. The exception is **2025**, where allotments jump but disbursements lag far behind — the visible signature of a windfall the agency could not spend within the year.
+
+## Absorptive capacity
+
+```{r absorp, fig.height=4.8}
+absorp_long <- exec %>% select(year, oblig_allot, disb_oblig, disb_allot) %>%
+  pivot_longer(-year, names_to = "ratio", values_to = "value") %>% filter(!is.na(value)) %>%
+  mutate(ratio = factor(ratio, levels = c("oblig_allot","disb_oblig","disb_allot"),
+    labels = c("Obligations / Allotment","Disbursements / Obligations","Disbursements / Allotment")))
+ggplot(absorp_long, aes(year, value, color = ratio, group = ratio)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 2) +
+  scale_color_manual(values = absorp_pal) +
+  scale_y_continuous(labels = percent_format(accuracy = 1), limits = c(0.5, 1.02), breaks = seq(0.5, 1, 0.1)) +
+  scale_x_continuous(breaks = seq(2011, 2025, 2)) +
+  labs(title = "NYC absorptive capacity, FY 2011–2025",
+       subtitle = "Obligation and cash rates improved through 2024, then collapsed in 2025 (O/A 69%, D/A 58%)",
+       x = NULL, y = NULL) +
+  theme_nyc() + guides(color = guide_legend(nrow = 1))
+```
+
+NYC's absorption had actually been **improving** — disbursement-to-allotment climbed from the low-70s to **86% by 2024**. Then the FY 2025 surge reversed it: obligations fell to **69%** of the allotment and disbursements to just **58%**, the agency's weakest cash utilization on record. The pattern is telling — NYC can spend a steady budget reasonably well, but a sudden trebling exceeded its capacity to obligate and pay within the year.
+
+### Execution at a glance (interactive) {.unnumbered}
+
+```{r exec-table}
+exec %>% transmute(Year = year, `Allotments (M)` = Allotments/1e6, `Obligations (M)` = Obligations/1e6,
+            `Disbursements (M)` = Disbursements/1e6, `O/A` = oblig_allot, `D/O` = disb_oblig, `D/A` = disb_allot) %>%
+  dt_table(page = 15, money_cols = c("Allotments (M)","Obligations (M)","Disbursements (M)"),
+           pct_cols = c("O/A","D/O","D/A"))
+```
+
+<p class="kbl-note">PHP millions, all-funds basis. O/A = obligations ÷ allotment; D/O = disbursements ÷ obligations; D/A = disbursements ÷ allotment. Not comparable to the NEP/GAA appropriations series above.</p>
+
+# Questions for discussion {#discussion}
+
+1. **Is the envelope enough?** At about **₱10 per young Filipino per year**, is NYC funded to be a credible national policy and coordinating body for roughly a third of the population — or only to exist?
+2. **Can NYC absorb sudden windfalls?** The FY 2025 surge tripled the budget but only **58% was disbursed**. Was that money well-targeted, and does the agency have the staffing and systems to spend a large increase well?
+3. **The one-year Assistance line.** A ₱50M "Assistance to Youth Individuals and Organizations" line appeared for FY 2025 only. What did it fund, who decided the recipients, and why did it not continue?
+4. **Reaching youth everywhere.** With ~92% of the budget in one policy-and-coordination line, can young people — especially outside Metro Manila — see which programs actually reach them?
+5. **What is missing?** Which youth needs — employment, education, mental health, meaningful participation — does this budget not reach at all?
+6. **What would program-level execution data show?** With no FAR No. 1, we can see that NYC's overall spending lagged in 2025, but not *which* activities stalled. Program-level records would show where a windfall like FY 2025's actually went — and where it got stuck.
+
+---
+
+<p class="caption">
+Underlying data: DBM NEP & GAA documents (current-year new appropriations, P/A/P level), FY 2018–2026; DBM-published execution aggregates (all available funds, agency level), FY 2011–2025. Per-person figures use the 2020 Census of Population and Housing (31,400,000 Filipinos aged 15–30, the RA 8044 definition of youth). No FAR No. 1 (P/A/P-level execution) was available for NYC, so absorption is reported only at the agency aggregate, on a basis not directly comparable to the appropriations series. Prepared as the long-form companion to the NYC budget briefing.
+</p>

@@ -111,7 +111,11 @@ agencies <- tibble::tribble(
 
   "PCW",    "Philippine Commission on Women",                     "Whole commission", "pcw.html",         "published",
   "The lead agency on gender mainstreaming, at the million-peso scale \u2014 small enough to read line by line. The budget nearly doubled, Congress tops it up every year (and funds a recurring stream of one-off \u201cTier 2\u201d lines), but absorption is softening as MOOE outpaces what the agency can spend.",
-  "GAA nearly doubled: \u20b1112M (2018) \u2192 \u20b1205M (2026), +83%  |  +\u20b129M 2026 add went to one line \u2014 Technical Assistance is now ~a third of the budget  |  Absorption ~80%, softening to 75% (2025); MOOE allotments doubled but disburse 67%"
+  "GAA nearly doubled: \u20b1112M (2018) \u2192 \u20b1205M (2026), +83%  |  +\u20b129M 2026 add went to one line \u2014 Technical Assistance is now ~a third of the budget  |  Absorption ~80%, softening to 75% (2025); MOOE allotments doubled but disburse 67%",
+
+  "NYC",    "National Youth Commission",                          "Whole commission (no P/A/P execution)", "nyc.html",         "published",
+  "A very small agency \u2014 the government's sole policy body for Filipino youth \u2014 at about \u20b110 per young Filipino a year. Congress only ever adds to it, and in FY 2025 (an election year) nearly tripled it to \u20b1632M \u2014 but the agency disbursed only 58%, showing the limits of a sudden windfall. Execution is read at the agency level only.",
+  "\u2248\u20b110 per young Filipino per year (31.4M aged 15\u201330)  |  FY 2025 spike: \u20b1632M enacted vs \u20b1242M proposed (+\u20b1391M), then reverted  |  The surge outran capacity \u2014 only 58% disbursed in 2025; ~92% is one program"
 )
 
 # ---- EDIT THIS: briefing slides --------------------------------------------
@@ -135,7 +139,8 @@ slides_paths <- c(
   DOLE  = "slides/DOLE_Budget_Analysis.html",
   NCIP  = "slides/NCIP_Budget_Analysis.html",
   NCMF  = "slides/NCMF_Budget_Analysis.html",
-  PCW   = "slides/PCW_Budget_Analysis.html"
+  PCW   = "slides/PCW_Budget_Analysis.html",
+  NYC   = "slides/NYC_Budget_Analysis.html"
 )
 ```
 
