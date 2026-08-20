@@ -193,7 +193,7 @@ short_map <- c(
 This document tracks the budget of the **Department of Agriculture (DA)** across ten fiscal years, FY 2018 to FY 2027, following each peso from the Executive's proposal (NEP) to enactment (GAA), release (allotment), commitment (obligation), and final cash payment (disbursement). It covers the **Office of the Secretary (OSEC)** in depth and the **nine attached agencies** in a dedicated section, and it is written for **civil-society organizations and advocates scrutinizing the newly released FY 2027 proposal** — ending with full, sortable line-item tables they can interrogate directly.
 </p>
 
-The headline for FY 2027: the Executive proposes to **cut DA to ₱171.3B department-wide (₱152.0B for the OSEC) — down about ₱14B, roughly 8%, from the FY 2026 enacted level** — even as food security and farm-input costs dominate public debate. But the aggregate hides two moves advocates should focus on. **Farm-to-Market Roads are nearly halved** (₱33B → ₱16B), the single largest change; and the **Locally-Funded and Foreign-Assisted project portfolio grows to over half the OSEC budget** (₱76.9B, 50.6%) — even though it is the department's weakest-absorbing and least-transparent category, disbursing only about a third to a half of what it is given.
+The headline for FY 2027: the Executive proposes to **cut DA to ₱171.3B department-wide (₱152.0B for the OSEC) — down about ₱14B, roughly 8%, from the FY 2026 enacted level** — even as food security and farm-input costs dominate public debate. But the aggregate hides two moves advocates should focus on. **Farm-to-Market Roads are nearly halved** (₱33B → ₱16B), the single largest change; and the **Locally-Funded and Foreign-Assisted project portfolio grows to over half the OSEC budget** (₱76.9B, 50.6%) — even though it is the category the department has historically absorbed most slowly, disbursing only about a third to a half of what it is given. (This portfolio is an aggregation of many small, often short-lived projects — individually itemized in the budget documents, but collapsed here into one line for clarity.)
 
 This report opens up that core. In addition to the standard analysis it adds three deep-dives the slide format could not carry: the operational core **by service type** (Production Support, Extension, Market Development, R&D, Equipment, Irrigation); the operational core **by commodity** (rice, corn, livestock, high-value crops, and more); and the **two aggregated mega-lines** (Farm-to-Market Roads and the Locally-Funded/Foreign-Assisted portfolio), where most of the money — and most of the delivery risk — now sits.
 
@@ -203,9 +203,9 @@ This report opens up that core. In addition to the standard analysis it adds thr
 
 **Farm-to-Market Roads are nearly halved.** The FMR line falls **₱33B → ₱16B (−₱17B)**, by far the single largest change in the proposal. (FMR is appropriated at DA but implemented by DPWH, and shows zero DA execution every year.)
 
-**Locally-funded and foreign-assisted projects grow to over half the OSEC.** Grouped together they rise **+₱5.3B to ₱76.9B — 50.6% of the entire OSEC budget.** This category bundles many individual projects — often small and short-lived — and, as a group, absorbs slowly: disbursement-to-allotment was just **33% (2024) and 53% (2025)**.
+**Locally-funded and foreign-assisted projects grow to over half the OSEC.** Grouped together they rise **+₱5.3B to ₱76.9B — 50.6% of the entire OSEC budget.** This is an aggregation of many individual projects — often small and short-lived (appearing one year, absent the next), and itemized in the budget documents but collapsed here into one line — and, as a group, it absorbs slowly: disbursement-to-allotment was just **33% (2024) and 53% (2025)**.
 
-**That is the central risk.** The fastest-growing, largest category is also the **weakest-absorbing and least-transparent** one — so the FY 2027 proposal tilts DA further toward money it has historically struggled to spend.
+**That is the central risk.** The fastest-growing, largest category is also the one the department has historically absorbed most slowly — so the FY 2027 proposal tilts DA further toward money it has struggled to spend.
 
 **The operational core is roughly held or trimmed.** The National Rice Program's Production Support stays around ₱26B; livestock and corn production support are cut. Several extension, equipment and modernization lines see modest increases.
 
@@ -597,7 +597,7 @@ This dataset cannot distinguish the two: a DPWH transfer and a spill into Contin
 
 Either way, the consequence for this analysis is the same and substantial: roughly **₱33B in 2026 — 20% of the OSEC budget — is appropriated to DA but not executed by DA within the year**. It inflates DA's apparent Capital-Outlay share (the line is 100% CO) while contributing nothing to measured disbursement, and it is a large part of why DA's GAA-to-allotment ratio looks so low.
 
-## The Locally-Funded and Foreign-Assisted black box
+## The Locally-Funded and Foreign-Assisted portfolio
 
 ```{r lfp-fap, fig.height=4.4}
 lfp <- osec_pap_year %>% filter(pap == LFP_LABEL) %>%
@@ -609,9 +609,9 @@ ggplot(lfp, aes(year, amount, color = metric, group = metric)) +
   geom_line(linewidth = 1.0) + geom_point(size = 2.2) +
   scale_color_manual(values = exec_pal) +
   scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(5), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
-  scale_x_continuous(breaks = 2018:2026) +
-  labs(title = "Locally-Funded and Foreign-Assisted Program: 2018–2026",
-       subtitle = "A single P/A/P line that balloons to PHP 72B in 2026 — and historically a poor absorber",
+  scale_x_continuous(breaks = c(seq(2018, 2026, 2), 2027)) +
+  labs(title = "Locally-Funded and Foreign-Assisted Program: 2018–2027 (2027 = proposed)",
+       subtitle = "An aggregation of many project lines, reaching ₱72B in 2026 — and historically a poor absorber",
        x = NULL, y = NULL) +
   theme_da() + guides(color = guide_legend(nrow = 1))
 ```
@@ -624,12 +624,12 @@ osec_pap_year %>% filter(pap == LFP_LABEL, year %in% 2018:2025) %>%
   kbl_clean(font = 13.5, align = "rrrrr", na = "")
 ```
 
-Unlike FMR, LFP/FAP *does* execute — but poorly, and with a large share of its GAA never released as allotment in the first place (in 2025, ₱35B GAA yielded only ₱10.2B of allotment). Of what is released, disbursement-to-allotment averaged ~60% through 2018–2023 and then fell to **33% (2024) and 53% (2025)**. The 2026 GAA proposes **₱71.6B for this single line — roughly 6× the 2025 GAA** — against a recent absorption record near half. Like FMR, it bundles dozens of distinct loan- and locally-funded projects into one line with no sub-project visibility in the GAA itself; unlike FMR, it stays with DA to spend.
+Unlike FMR, LFP/FAP *does* execute — but poorly, and with a large share of its GAA never released as allotment in the first place (in 2025, ₱35B GAA yielded only ₱10.2B of allotment). Of what is released, disbursement-to-allotment averaged ~60% through 2018–2023 and then fell to **33% (2024) and 53% (2025)**. The 2026 GAA proposes **₱71.6B for this single line — roughly 6× the 2025 GAA** — against a recent absorption record near half. This portfolio bundles many distinct loan- and locally-funded projects — each itemized in the budget documents, but aggregated here into one line because they are numerous, individually small, and tend to churn from year to year. The analytical point is not opacity but absorption: unlike FMR, this money stays with DA to spend — and much of it goes unspent.
 
 # Congressional action: NEP → GAA {#augmentation}
 
 ```{r osec-augmentation, fig.height=4.8}
-aug <- osec_pap_year %>% group_by(pap) %>%
+aug <- osec_pap_year %>% filter(year <= 2026) %>% group_by(pap) %>%
   summarise(nep = sum(NEP, na.rm = TRUE), gaa = sum(GAA, na.rm = TRUE), .groups = "drop") %>%
   mutate(change = gaa - nep) %>% filter(abs(change) >= 5e8)
 aug_plot <- bind_rows(aug %>% arrange(desc(change)) %>% slice_head(n = 8),
@@ -737,7 +737,7 @@ abs_2025 %>% arrange(desc(`D/A`)) %>% slice_head(n = 7) %>%
 ```
 
 ::: {.takeaway}
-**Weakest absorbers, FY 2025** — equipment-provision (PAEF) lines and livestock, plus the LFP/FAP black box.
+**Weakest absorbers, FY 2025** — equipment-provision (PAEF) lines and livestock, plus the aggregated Locally-Funded/Foreign-Assisted portfolio.
 :::
 
 ```{r osec-bot-absorb}
@@ -796,7 +796,9 @@ The Department of Agriculture has nine attached agencies. Together they are abou
 
 ```{r attached-overview, fig.height=5.6}
 att <- df_long %>% filter(!is_osec, metric %in% c("NEP","GAA")) %>%
-  group_by(agency, year, metric) %>% summarise(v = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  group_by(agency, year, metric) %>%
+  summarise(v = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  filter(!is.na(v)) %>%
   mutate(short = recode(agency, !!!short_map),
          metric = factor(metric, levels = c("NEP","GAA"), labels = c("NEP (proposed)","GAA (enacted)")))
 ord <- att %>% filter(metric == "GAA (enacted)", year == 2026) %>% arrange(desc(v)) %>% pull(short)
@@ -808,22 +810,25 @@ ggplot(att, aes(year, v, color = metric, group = metric)) +
   scale_color_manual(values = c("NEP (proposed)" = "#9E9AC8","GAA (enacted)" = "#54278F")) +
   scale_y_continuous(labels = php_b, breaks = pretty_breaks(4)) +
   scale_x_continuous(breaks = c(2018, 2022, 2026)) +
-  labs(title = "Attached agencies: NEP vs GAA, 2018–2026",
-       subtitle = "BFAR dwarfs the rest; most others are small and slow-growing",
+  labs(title = "Attached agencies: NEP vs GAA, 2018–2027 (2027 = proposed, NEP only)",
+       subtitle = "BFAR dwarfs the rest; most others are small — and most are trimmed in the FY 2027 proposal",
        x = NULL, y = NULL) +
   theme_da() + guides(color = guide_legend(nrow = 1))
 ```
 
 ```{r attached-summary}
 att_sum <- df_long %>% filter(!is_osec, metric %in% c("NEP","GAA")) %>%
-  group_by(agency, year, metric) %>% summarise(v = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  group_by(agency, year, metric) %>%
+  summarise(v = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE), .groups = "drop") %>%
   pivot_wider(names_from = metric, values_from = v) %>% group_by(agency) %>%
-  summarise(`GAA 2018 (B)` = round(GAA[year==2018]/1e9,2), `GAA 2026 (B)` = round(GAA[year==2026]/1e9,2),
-            `NEP 2026 (B)` = round(NEP[year==2026]/1e9,2),
-            `Cumulative NEP→GAA (B)` = round(sum(GAA-NEP, na.rm=TRUE)/1e9,2), .groups = "drop") %>%
-  mutate(Agency = paste0(recode(agency, !!!short_map), " — ", str_trunc(agency, 48))) %>%
-  select(Agency, `GAA 2018 (B)`, `GAA 2026 (B)`, `NEP 2026 (B)`, `Cumulative NEP→GAA (B)`) %>%
-  arrange(desc(`GAA 2026 (B)`))
+  summarise(`GAA 2026 (B)` = round(GAA[year==2026]/1e9,2),
+            `NEP 2027 (B)` = round(NEP[year==2027]/1e9,2),
+            `Proposed chg 26→27 (B)` = round((NEP[year==2027] - GAA[year==2026])/1e9,2),
+            `Cumulative NEP→GAA, 2018–2026 (B)` = round(sum((GAA - NEP)[year <= 2026], na.rm=TRUE)/1e9,2),
+            .groups = "drop") %>%
+  mutate(Agency = paste0(recode(agency, !!!short_map), " — ", str_trunc(agency, 46))) %>%
+  select(Agency, `GAA 2026 (B)`, `NEP 2027 (B)`, `Proposed chg 26→27 (B)`, `Cumulative NEP→GAA, 2018–2026 (B)`) %>%
+  arrange(desc(`NEP 2027 (B)`))
 kbl_clean(att_sum, font = 12.5, align = "lrrrr", na = "")
 ```
 
@@ -872,7 +877,9 @@ dt_table(att_full, page = 15,
 # The whole Department of Agriculture {#department}
 
 ```{r dept-evolution, fig.height=4.8}
-dept_totals <- df_long %>% group_by(year, metric) %>% summarise(total = sum(amount, na.rm = TRUE), .groups = "drop")
+dept_totals <- df_long %>% group_by(year, metric) %>%
+  summarise(total = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  filter(!is.na(total))
 evo2 <- dept_totals %>% filter(metric %in% c("NEP","GAA")) %>%
   mutate(metric = factor(metric, levels = c("NEP","GAA"), labels = c("NEP (proposed)","GAA (enacted)")))
 osec_exec <- df_long %>% filter(is_osec, metric %in% c("AdjAllot","Obligations","Disbursements")) %>%
@@ -930,7 +937,7 @@ kbl_clean(dept_top, font = 12.5, align = "llr")
 
 These follow directly from the FY 2027 proposal and the OSEC spending record in the master tables above.
 
-1. **A smaller budget, tilted toward the weakest absorber.** The FY 2027 NEP cuts DA ~8% while growing the Locally-Funded/Foreign-Assisted portfolio past **half the OSEC budget (₱76.9B)** — a category that disbursed just 33% (2024) and 53% (2025). What will make it spend faster as it grows, and should the line be disaggregated in the GAA so its sub-projects are visible?
+1. **A smaller budget, tilted toward the weakest absorber.** The FY 2027 NEP cuts DA ~8% while growing the Locally-Funded/Foreign-Assisted portfolio past **half the OSEC budget (₱76.9B)** — a category that disbursed just 33% (2024) and 53% (2025). The portfolio bundles many small, short-lived projects (itemized in the budget documents, aggregated here for analysis). What will make it spend faster as it grows — and is a collection of churning small projects the right vehicle for half the department's budget?
 2. **Farm-to-Market Roads cut by ₱17B.** FMR is nearly halved. Given it is implemented by DPWH and shows zero DA execution, is this a sensible clean-up — or a cut to rural connectivity that food-security rhetoric doesn't square with? Where does the ₱17B go?
 3. **The operational core held flat.** Rice production support stays ~₱26B while livestock and corn are trimmed. In a period of high food prices, is holding the hands-on commodity programs flat the right call — and is the balance across rice, corn, livestock, high-value crops and fisheries defensible?
 4. **Capital execution as the binding constraint.** The multi-year decline in disbursement traces to Capital Outlays — equipment (PAEF, ~41%) and irrigation (INS, ~55%). Is DA's procurement and construction machinery the real limit on any budget of this size, no matter how it is allocated?
