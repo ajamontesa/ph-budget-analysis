@@ -66,8 +66,8 @@ agencies <- tibble::tribble(
   ~short,   ~name,                                                ~unit,                     ~output,            ~status,      ~blurb, ~highlights,
 
   "DAR",    "Department of Agrarian Reform",                      "Office of the Secretary", "dar-osec.html",    "published",
-  "A small department, and one Congress tends to trim rather than augment. A flat \u20b18\u201310B budget for eight years jumps 62% in 2026 \u2014 built almost entirely on foreign-assisted loan projects that are the agency's weakest absorbers.",
-  "Flat \u20b18\u201310B for 8 years \u2192 \u20b116.8B in 2026 (+62%)  |  Congress is a net subtractor: \u2212\u20b12.4B (2022), \u2212\u20b14.5B (2023)  |  Foreign-assisted projects 10% \u2192 37% of budget, but disburse just 19\u201338%",
+  "A small department, and one Congress tends to trim rather than augment. The FY 2027 NEP proposes to shrink DAR-OSEC 13% (to \u20b114.7B) \u2014 winding down the SPLIT land-titling project and pivoting the money into livelihood lines the agency absorbs worst. Includes a full, sortable per-P/A/P table with 2025\u20132027 amounts and the latest utilization data.",
+  "FY 2027 NEP: \u20b114.7B, \u221213% from the 2026 enacted \u20b116.8B  |  SPLIT cut \u2212\u20b14.4B; VISTA (19% disbursed) nearly doubles; new \u20b11.4B flagship  |  Core programs disburse 94\u201399%, foreign-assisted lines just 19\u201338%",
 
   "DA",     "Department of Agriculture",                          "OSEC + 9 attached agencies", "da-osec.html",     "published",
   "A striking case of appropriation outrunning execution. The OSEC budget nearly quadrupled, but disbursement fell to 69% \u2014 with two giant lines (FMR, which DA never executes, and the LFP/FAP black box) crowding out a rice-dominated operational core. Adds deep-dives by service type and by commodity.",

@@ -1,6 +1,6 @@
 ---
 title: "Department of Agrarian Reform — Office of the Secretary"
-subtitle: "Budget evolution and absorptive capacity, FY 2018–2026"
+subtitle: "The FY 2027 proposed budget in context, FY 2018–2027"
 date: "`r format(Sys.Date(), '%B %Y')`"
 output:
   html_document:
@@ -210,30 +210,36 @@ mask_2018 <- function(df) {
 # Overview {#overview .unnumbered}
 
 <p class="lead">
-This document tracks the budget of the **Department of Agrarian Reform – Office of the Secretary (DAR-OSEC)** across nine fiscal years, FY 2018 to FY 2026, following each peso from the Executive's proposal (NEP) to enactment (GAA), release (allotment), commitment (obligation), and final cash payment (disbursement).
+This document tracks the budget of the **Department of Agrarian Reform – Office of the Secretary (DAR-OSEC)** across ten fiscal years, FY 2018 to FY 2027, following each peso from the Executive's proposal (NEP) to enactment (GAA), release (allotment), commitment (obligation), and final cash payment (disbursement). It is written for **civil-society organizations and advocates scrutinizing the newly released FY 2027 proposal** — so it pairs the long-run record with a close look at what the Executive is now proposing, and it ends with a full, sortable line-item table advocates can interrogate directly.
 </p>
 
-It is the long-form companion to the DAR-OSEC briefing deck. Where the deck fits each point on a slide, this version keeps the full argument and adds reference tables — sortable, searchable, and exportable — so a reader can interrogate the figures directly.
+The headline for FY 2027: after a one-year surge to ₱16.8B in 2026, **the Executive proposes to pull DAR-OSEC back to ₱14.7B — a 13% cut.** But the more important story is *what* is being cut and *what* is being scaled up. The being-wound-down World Bank land-titling project (SPLIT) falls ₱4.4B; the money pivots into livelihood and value-chain lines — the VISTA project and a brand-new ₱1.4B flagship, *Pang-Agraryong Tulay para sa Bagong Bayanihan*.
 
-DAR is a small department, and its budget tells a distinctive story. For eight straight years it was almost perfectly flat at ₱8–10B; then the 2026 proposal jumps 62% to ₱16.8B. Two features make DAR distinctive. First, **Congress has been a net *subtractor*** here — repeatedly trimming the Executive's proposal rather than augmenting it. Second, the agency runs on two very different kinds of money: **routine, domestically-run programs that absorb beautifully (94–99%)**, and **foreign-assisted loan projects that absorb badly (19–38%)**. The 2026 surge is built almost entirely on the second kind — which means the budget is being loaded with precisely the program type DAR has the weakest record of spending.
+This matters because of a distinctive DAR pattern the long record makes clear. The agency runs on two very different kinds of money: **routine, domestically-run programs that absorb beautifully (94–99% disbursed)**, and **foreign-assisted and newer project lines that absorb badly (19–38%)**. The FY 2027 proposal leans *harder* on the second kind — scaling up exactly the lines DAR has the weakest record of actually spending, and adding one with no track record at all. That is the central question this report equips advocates to press.
 
 # Executive summary {#exec}
 
-**DAR-OSEC runs a small budget.** The OSEC budget held at ₱8–10B for eight straight years (2018–2025), then jumps to a proposed ₱16.8B in 2026 — a 62% increase in a single year.
+**The FY 2027 NEP proposes to *shrink* DAR-OSEC** to **₱14.7B — down 13% from the FY 2026 enacted ₱16.8B.** After a one-year surge, the Executive is pulling the department back (though still well above the ₱8–10B pre-2026 baseline).
 
-**The 2026 surge is foreign-assisted.** Externally-funded loan projects rise from about 10% of the budget (2025) to **37% (2026)**, led by the World Bank-funded SPLIT land-titling project (₱0.7B → ₱5.1B), which becomes the single largest line in the entire department.
+**The land-titling project (SPLIT) is being wound down.** The World Bank-funded SPLIT falls from ₱5.1B (2026, the single largest line) to just **₱0.7B — a ₱4.4B cut** — dragging the Land Tenure Security program down with it.
 
-**Congress repeatedly trims DAR's proposal.** Unusually for these reviews, in FY 2022 and FY 2023 the enacted GAA came in ₱2.4B and ₱4.5B *below* the Executive's NEP — almost entirely by cutting SPLIT. DAR is a department Congress shrinks, not enlarges.
+**The money pivots to ARB development and livelihood.** ARB Development & Sustainability rises **+₱2.4B**, led by the VISTA value-chain project (₱1.2B → ₱2.0B) and a **brand-new ₱1.4B line, *Pang-Agraryong Tulay para sa Bagong Bayanihan*.**
 
-**The agency absorbs its core budget well** — aggregate disbursement-to-allotment held in a tight 79–98% band, and the core domestic programs (Land Acquisition and Distribution, agrarian legal assistance, social infrastructure) all disburse at 94–99%.
+**Core Land Acquisition & Distribution (LAD) grows modestly** to ₱3.1B and is again the largest single line.
 
-**But foreign-assisted projects absorb poorly.** SPLIT disbursed only 31–38% of its allotment; the newer VISTA project just 19% in 2025. **The 2026 budget therefore loads the agency with the program type it has the weakest track record absorbing** — making project execution, not appropriation, the central delivery risk.
+**A red flag for advocates.** The projects being scaled up are the ones DAR absorbs *worst*. **VISTA disbursed just 19% of its allotment in 2025**, yet is proposed to nearly double; the new Pang-Agraryong Tulay line has no track record at all. Meanwhile the domestic core — LAD, legal assistance, social infrastructure — disburses at **94–99%**, versus 31–38% for SPLIT.
 
-> The DAR paradox in one line: the department spends its own programs almost perfectly and its borrowed-money projects barely at all — and the 2026 budget triples down on the latter.
+**Congress has cut DAR's proposals before.** In FY 2022 and FY 2023 the enacted GAA came in ₱2.4B and ₱4.5B *below* the Executive's NEP — so the FY 2027 numbers are a starting point advocates can shape, not a settled outcome.
+
+> The scrutiny question in one line: is a smaller budget that leans on weak-absorbing and untested project lines a credible plan to finish agrarian reform — or a headline figure the delivery record can't support?
 
 # A note on the data {#data-notes}
 
-**Period.** FY 2018 through FY 2026 for NEP and GAA. Execution data — Adjusted Appropriations, Adjusted Allotments, Obligations, Disbursements — is available for FY 2018–2025; FY 2026 reflects the proposed/enacted budget only.
+**Period.** FY 2018 through FY 2027. **FY 2027 is the NEP — the Executive's proposal — only:** it has not been debated or enacted, and has no execution data. FY 2026 reflects NEP/GAA only. Execution data (Adjusted Allotments, Obligations, Disbursements) is available for FY 2018–2025, so **the most recent per-P/A/P utilization shown throughout is FY 2025**.
+
+**Reading the proposal.** Wherever a chart or table shows FY 2027, the figure is the *proposed* amount. Whether it survives Congress — which has cut DAR's proposals before — is exactly what advocates can shape. The FY 2025 execution columns are included alongside the 2027 proposal so a reader can weigh each line's *track record* against what it is now being handed.
+
+**Key terms.** NEP = National Expenditure Program (the Executive's proposal); GAA = General Appropriations Act (what Congress enacts). Allotment = what an agency is cleared to spend; Obligation = a spending commitment; Disbursement = cash actually paid out. **D/A** (disbursements ÷ allotment) is the sharpest measure of whether money reaches the ground.
 
 **One known data gap.** FY 2018 execution data for the foreign-assisted projects (SPLIT, IARCDSP, MINSAAD, CONVERGE, IPAC, VISTA) and two small building lines is not yet encoded. The 2018 aggregate execution totals therefore exclude those P/A/Ps — about ₱2B of GAA. To avoid presenting biased ratios, the **absorption charts cover FY 2019–2025 only**, and the 2018 execution figures are masked in the evolution chart and table. Subsequent years are complete.
 
@@ -259,15 +265,15 @@ ggplot(evo, aes(year, total, color = metric, group = metric)) +
   scale_color_manual(values = exec_pal) +
   scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6),
                      limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
-  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
-  labs(title = "DAR-OSEC budget, NEP through Disbursements (FY 2018–2026)",
-       subtitle = "A flat PHP 8–10B budget for eight years — then a sharp jump to a proposed PHP 16.8B",
+  scale_x_continuous(breaks = c(seq(2018, 2026, 2), 2027)) +
+  labs(title = "DAR-OSEC budget, NEP through Disbursements (FY 2018–2027)",
+       subtitle = "A flat PHP 8–10B budget for eight years, a one-year jump to PHP 16.8B (2026) — then a proposed pull-back to PHP 14.7B (2027)",
        x = NULL, y = NULL,
-       caption = "Execution lines start at FY 2019: 2018 foreign-assisted-project SAAODB not yet encoded. FY 2026 reflects NEP/GAA only.") +
+       caption = "Execution lines start at FY 2019 (2018 foreign-assisted SAAODB not yet encoded). FY 2026 = NEP/GAA only; FY 2027 = NEP (proposed) only.") +
   theme_dar() + guides(color = guide_legend(nrow = 1))
 ```
 
-The flat stretch from 2018 to 2025 is the most striking thing here — in nominal terms, DAR's budget barely moved for eight years while health, education, and social welfare grew steadily. The 2026 proposal breaks the pattern decisively. Notice too that in two years (2022 and 2023) the **NEP line sits well above the GAA line**: those are the years Congress cut the proposal, a reversal explored below. The table gives the figures (2018 execution masked, per the data note).
+The flat stretch from 2018 to 2025 is the most striking long-run feature — in nominal terms, DAR's budget barely moved for eight years while health, education, and social welfare grew steadily. The 2026 enacted budget broke the pattern; the **FY 2027 proposal (the rightmost point, NEP only) steps back down to ₱14.7B** — still above the old baseline, but a clear pull-back. Notice too that in two years (2022 and 2023) the **NEP line sits well above the GAA line**: those are years Congress *cut* the proposal, a reversal explored below — and a reminder that the 2027 proposal is not the last word. The table gives the figures (2018 execution masked, per the data note; the 2027 column carries the proposal only).
 
 ```{r tbl-evolution}
 tbl_evo <- totals_by_year %>%
@@ -391,21 +397,95 @@ ggplot(top10, aes(pap, GAA)) +
   theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"))
 ```
 
-### Full P/A/P ranking (interactive) {.unnumbered}
+### The master table: every P/A/P, 2025–2027, with its spending record {.unnumbered}
 
-DAR is compact enough that the full list fits comfortably. Every P/A/P, ranked by 2026 GAA, with the 2026 NEP, the prior-year (2025) enacted figure, and the implied 2026 net Congressional change.
+This is the table built for scrutiny. It lists **every P/A/P in the department** — not just the top lines — with the proposed and enacted amounts for **FY 2025, 2026, and the new FY 2027 proposal** side by side, and, crucially, each line's **most recent actual spending record (FY 2025 utilization)**. The rightmost columns show what the agency was allotted, what it committed (obligated), what it actually paid out (disbursed), and the disbursement rate (**D/A**) — so a reader can weigh each 2027 proposal against the line's demonstrated ability to spend. It is sortable, searchable, and exportable to CSV. Amounts are in **PHP billions**; the FY 2027 GAA column is intentionally blank (not yet enacted).
 
-```{r tbl-allpaps}
-all_paps_2026 <- pap_year %>% filter(year == 2026) %>%
-  transmute(`P/A/P` = pap, `NEP 2026 (B)` = NEP/1e9, `GAA 2026 (B)` = GAA/1e9) %>%
-  arrange(desc(`GAA 2026 (B)`))
-gaa25 <- pap_year %>% filter(year == 2025) %>% transmute(`P/A/P` = pap, g25 = GAA/1e9)
-all_paps_2026 <- all_paps_2026 %>% left_join(gaa25, by = "P/A/P") %>%
-  rename(`GAA 2025 (B)` = g25) %>%
-  mutate(`Net chg NEP to GAA 2026 (B)` = `GAA 2026 (B)` - `NEP 2026 (B)`)
-dt_table(all_paps_2026, page = 15,
-         money_cols = c("NEP 2026 (B)","GAA 2026 (B)","GAA 2025 (B)","Net chg NEP to GAA 2026 (B)"))
+```{r tbl-master}
+mw <- df_long %>%
+  group_by(pap, category, year, metric) %>%
+  summarise(amount = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = c(metric, year), values_from = amount)
+getcol <- function(df, nm) if (nm %in% names(df)) df[[nm]] else NA_real_
+master <- tibble(
+  `P/A/P`             = mw$pap,
+  `Program`           = str_replace(mw$category, " Program$", ""),
+  `NEP 2025 (B)`      = getcol(mw,"NEP_2025")/1e9,
+  `GAA 2025 (B)`      = getcol(mw,"GAA_2025")/1e9,
+  `NEP 2026 (B)`      = getcol(mw,"NEP_2026")/1e9,
+  `GAA 2026 (B)`      = getcol(mw,"GAA_2026")/1e9,
+  `NEP 2027 (B)`      = getcol(mw,"NEP_2027")/1e9,
+  `Proposed chg 26→27 (B)` = (getcol(mw,"NEP_2027") - getcol(mw,"GAA_2026"))/1e9,
+  `Allot 2025 (B)`    = getcol(mw,"AdjAllot_2025")/1e9,
+  `Oblig 2025 (B)`    = getcol(mw,"Obligations_2025")/1e9,
+  `Disb 2025 (B)`     = getcol(mw,"Disbursements_2025")/1e9,
+  `D/A 2025`          = getcol(mw,"Disbursements_2025")/getcol(mw,"AdjAllot_2025")
+) %>% arrange(desc(`NEP 2027 (B)`))
+dt_table(master, page = 25,
+         money_cols = c("NEP 2025 (B)","GAA 2025 (B)","NEP 2026 (B)","GAA 2026 (B)","NEP 2027 (B)",
+                        "Proposed chg 26→27 (B)","Allot 2025 (B)","Oblig 2025 (B)","Disb 2025 (B)"),
+         pct_cols = "D/A 2025")
 ```
+
+<p class="kbl-note">Sort by <em>NEP 2027</em> to see the proposal's priorities; sort by <em>D/A 2025</em> to see which lines actually spend what they are given. A line with a large FY 2027 proposal but a low D/A 2025 is where the gap between ambition and delivery is widest. Blank cells mean no appropriation or no execution record in that year (the FY 2027 GAA is blank because the budget is not yet enacted; some project lines have no FY 2025 execution).</p>
+
+# The FY 2027 proposal: what is being cut, what is being scaled up {#proposal}
+
+The FY 2027 NEP is the live document advocates can still shape. It proposes to bring DAR-OSEC down to **₱14.7B, a 13% cut** from the 2026 enacted level — but the aggregate hides a sharp reallocation *within* the department.
+
+```{r fig-change-2627, fig.height=5.0}
+mw2 <- df_long %>% group_by(pap, year, metric) %>%
+  summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = c(metric, year), values_from = amount)
+g26v <- if ("GAA_2026" %in% names(mw2)) mw2$GAA_2026 else NA_real_
+n27v <- if ("NEP_2027" %in% names(mw2)) mw2$NEP_2027 else NA_real_
+chg <- tibble(pap = mw2$pap, g26 = g26v, n27 = n27v) %>%
+  mutate(g26 = coalesce(g26, 0), n27 = coalesce(n27, 0), delta = (n27 - g26)/1e9) %>%
+  filter(abs(delta) >= 0.1) %>% arrange(delta) %>%
+  mutate(pap = factor(str_trunc(pap, 50), levels = str_trunc(pap, 50)),
+         dir = ifelse(delta >= 0, "Proposed increase", "Proposed cut"))
+ggplot(chg, aes(delta, pap, fill = dir)) +
+  geom_col(width = 0.72) +
+  geom_text(aes(label = sprintf("%+.1f", delta), hjust = ifelse(delta >= 0, -0.15, 1.15)), size = 3.2, color = "grey20") +
+  scale_fill_manual(values = c("Proposed increase" = "#1B9E77", "Proposed cut" = "#D95F02")) +
+  scale_x_continuous(labels = function(v) paste0(peso, v, "B"), expand = expansion(mult = c(0.16, 0.16))) +
+  scale_y_discrete(labels = function(x) str_wrap(x, 40)) +
+  labs(title = "Proposed change by P/A/P, FY 2026 enacted → FY 2027 proposed",
+       subtitle = "SPLIT is cut ₱4.4B; VISTA and a brand-new ₱1.4B flagship 'Pang-Agraryong Tulay' are the main increases",
+       x = NULL, y = NULL) +
+  theme_dar() + theme(panel.grid.major.y = element_blank(),
+        panel.grid.major.x = element_line(color = "grey85")) +
+  guides(fill = guide_legend(nrow = 1))
+```
+
+The reallocation has a clear shape. The **World Bank-funded SPLIT land-titling project is wound down** (−₱4.4B), taking the Land Tenure Security program down with it. In its place the Executive scales up **livelihood and value-chain work**: the **VISTA** project nearly doubles (₱1.2B → ₱2.0B) and a **brand-new ₱1.4B flagship, *Pang-Agraryong Tulay para sa Bagong Bayanihan*,** appears for the first time. Core **Land Acquisition & Distribution** grows modestly to ₱3.1B and is again the largest single line.
+
+## The red flag: scaling up the weakest absorbers
+
+Here is what advocates should press hardest. The chart pairs each **rising** FY 2027 line with the share of its allotment it actually **disbursed in FY 2025** — its most recent track record.
+
+```{r fig-redflag, fig.height=4.2}
+risers <- tibble(
+  line = c("VISTA (value-chain)", "Pang-Agraryong Tulay (new)", "Land Acquisition & Distribution"),
+  prop_2027 = c(2.00, 1.42, 3.11),
+  da_2025   = c(0.19, NA, 0.98))
+rl <- risers %>% mutate(line = factor(line, levels = rev(line)))
+ggplot(rl, aes(da_2025, line)) +
+  geom_col(aes(x = 1), fill = "grey90", width = 0.6) +
+  geom_col(aes(fill = da_2025 < 0.6), width = 0.6) +
+  geom_text(aes(label = ifelse(is.na(da_2025), "no track record",
+                               scales::percent(da_2025, accuracy = 1)),
+                x = ifelse(is.na(da_2025), 0.02, da_2025)),
+            hjust = ifelse(is.na(rl$da_2025), 0, -0.15), size = 3.4, color = "grey20") +
+  scale_fill_manual(values = c("TRUE" = "#D95F02", "FALSE" = "#1B9E77"), guide = "none") +
+  scale_x_continuous(labels = percent_format(accuracy = 1), limits = c(0, 1.05), expand = c(0,0)) +
+  labs(title = "FY 2025 disbursement rate of the lines being scaled up in FY 2027",
+       subtitle = "The two projects growing fastest are the ones DAR spends worst — or has never run at all",
+       x = "Disbursements ÷ allotment, FY 2025", y = NULL) +
+  theme_dar() + theme(panel.grid.major.y = element_blank())
+```
+
+The pattern is the core of the scrutiny case. **VISTA disbursed just 19% of its 2025 allotment**, yet is proposed to nearly double. **Pang-Agraryong Tulay is brand new** — ₱1.4B with no track record at all. Only **LAD**, which absorbs at 98%, is a proven spender among the growing lines. Meanwhile the line being cut, SPLIT, is itself a weak absorber (33% in 2025) — so the reallocation is less "from weak to strong" than "from one weak-absorbing project to others." Two questions follow directly: **(1)** what will make VISTA and Pang-Agraryong disburse when comparable projects have not, and **(2)** is winding down SPLIT a decision that land parcelization is finished, or merely a pause that leaves titling unfunded?
 
 # Foreign-assisted projects and the 2026 surge {#fap}
 
@@ -631,32 +711,19 @@ ggplot(trend_dat, aes(year, amount, color = metric, group = metric)) +
 
 The five domestic panels are textbook clean execution — the disbursement line shadows the allotment, and **Land Acquisition and Distribution**, the agency's historic core function, tracks its budget closely throughout. **SPLIT** is the visible exception: a jagged line with wide gaps between what was enacted, what was released, and what was actually spent — the volatility that makes the 2026 scale-up a genuine risk rather than a routine expansion.
 
-# Line-item reference {#reference}
+# Questions for advocates to press {#discussion}
 
-Every P/A/P in the 2026 GAA, with the 2026 NEP and GAA, the prior-year (2025) enacted budget, and the most recent (2025) disbursement-to-allotment ratio as an execution indicator.
+These follow directly from the FY 2027 proposal and the spending record in the master table above.
 
-```{r tbl-reference}
-ref <- pap_year %>% filter(year == 2026, !is.na(GAA), GAA > 0) %>%
-  arrange(desc(GAA)) %>%
-  transmute(pap, `NEP 2026 (B)` = NEP/1e9, `GAA 2026 (B)` = GAA/1e9)
-ctx_2025 <- pap_year %>% filter(year == 2025) %>%
-  transmute(pap, `GAA 2025 (B)` = GAA/1e9,
-            `D/A 2025` = ifelse(!is.na(AdjAllot) & AdjAllot > 0, Disbursements/AdjAllot, NA_real_))
-ref %>% left_join(ctx_2025, by = "pap") %>% rename(`P/A/P` = pap) %>%
-  dt_table(page = 25, money_cols = c("NEP 2026 (B)","GAA 2026 (B)","GAA 2025 (B)"), pct_cols = "D/A 2025")
-```
-
-<p class="kbl-note">2026 execution data is not yet available; the 2025 D/A column indicates how each line has most recently absorbed.</p>
-
-# Questions for discussion {#discussion}
-
-1. **The 2026 scale-up.** The budget rises 62% in one year, with foreign-assisted projects going from 10% to 37% of the total. Is the agency's project-management and disbursement capacity ready for a budget of this shape?
-2. **SPLIT absorption.** The land-titling project has disbursed only 31–38% of its allotments. What is the binding constraint — survey and titling throughput, LGU coordination, or loan-drawdown procedures?
-3. **The NEP-to-GAA cuts.** Congress trimmed DAR's proposal sharply in 2022–2023, mostly on SPLIT. Was this a judgment on absorptive capacity — and if so, what changed for the 2026 GAA to match the NEP again?
-4. **The core vs. project divide.** DAR's domestic programs absorb at 94–99% while its externally-funded projects lag badly. Should foreign-assisted project design borrow from what makes the core programs work?
+1. **A smaller budget built on weak absorbers.** The FY 2027 NEP cuts DAR-OSEC 13% and pivots the remaining money into VISTA (19% disbursed in 2025) and the untested Pang-Agraryong Tulay. What concretely will make these lines disburse when comparable projects have not — and should Congress condition the increases on a delivery plan?
+2. **Is land titling finished, or just defunded?** SPLIT falls ₱4.4B. Is parcelization of collective titles substantially complete, or is a still-unfinished job simply losing its funding? How many hectares and beneficiaries remain?
+3. **Guarding the core.** DAR's domestic programs — LAD, legal assistance, social infrastructure — disburse at 94–99% and are the department's proven engine. Does the FY 2027 proposal protect and grow them, or hold them flat while betting on new project lines?
+4. **A brand-new ₱1.4B line.** Pang-Agraryong Tulay para sa Bagong Bayanihan appears for the first time at ₱1.4B. What exactly does it fund, how will results be measured, and what absorptive capacity is assumed?
+5. **Congress has cut before.** In FY 2022–2023 Congress trimmed DAR's NEP by ₱2.4B and ₱4.5B, mostly on SPLIT. Given that history, which parts of the FY 2027 proposal are most and least likely to survive — and where can advocacy make the biggest difference?
+6. **What the data can't yet show.** Per-P/A/P execution stops at FY 2025 and the 2018 foreign-assisted execution is unencoded. Full, timely program-level execution data would let advocates track in-year whether the 2027 money — if enacted — is actually reaching beneficiaries.
 
 ---
 
 <p class="caption">
-Underlying data: DBM-published budget and execution data for the DAR Office of the Secretary (Current New Appropriations only), FY 2018–2026. Execution measures (Allotments, Obligations, Disbursements) cover FY 2018–2025; FY 2018 SAAODB for foreign-assisted projects is pending encoding, so absorption analysis covers FY 2019–2025. Prepared as the long-form companion to the DAR-OSEC budget briefing.
+Underlying data: DBM-published budget and execution data for the DAR Office of the Secretary (Current New Appropriations only), FY 2018–2027. FY 2027 is the NEP (the Executive's proposal) only and has no execution data; FY 2026 reflects NEP/GAA only. Execution measures (Allotments, Obligations, Disbursements) cover FY 2018–2025, so the most recent per-P/A/P utilization shown is FY 2025; FY 2018 SAAODB for foreign-assisted projects is pending encoding, so aggregate absorption analysis covers FY 2019–2025. Prepared as the long-form companion to the DAR-OSEC budget briefing.
 </p>
