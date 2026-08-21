@@ -36,6 +36,7 @@ budget-analysis/
 │   └── NYC_Budget_Analysis.Rmd
 └── docs/                          # GitHub Pages root (published HTML output)
     ├── index.html
+    ├── agency-budget-utilization.html  # embed page: frames the Connect Cloud dashboard
     ├── dar-osec.html
     ├── da-osec.html
     ├── deped-osec.html
@@ -110,7 +111,16 @@ R (≥ 4.2) with `rmarkdown`, `knitr`, `dplyr`, `tidyr`, `ggplot2`, `scales`,
    > blank on its own. Knit with `self_contained: true` in the deck's YAML to get
    > one portable file (the decks currently in `docs/slides/` are already built
    > this way — remark.js and images are inlined, so they work even offline).
-7. **Commit and push.** GitHub Pages serves the update.
+7. **(Optional) Add an interactive dashboard.** The dashboards themselves are R
+   Shiny apps that run on **Posit Connect Cloud** (GitHub Pages serves static
+   files only and cannot run R) — they live in the separate `ph-budget-dashboards`
+   repo. This repo only holds a small **embed page** per dashboard that frames the
+   live app. To add one: drop the embed page into `docs/` (e.g.
+   `docs/agency-budget-utilization.html`), then add one row to the `dashboards`
+   tribble in `reports/index.Rmd` (`title`, `scope`, `href`) and re-knit
+   `index.html`. A navy dashboard band then renders at the **top of the landing
+   page**, above the reports. Leave the tribble empty to hide the band entirely.
+8. **Commit and push.** GitHub Pages serves the update.
 
 ## Data notes
 

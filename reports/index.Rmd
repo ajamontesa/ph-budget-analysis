@@ -61,6 +61,15 @@ source_note <- paste(
 )
 repo_url <- "https://github.com/ajamontesa/ph-budget-analysis/"   # GitHub repo: full code + datasets
 
+# ---- EDIT THIS: interactive dashboards -----------------------------------
+# One row per interactive dashboard. Each `href` is an embed page under docs/
+# (which frames the live Posit Connect Cloud app). Add a row when a new embed
+# page is dropped into docs/; the dashboard band renders at the top of the page.
+dashboards <- tibble::tribble(
+  ~title,                                   ~scope,                                                        ~href,
+  "Agency Budget &amp; Utilization Dashboard", "National agency level &middot; NEP, GAA &amp; utilization &middot; FY 2016&ndash;2027", "agency-budget-utilization.html"
+)
+
 # ---- EDIT THIS: one row per agency ---------------------------------------
 agencies <- tibble::tribble(
   ~short,   ~name,                                                ~unit,                     ~output,            ~status,      ~blurb, ~highlights,
@@ -165,6 +174,19 @@ body { margin:0; font-family:Arial,Helvetica,"IBM Plex Sans",sans-serif;
 .site-header .repo-cta { margin:14px 0 0; font-size:13.5px; }
 .site-header .repo-cta a { color:var(--accent); font-weight:600; text-decoration:none; }
 .site-header .repo-cta a:hover { text-decoration:underline; }
+.dash-band { margin:22px 0 8px; }
+.dash-band .dash-label { font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+             color:var(--muted); margin:0 0 12px; font-weight:600; }
+.dash-card { display:flex; align-items:center; justify-content:space-between; gap:20px;
+             background:#1B4965; color:#fff; border-radius:10px; padding:20px 24px; flex-wrap:wrap; }
+.dash-card + .dash-card { margin-top:12px; }
+.dash-card .dash-text { min-width:240px; flex:1 1 auto; }
+.dash-card .dash-title { font-size:18px; font-weight:700; margin:0 0 4px; line-height:1.25; }
+.dash-card .dash-scope { font-size:13.5px; color:#CAE9F5; margin:0; }
+.dash-card .dash-open { display:inline-block; white-space:nowrap; background:#5FA8D3; color:#0e2433;
+             font-weight:700; font-size:14.5px; text-decoration:none; padding:11px 20px; border-radius:6px; }
+.dash-card .dash-open:hover { background:#7cbde0; }
+@media (max-width:560px){ .dash-card .dash-open { width:100%; text-align:center; } }
 .sec-label { font-size:12px; letter-spacing:.08em; text-transform:uppercase;
              color:var(--muted); margin:26px 0 12px; font-weight:600; }
 .list { display:flex; flex-direction:column; gap:14px; }
@@ -247,6 +269,18 @@ repo_cta  <- if (nzchar(repo_url)) sprintf('<p class="repo-cta"><a href="%s">Vie
 cat('<div class="wrap">')
 cat(sprintf('<div class="site-header"><div class="inner"><h1>%s</h1><p class="sub">%s</p><p class="intro">%s</p>%s</div></div>',
             esc(site_title), esc(site_subtitle), esc(site_intro), repo_cta))
+
+# ---- Interactive dashboards (top of page) --------------------------------
+if (exists("dashboards") && nrow(dashboards) > 0) {
+  dash_cards <- apply(dashboards, 1, function(d) sprintf(
+    '<div class="dash-card"><div class="dash-text"><p class="dash-title">%s</p><p class="dash-scope">%s</p></div><a class="dash-open" href="%s">Open the dashboard &rarr;</a></div>',
+    d[["title"]], d[["scope"]], esc(d[["href"]])))
+  cat('<div class="dash-band">')
+  cat(sprintf('<p class="dash-label">Interactive dashboard%s</p>', if (nrow(dashboards) > 1) "s" else ""))
+  cat(paste(dash_cards, collapse = "\n"))
+  cat('</div>')
+}
+
 cat(sprintf('<div class="sec-label">Published reports &middot; <span class="count">%d available</span></div>', n_pub))
 cat('<div class="list">', paste(cards, collapse = "\n"), '</div>', sep = "\n")
 cat(sprintf('<div class="site-footer"><div class="inner"><p>%s</p><p>%sLast updated %s.</p></div></div>',

@@ -95,6 +95,19 @@ color:var(--ink); background:var(--bg); line-height:1.6; }
 .site-header .repo-cta { margin:14px 0 0; font-size:13.5px; }
 .site-header .repo-cta a { color:var(--accent); font-weight:600; text-decoration:none; }
 .site-header .repo-cta a:hover { text-decoration:underline; }
+.dash-band { margin:22px 0 8px; }
+.dash-band .dash-label { font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+color:var(--muted); margin:0 0 12px; font-weight:600; }
+.dash-card { display:flex; align-items:center; justify-content:space-between; gap:20px;
+background:#1B4965; color:#fff; border-radius:10px; padding:20px 24px; flex-wrap:wrap; }
+.dash-card + .dash-card { margin-top:12px; }
+.dash-card .dash-text { min-width:240px; flex:1 1 auto; }
+.dash-card .dash-title { font-size:18px; font-weight:700; margin:0 0 4px; line-height:1.25; }
+.dash-card .dash-scope { font-size:13.5px; color:#CAE9F5; margin:0; }
+.dash-card .dash-open { display:inline-block; white-space:nowrap; background:#5FA8D3; color:#0e2433;
+font-weight:700; font-size:14.5px; text-decoration:none; padding:11px 20px; border-radius:6px; }
+.dash-card .dash-open:hover { background:#7cbde0; }
+@media (max-width:560px){ .dash-card .dash-open { width:100%; text-align:center; } }
 .sec-label { font-size:12px; letter-spacing:.08em; text-transform:uppercase;
 color:var(--muted); margin:26px 0 12px; font-weight:600; }
 .list { display:flex; flex-direction:column; gap:14px; }
@@ -160,6 +173,23 @@ scope vary by agency, as each report’s data note explains.
 <a href="https://github.com/ajamontesa/ph-budget-analysis/">View the
 full code &amp; datasets on GitHub →</a>
 </p>
+</div>
+</div>
+<div class="dash-band">
+<p class="dash-label">
+Interactive dashboard
+</p>
+<div class="dash-card">
+<div class="dash-text">
+<p class="dash-title">
+Agency Budget &amp; Utilization Dashboard
+</p>
+<p class="dash-scope">
+National agency level · NEP, GAA &amp; utilization · FY 2016–2027
+</p>
+</div>
+<a class="dash-open" href="agency-budget-utilization.html">Open the
+dashboard →</a>
 </div>
 </div>
 <div class="sec-label">
