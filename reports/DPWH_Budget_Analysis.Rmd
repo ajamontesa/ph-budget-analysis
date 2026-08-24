@@ -1,753 +1,2229 @@
 ---
-title: "Department of Public Works and Highways"
-subtitle: "Long-run appropriations and the geography of realignments, FY 1988–2026"
-date: "`r format(Sys.Date(), '%B %Y')`"
+title: "DPWH Budget Analysis"
+subtitle: "Office of the Secretary — Long-Run Appropriations"
+author: "AJ Montesa / People's Budget Coalition"
+date: "`r format(Sys.Date(), '%d %B %Y')`"
 output:
   html_document:
-    theme: flatly
+    md_extensions: "-smart"
     toc: true
-    toc_float:
-      collapsed: false
-      smooth_scroll: true
+    toc_float: true
     toc_depth: 3
     number_sections: true
-    code_folding: hide
-    self_contained: true
+    theme: flatly
     df_print: paged
-    fig_width: 10
-    fig_height: 5.5
 ---
 
-```{css, echo=FALSE}
-:root { --ink:#1a1a1a; --muted:#6e6e6e; --accent:#08519C; --rule:#e6e6e6; }
-body, .main-container { font-family: Arial, Helvetica, "IBM Plex Sans", sans-serif; color: var(--ink); }
-.main-container { max-width: 980px; }
-h1, h2, h3, h4 { font-family: Arial, Helvetica, sans-serif; font-weight: 600; }
-h1.title { font-size: 30px; }
-h1 { font-size: 25px; margin-top: 1.6em; padding-top: .3em; border-top: 2px solid var(--rule); }
-h2 { font-size: 20px; margin-top: 1.4em; }
-h3 { font-size: 17px; color: #333; }
-.author, .date { color: var(--muted); }
-p, li { font-size: 15.5px; line-height: 1.62; }
-blockquote { border-left: 3px solid var(--accent); background: #f5f8fc; color: #25405e;
-  font-size: 14.5px; padding: .6em 1em; margin: 1.2em 0; }
-.lead { font-size: 16.5px; color: #2b2b2b; }
-.takeaway { background: #f7f9fb; border: 1px solid var(--rule); border-radius: 6px;
-  padding: .4em 1.1em; margin: 1.1em 0; }
-.takeaway p, .takeaway li { font-size: 14.5px; }
-.caption, .figcaption { color: var(--muted); font-size: 13px; }
-table.dataTable { font-size: 13px; }
-.kbl-note { color: var(--muted); font-size: 12.5px; margin-top: -.5em; }
-hr { border-top: 1px solid var(--rule); }
-.home-link { font-size: 13.5px; }
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE, message = FALSE, warning = FALSE,
+  fig.width = 9, fig.height = 4.6, dpi = 200,
+  out.width = "100%", fig.align = "center"
+)
 ```
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
-                     dpi = 150, fig.align = "center", out.width = "100%")
+```{r libraries}
+library(tidyverse)
+library(readxl)
+library(scales)
+library(ggtext)
+library(ggrepel)
+library(knitr)
+library(kableExtra)
+```
 
-# ---- Self-contained setup ------------------------------------------------
-options(knitr.kable.NA = "")
-library(dplyr); library(tidyr); library(stringr); library(readxl)
-library(ggplot2); library(scales); library(forcats); library(ggrepel)
-library(knitr); library(kableExtra); library(DT); library(lubridate)
+```{r globals}
+# --- File path -------------------------------------------------------------
+# Path to the compiled data file (sourced from DBM publications).
+data_path <- "../data/Compiled_-_DPWH.xlsx"
 
-.candidates <- c("../data/Compiled_-_DPWH.xlsx", "data/Compiled_-_DPWH.xlsx",
-                 "Compiled - DPWH.xlsx", "Compiled_-_DPWH.xlsx")
-data_path <- .candidates[file.exists(.candidates)][1]
-stopifnot(!is.na(data_path))
+# --- Which series to deflate by --------------------------------------------
+# Either "CPI" or "GDPDeflator" (both indexed to 2018 = 100).
+deflator_choice <- "CPI"
 
-# Consistent house plot theme (Arial, readable sizes, no vertical gridlines)
-theme_dpwh <- function(base_size = 12, grid_x = FALSE) {
-  th <- theme_minimal(base_size = base_size, base_family = "sans") +
-    theme(
-      plot.title = element_text(face = "bold", size = base_size + 1, color = "black"),
-      plot.subtitle = element_text(color = "grey30", size = base_size - 1),
-      plot.caption = element_text(color = "grey45", size = base_size - 3, hjust = 0),
-      panel.grid.minor = element_blank(),
-      axis.title = element_text(size = base_size - 1, color = "grey20"),
-      axis.text = element_text(color = "grey25", size = base_size - 2),
-      legend.position = "bottom", legend.title = element_blank(),
-      legend.text = element_text(size = base_size - 2),
-      strip.text = element_text(face = "bold", size = base_size - 2, lineheight = 0.9))
-  if (!grid_x) th <- th + theme(panel.grid.major.x = element_blank())
-  th
-}
-
-# Fixed NEP/GAA/Actuals palette and the eight-programme house palette
+# --- Colours ---------------------------------------------------------------
+# Fixed mapping so NEP/GAA/Actuals are consistent across every plot.
 item_levels <- c("NEP", "GAA", "Actual Obligations")
 item_colors <- c("NEP" = "#ffa6b0", "GAA" = "#3994fc", "Actual Obligations" = "#bcbef2")
+
+# --- DPWH programs (consistent labelling began with the 2018 budget) -------
 dpwh_programs <- c("General Administration and Support", "Support to Operations",
                    "Asset Preservation Program", "Network Development Program",
                    "Bridge Program", "Flood Management Program",
                    "Local Program", "Convergence and Special Support Program")
-program_colors <- c(
-  "General Administration and Support"      = "#bcbef2", "Support to Operations" = "#c8a8e9",
-  "Asset Preservation Program"              = "#3994fc", "Network Development Program" = "#6fcfd6",
-  "Bridge Program"                          = "#8fd9a8", "Flood Management Program" = "#ffe27a",
-  "Local Program"                           = "#ffcf8b", "Convergence and Special Support Program" = "#ffa6b0")
-# Per-fiscal-year palette (one hue family per Congress, light=old to dark=new)
-fy_colors <- c(
-  "2014" = "#fbe7a4", "2015" = "#f3cd4e", "2016" = "#d4a417",
-  "2017" = "#f6b0a8", "2018" = "#e36253", "2019" = "#c22d22",
-  "2020" = "#ddd0ee", "2021" = "#b89ad9", "2022" = "#8a5cc0",
-  "2023" = "#b9d4f6", "2024" = "#6fa6e8", "2025" = "#2f6fd0",
-  "2026" = "#5cc0c4")
 
-# Presidential administrations and Philippine Congresses (long-run reference lines)
-administrations_ph <- tibble(
-  President = c("C. Aquino", "Ramos", "Estrada", "Arroyo", "B. Aquino III", "Duterte", "Marcos Jr."),
-  Start = as.Date(c("1986-02-25","1992-06-30","1998-06-30","2001-01-20","2010-06-30","2016-06-30","2022-06-30")))
+# Eight-colour palette built around the house three (#bcbef2 / #ffa6b0 / #3994fc):
+# cool tones for the engineering programs, warm tones for the discretionary ones.
+program_colors <- c(
+  "General Administration and Support"      = "#bcbef2",  # periwinkle (house)
+  "Support to Operations"                   = "#c8a8e9",  # soft violet
+  "Asset Preservation Program"              = "#3994fc",  # blue (house)
+  "Network Development Program"             = "#6fcfd6",  # teal
+  "Bridge Program"                          = "#8fd9a8",  # mint
+  "Flood Management Program"                = "#ffe27a",  # warm yellow
+  "Local Program"                           = "#ffcf8b",  # apricot
+  "Convergence and Special Support Program" = "#ffa6b0"   # salmon (house)
+)
+
+# --- Philippine Congresses (for reference lines) ---------------------------
+# Short ordinal labels so they don't crowd the 1988-2026 span.
 congresses_ph2 <- tibble(
-  Congress = c("8th","9th","10th","11th","12th","13th","14th","15th","16th","17th","18th","19th","20th"),
-  Congress_Start = as.Date(c("1987-07-27","1992-07-27","1995-07-24","1998-07-27","2001-07-23","2004-07-26",
-                             "2007-07-23","2010-07-26","2013-07-22","2016-07-25","2019-07-22","2022-07-25","2025-07-28")))
+  Congress = c("8th", "9th", "10th", "11th", "12th", "13th", "14th",
+               "15th", "16th", "17th", "18th", "19th", "20th"),
+  Congress_Start = as.Date(c("1987-07-27", "1992-07-27", "1995-07-24", "1998-07-27",
+                             "2001-07-23", "2004-07-26", "2007-07-23", "2010-07-26",
+                             "2013-07-22", "2016-07-25", "2019-07-22", "2022-07-25",
+                             "2025-07-28"))
+)
+
+# --- Presidential administrations (inauguration dates) ---------------------
+administrations_ph <- tibble(
+  President = c("C. Aquino", "Ramos", "Estrada", "Arroyo",
+                "B. Aquino III", "Duterte", "Marcos Jr."),
+  Start = as.Date(c("1986-02-25", "1992-06-30", "1998-06-30", "2001-01-20",
+                    "2010-06-30", "2016-06-30", "2022-06-30"))
+)
+
+# Clamp the first era to the left edge of the data so its label stays on-canvas,
+# and only draw boundary lines that fall inside the plotted range.
 data_start      <- as.Date("1988-01-01")
 admin_labels    <- administrations_ph %>% mutate(LabelX = pmax(Start, data_start))
 admin_lines     <- administrations_ph %>% filter(Start >= data_start)
 congress_labels <- congresses_ph2     %>% mutate(LabelX = pmax(Congress_Start, data_start))
 congress_lines  <- congresses_ph2     %>% filter(Congress_Start >= data_start)
-congress_first_fy <- as.Date(c("1988-01-01","1993-01-01","1996-01-01","1999-01-01","2002-01-01","2005-01-01",
-                               "2008-01-01","2011-01-01","2014-01-01","2017-01-01","2020-01-01","2023-01-01","2026-01-01"))
 
-# Interactive reference-table helper
-dt_table <- function(df, caption = NULL, page = 10, money_cols = NULL, pct_cols = NULL, money_digits = 1) {
-  dt <- datatable(df, rownames = FALSE, caption = caption, extensions = "Buttons",
-    options = list(pageLength = page, lengthMenu = c(10, 20, 50, 100), dom = "Bfrtip",
-      buttons = c("copy", "csv"), scrollX = TRUE, autoWidth = FALSE,
-      columnDefs = list(list(className = "dt-right", targets = which(sapply(df, is.numeric)) - 1))),
-    class = "stripe hover compact")
-  if (!is.null(money_cols)) { mc <- which(names(df) %in% money_cols)
-    if (length(mc)) dt <- formatRound(dt, mc, digits = money_digits, mark = ",") }
-  if (!is.null(pct_cols)) { pc <- which(names(df) %in% pct_cols)
-    if (length(pc)) dt <- formatPercentage(dt, pc, digits = 0) }
-  dt
-}
-kbl_clean <- function(x, font = 14, ...) {
-  x %>% kable(...) %>% kable_styling(full_width = TRUE, font_size = font,
-    bootstrap_options = c("condensed", "striped", "hover"))
-}
+# --- Shared x-axis: tick + label ONLY the first budget year of each Congress
+# (FY1988 = 8th, FY1993 = 9th, ... FY2020 = 18th, FY2023 = 19th, FY2026 = 20th)
+congress_first_fy <- as.Date(c("1988-01-01", "1993-01-01", "1996-01-01", "1999-01-01",
+                               "2002-01-01", "2005-01-01", "2008-01-01", "2011-01-01",
+                               "2014-01-01", "2017-01-01", "2020-01-01", "2023-01-01",
+                               "2026-01-01"))
 ```
 
-<p class="home-link"><a href="index.html">← All agencies</a></p>
+# Overview
 
-# Overview {#overview .unnumbered}
+This first section profiles the long-run budget of the **DPWH Office of the
+Secretary**: a (still incomplete) time series of the
+**NEP**, **GAA**, and **Actual Obligations** running back to 1988. Three views
+are shown — the **nominal** trend, the department's **share of the national
+budget**, and the **real (inflation-adjusted)** trend in constant 2018 prices.
 
-<p class="lead">
-This document profiles the budget of the **Department of Public Works and Highways (DPWH)** — the government's largest infrastructure agency — from two angles: a **long-run time series stretching back to 1988**, and a **fine-grained map of how money moves between the President's proposal and the enacted law**, both by program and across the department's 200-plus operating units.
-</p>
+All figures throughout this document are drawn from the National Expenditure
+Program (NEP), General Appropriations Act (GAA), and related budget documents
+published by the Department of Budget and Management (DBM).
 
-The reason for this approach is a data limitation. DPWH's budget-execution reports (SAAODB) are not available at the program/activity/project level, so the peso-by-peso *execution* chain cannot be traced down to individual line items. What *is* available, and unusually deep, is the **appropriations** record: a near-four-decade series of proposed, enacted, and (where sourced) obligated totals, plus a complete office-by-office breakdown of the NEP and GAA from FY 2014 to FY 2026. So this review leans into those strengths — the **long arc** of the department's budget and **the geography of Congressional realignment** — rather than absorption ratios.
+A few conventions:
 
-Two themes run through it. First, DPWH has grown from a roughly 6–8% slice of the national budget in the 1990s–2000s to a mid-teens share in recent years, with the **2026 GAA a sharp, anomalous contraction**. Second, the budget process is a sustained tug-of-war between the executive, which concentrates the proposal in the **Central Office**, and Congress, which **systematically redirects money toward named district engineering offices** — every year on record — making the geography of those insertions, and the 2019 line-item veto that briefly reversed them, the central story.
-
-# Executive summary {#exec}
-
-**DPWH's footprint roughly doubled over the long run.** From about 6–8% of the national budget in the 1990s–2000s, the department rose to a mid-teens share (around 17% of the GAA in 2024–2025) — evidence its expansion outpaced overall budget growth rather than merely tracking it. In real (2018-constant) terms, much of the headline post-2018 "growth" is the price level catching up; the real GAA was broadly flat between 2018 and 2023 before resuming its climb.
-
-**The 2026 GAA is a sharp anomaly.** Against a proposed ₱881B (New + Automatic Appropriations), the enacted 2026 GAA falls to ₱531B — the reverse of the usual upward realignment, and a one-year collapse in DPWH's budget share to under 8%. By program, **Flood Management is realigned down by roughly ₱246B** in 2026 — the largest single-program cut on record.
-
-**Congress reshapes the program mix.** The **Convergence and Special Support Program** gains year after year, peaking at **+₱265B over its proposal in 2025**, while Network Development and Bridge programs are routinely trimmed from proposed levels.
-
-**The 2019 line-item veto was the largest in recent memory.** Congress raised DPWH's New Appropriations only modestly (₱544.5B proposed → ₱549.4B legislated) but heavily reallocated the money, mostly into the Local Program; the President then vetoed **₱95.4B**, bringing the enacted total to ₱454.0B. The veto fell overwhelmingly on the **Central Office (₱74B of the ₱95B struck)**.
-
-**The Unprogrammed Appropriations became a major channel.** After a decade of negligible draws, UA releases to DPWH surged from ₱16B (2022) to ₱89B (2023) to **₱245B (2024)** — roughly a quarter of the department's regular budget that year — yet a large share went unobligated (about **54% utilized in 2024, 50% in 2025**).
-
-**Most of the money sits centrally — but Congress moves it outward.** The Central Office holds 60–75% of the enacted budget (peaking at 75% in 2025). Yet the executive's *proposal* concentrates it even more, and in **every year on record Congress shifts the budget away from the Central Office toward district engineering offices** — a swing of nearly 30 percentage points in 2021 and 2023.
-
-**A transparent screen nominates the district offices that merit scrutiny.** Scoring every office on size, intensity, persistence, and administration-tilt of its realignments, a consistent shortlist emerges — led by **Batangas 4th** (₱24.3B of realignments, 69% of its enacted budget, padded in all ten years), with **Bulacan 1st**, **Sorsogon**, **Abra** (the clearest Duterte-era office), and **Metro Manila 3rd** (its Marcos-era mirror) close behind.
-
-> DPWH's budget is less a story of execution than of *redistribution*: a proposal lodged centrally, a Congress that reliably pushes money to named districts, and the occasional dramatic correction — a veto, a flood-control cut — that briefly reveals how the system normally works.
-
-# A note on the data {#data-notes}
-
-**Why this report focuses on appropriations.** DPWH's SAAODB execution data is not published at the P/A/P level, so this report does not compute program-level absorptive capacity. It instead exploits the deep **appropriations** record: the long-run total series, the program breakdown, and the office-by-office NEP/GAA.
-
-**Three data layers, three time spans.**
-
-- The **long-run series** (Section *The long-run budget*) covers FY 1988–2026 for the headline **New + Automatic Appropriations**, with NEP, GAA, and (where sourced) Actual Obligations. Points mark observed years; the connecting line is interpolated, so visible gaps flag where encoding is still pending.
-- The **program breakdown** (FY 2018–2026) uses **New Appropriations** only; consistent program labelling began with the 2018 budget. Program totals reconcile to the New-Appropriations column.
-- The **operating-unit breakdown** (FY 2014–2026) covers NEP and GAA across 200-plus offices, spanning the 16th–20th Congresses.
-
-**On the 2019 GAA.** The GAA figures throughout are the **enacted, post-veto** levels. "Legislated (pre-veto)" reconstructs what Congress passed by adding the vetoed amounts back. Every 2019 realignment figure therefore reflects the combined effect of Congress's reallocation *and* the President's ₱95.4B veto; the veto section isolates the two.
-
-**On the Unprogrammed Appropriations (UA).** The UA is a standby fund released only when revenues exceed targets or new financing is secured. Obligation data before 2013 could not be sourced; FY 2015–2017 carried no UA releases to DPWH.
-
-**On "realignment".** Throughout, *realignment* means the simple arithmetic difference **GAA − NEP** for a program or office. It is not, on its own, evidence of irregularity — but its size, persistence, and geographic concentration are what make particular offices worth a closer look. Amounts are nominal pesos unless a real (2018-constant) series is named.
-
-# The long-run budget, 1988–2026 {#longrun}
-
-The headline series is **New + Automatic Appropriations** — the full agency budget including automatic items — which is also the numerator for DPWH's share of the national budget.
+- Amounts are reported in **thousand pesos**; everything below is
+  rescaled to **PHP billions** (`/ 1e6`).
+- The headline series is **New + Automatic Appropriations** (the full
+  agency budget, including automatic items). This is also the numerator used
+  for the share of the national budget.
+- Points mark **years with observed data**; the connecting line is interpolated,
+  so visible gaps flag where encoding is still pending.
 
 ```{r load-data}
+# New + Automatic Appropriations (the headline DPWH OSec budget)
 dpwh_newauto <- read_xlsx(data_path, sheet = "DPWH_OSec", range = "A2:D41") %>%
   rename(FY = 1, NEP = 2, GAA = 3, `Actual Obligations` = 4)
+
+# Total national budget (denominator for DPWH's share)
 total_budget <- read_xlsx(data_path, sheet = "DPWH_OSec", range = "K2:N41") %>%
   rename(FY = 1, NEP = 2, GAA = 3, `Actual Obligations` = 4)
+
+# Price indices (2018 = 100)
 price_index <- read_xlsx(data_path, sheet = "DPWH_OSec", range = "U2:W41") %>%
   rename(FY = 1, CPI = 2, GDPDeflator = 3)
 
+# Tidy long table with nominal, real, and share columns
 dpwh_long <- dpwh_newauto %>%
   pivot_longer(-FY, names_to = "Item", values_to = "Amount") %>%
-  left_join(total_budget %>% pivot_longer(-FY, names_to = "Item", values_to = "TotalBudget"), by = c("FY","Item")) %>%
+  left_join(
+    total_budget %>% pivot_longer(-FY, names_to = "Item", values_to = "TotalBudget"),
+    by = c("FY", "Item")
+  ) %>%
   left_join(price_index, by = "FY") %>%
-  mutate(FY_date = as_date(str_c(FY, "-01-01")), Item = factor(Item, levels = item_levels),
-         AmountB = Amount / 1e6, RealB = AmountB / (CPI / 100), Share = Amount / TotalBudget)
+  mutate(
+    FY_date  = as_date(str_c(FY, "-01-01")),
+    Item     = factor(Item, levels = item_levels),
+    AmountB  = Amount / 1e6,                       # thousand pesos -> PHP billions
+    Deflator = .data[[deflator_choice]],
+    RealB    = AmountB / (Deflator / 100),         # constant 2018 prices
+    Share    = Amount / TotalBudget
+  )
 ```
 
-## The nominal trend
+# The Long View: DPWH Appropriations Since 1988
 
-```{r plot-nominal, fig.height=5}
-ggplot(dpwh_long %>% filter(!is.na(AmountB))) +
+The four views below track the DPWH Office of the Secretary's budget across nearly
+four decades — in nominal pesos, as a share of the national budget, in
+inflation-adjusted terms, and in a single reference table — before the rest of
+the document turns to the program, item, and district-level detail of recent years.
+
+## Nominal Trend
+
+```{r plot-nominal}
+ggplot(data = dpwh_long %>% filter(!is.na(AmountB))) +
   geom_hline(yintercept = 0) +
-  geom_vline(data = admin_lines, aes(xintercept = Start), linetype = "dashed", linewidth = 0.4, alpha = 0.45) +
+  geom_vline(data = admin_lines, aes(xintercept = Start),
+             linetype = "dashed", linewidth = 0.4, alpha = 0.45) +
   geom_vline(data = congress_lines, aes(xintercept = Congress_Start), alpha = 0.10) +
-  geom_text(data = admin_labels, aes(x = LabelX, y = Inf, label = President), size = 2.6, fontface = "bold", hjust = -0.05, vjust = 1.3) +
-  geom_text(data = congress_labels, aes(x = LabelX, y = Inf, label = Congress), size = 2.0, color = "gray55", hjust = -0.1, vjust = 3.0) +
-  geom_path(aes(FY_date, AmountB, color = Item), linewidth = 1.1) +
-  geom_point(aes(FY_date, AmountB, color = Item), size = 1.2) +
+  geom_text(data = admin_labels, aes(x = LabelX, y = Inf, label = President),
+            size = 2.4, fontface = "bold", hjust = -0.05, vjust = 1.2) +
+  geom_text(data = congress_labels, aes(x = LabelX, y = Inf, label = Congress),
+            size = 1.9, color = "gray55", hjust = -0.1, vjust = 2.9) +
+  geom_path(aes(x = FY_date, y = AmountB, color = Item), linewidth = 1.1) +
+  geom_point(aes(x = FY_date, y = AmountB, color = Item), size = 1.1) +
   scale_x_date(date_labels = "FY '%y", breaks = congress_first_fy, minor_breaks = NULL) +
-  scale_y_continuous(labels = comma, expand = expansion(mult = c(0, 0.05))) +
+  scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.05))) +
   scale_color_manual(values = item_colors) +
   coord_cartesian(ylim = c(0, NA)) +
-  labs(x = NULL, y = "PHP billions", title = "DPWH: New + Automatic Appropriations, FY 1988–2026") +
-  theme_dpwh() + theme(legend.position = c(0.15, 0.72))
+  labs(x = NULL, y = "PHP billions", color = NULL,
+       title = "DPWH Office of the Secretary: New + Automatic Appropriations",
+       caption = "**Data Sources:** NEP and GAA documents, 1988-2026.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_minimal() +
+  theme(legend.position = c(0.15, 0.7),
+        panel.grid.major.x = element_blank(),
+        panel.grid = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.caption = element_markdown(size = 6),
+        axis.text.x = element_text(size = 7))
 ```
 
-In nominal terms the budget climbs steeply from the mid-2010s. Two deviations from the usual upward NEP-to-GAA pattern stand out: the **2019 GAA fell below the NEP** (the year of the ₱95.4B line-item veto), and the **2026 GAA drops sharply below its NEP** — the reverse of the realignment seen in most other years.
+In nominal terms the DPWH OSec budget climbs steeply from the mid-2010s. Two
+deviations from the usual NEP-to-GAA pattern stand out and are worth raising in
+hearings: the **2019 GAA fell below the NEP** (the year of the ₱95.4B line-item veto; a smaller ₱26.1B veto also trimmed the 2025 GAA),
+and the **2026 GAA drops sharply below its NEP** — the reverse of the
+usual upward realignment seen in most other years.
 
-## Share of the national budget
+## Share of the National Budget
 
-```{r plot-share, fig.height=5}
-ggplot(dpwh_long %>% filter(!is.na(Share))) +
+```{r plot-share}
+ggplot(data = dpwh_long %>% filter(!is.na(Share))) +
   geom_hline(yintercept = 0) +
-  geom_vline(data = admin_lines, aes(xintercept = Start), linetype = "dashed", linewidth = 0.4, alpha = 0.45) +
+  geom_vline(data = admin_lines, aes(xintercept = Start),
+             linetype = "dashed", linewidth = 0.4, alpha = 0.45) +
   geom_vline(data = congress_lines, aes(xintercept = Congress_Start), alpha = 0.10) +
-  geom_text(data = admin_labels, aes(x = LabelX, y = Inf, label = President), size = 2.6, fontface = "bold", hjust = -0.05, vjust = 1.3) +
-  geom_text(data = congress_labels, aes(x = LabelX, y = Inf, label = Congress), size = 2.0, color = "gray55", hjust = -0.1, vjust = 3.0) +
-  geom_path(aes(FY_date, Share, color = Item), linewidth = 1.1) +
-  geom_point(aes(FY_date, Share, color = Item), size = 1.2) +
+  geom_text(data = admin_labels, aes(x = LabelX, y = Inf, label = President),
+            size = 2.4, fontface = "bold", hjust = -0.05, vjust = 1.2) +
+  geom_text(data = congress_labels, aes(x = LabelX, y = Inf, label = Congress),
+            size = 1.9, color = "gray55", hjust = -0.1, vjust = 2.9) +
+  geom_path(aes(x = FY_date, y = Share, color = Item), linewidth = 1.1) +
+  geom_point(aes(x = FY_date, y = Share, color = Item), size = 1.1) +
   scale_x_date(date_labels = "FY '%y", breaks = congress_first_fy, minor_breaks = NULL) +
-  scale_y_continuous(labels = percent_format(accuracy = 1), expand = expansion(mult = c(0, 0.05))) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1),
+                     expand = expansion(mult = c(0, 0.05))) +
   scale_color_manual(values = item_colors) +
   coord_cartesian(ylim = c(0, NA)) +
-  labs(x = NULL, y = "% of total appropriations", title = "DPWH as a share of the national budget, FY 1988–2026") +
-  theme_dpwh() + theme(legend.position = c(0.13, 0.6))
+  labs(x = NULL, y = "% of Total Appropriations", color = NULL,
+       title = "DPWH Office of the Secretary, as a Share of the National Budget",
+       caption = "**Data Sources:** NEP and GAA documents, 1988-2026.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_minimal() +
+  theme(legend.position = c(0.13, 0.55),
+        panel.grid.major.x = element_blank(),
+        panel.grid = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.caption = element_markdown(size = 6),
+        axis.text.x = element_text(size = 7))
 ```
 
-Rescaling the same money against the size of the whole budget shows the department's footprint roughly **doubling — from ~6–8% in the 1990s–2000s to a mid-teens share** in recent years. DPWH's expansion outpaced overall budget growth, rather than merely tracking it. The 2026 NEP-to-GAA gap reappears here as a one-year contraction in the GAA share to under 8%.
+The share view rescales the same money against the size of the whole budget.
+The department's footprint roughly **doubles from ~6-8% (1990s-2000s) to a
+mid-teens share** in the latest years — evidence that DPWH's expansion outpaced
+overall budget growth, not merely tracked it. The 2026 NEP-to-GAA gap reappears
+here as a one-year contraction in the GAA share.
 
-## In real terms (constant 2018 prices)
+## Real Trend (Inflation-Adjusted)
 
-```{r plot-real, fig.height=5}
-ggplot(dpwh_long %>% filter(!is.na(RealB))) +
+```{r plot-real}
+ggplot(data = dpwh_long %>% filter(!is.na(RealB))) +
   geom_hline(yintercept = 0) +
-  geom_vline(data = admin_lines, aes(xintercept = Start), linetype = "dashed", linewidth = 0.4, alpha = 0.45) +
+  geom_vline(data = admin_lines, aes(xintercept = Start),
+             linetype = "dashed", linewidth = 0.4, alpha = 0.45) +
   geom_vline(data = congress_lines, aes(xintercept = Congress_Start), alpha = 0.10) +
-  geom_text(data = admin_labels, aes(x = LabelX, y = Inf, label = President), size = 2.6, fontface = "bold", hjust = -0.05, vjust = 1.3) +
-  geom_text(data = congress_labels, aes(x = LabelX, y = Inf, label = Congress), size = 2.0, color = "gray55", hjust = -0.1, vjust = 3.0) +
-  geom_path(aes(FY_date, RealB, color = Item), linewidth = 1.1) +
-  geom_point(aes(FY_date, RealB, color = Item), size = 1.2) +
+  geom_text(data = admin_labels, aes(x = LabelX, y = Inf, label = President),
+            size = 2.4, fontface = "bold", hjust = -0.05, vjust = 1.2) +
+  geom_text(data = congress_labels, aes(x = LabelX, y = Inf, label = Congress),
+            size = 1.9, color = "gray55", hjust = -0.1, vjust = 2.9) +
+  geom_path(aes(x = FY_date, y = RealB, color = Item), linewidth = 1.1) +
+  geom_point(aes(x = FY_date, y = RealB, color = Item), size = 1.1) +
   scale_x_date(date_labels = "FY '%y", breaks = congress_first_fy, minor_breaks = NULL) +
-  scale_y_continuous(labels = comma, expand = expansion(mult = c(0, 0.05))) +
+  scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.05))) +
   scale_color_manual(values = item_colors) +
   coord_cartesian(ylim = c(0, NA)) +
-  labs(x = NULL, y = "PHP billions (constant 2018 prices)",
-       title = "DPWH in real terms, FY 1988–2026", subtitle = "Deflated by the CPI (2018 = 100)") +
-  theme_dpwh() + theme(legend.position = c(0.15, 0.72))
+  labs(x = NULL, y = "PHP billions (constant 2018 prices)", color = NULL,
+       title = "DPWH Office of the Secretary, in Real Terms",
+       subtitle = str_c("Deflated by the ",
+                        if_else(deflator_choice == "CPI", "CPI", "GDP deflator"),
+                        " (2018 = 100)"),
+       caption = "**Data Sources:** NEP and GAA documents, 1988-2026; PSA price indices.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_minimal() +
+  theme(legend.position = c(0.15, 0.7),
+        panel.grid.major.x = element_blank(),
+        panel.grid = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.subtitle = element_text(size = 9),
+        plot.caption = element_markdown(size = 6),
+        axis.text.x = element_text(size = 7))
 ```
 
-Holding prices constant at 2018 tempers the nominal story: much of the post-2018 "growth" is the price level catching up. In real terms the GAA is **broadly flat between 2018 and 2023** before resuming its climb — a useful counterweight to headline peso figures.
+Holding prices constant at 2018 tempers the nominal story: much of the post-2018
+"growth" is the price level catching up. In real terms the GAA budget is
+**broadly flat between 2018 and 2023** before resuming its climb — a useful
+counterweight to headline peso figures in the hearing room. Switch
+`deflator_choice` to `"GDPDeflator"` in the setup chunk to see the
+GDP-deflator version.
 
-### Summary table (interactive) {.unnumbered}
+## Summary Table
 
 ```{r summary-table}
-dpwh_tbl <- dpwh_long %>%
-  mutate(code = recode(Item, "NEP"="NEP","GAA"="GAA","Actual Obligations"="AO")) %>%
+dpwh_table <- dpwh_long %>%
+  mutate(code = recode(Item, "NEP" = "NEP", "GAA" = "GAA",
+                       "Actual Obligations" = "AO")) %>%
   select(FY, code, AmountB, RealB, Share) %>%
   pivot_wider(names_from = code, values_from = c(AmountB, RealB, Share)) %>%
-  transmute(FY, `NEP (B)` = round(AmountB_NEP,1), `GAA (B)` = round(AmountB_GAA,1),
-            `Actual Oblig. (B)` = round(AmountB_AO,1),
-            `Realignment GAA−NEP (B)` = round(AmountB_GAA - AmountB_NEP,1),
-            `DPWH share of GAA` = Share_GAA, `GAA, real 2018 (B)` = round(RealB_GAA,1)) %>%
+  transmute(
+    `FY`                   = FY,
+    `NEP`                  = AmountB_NEP,
+    `GAA`                  = AmountB_GAA,
+    `Actual Oblig.`        = AmountB_AO,
+    `Realignment (GAA-NEP)`  = AmountB_GAA - AmountB_NEP,
+    `DPWH Share (GAA)`     = Share_GAA,
+    `GAA, real 2018`       = RealB_GAA
+  ) %>%
   arrange(desc(FY))
-dt_table(dpwh_tbl, page = 12,
-         money_cols = c("NEP (B)","GAA (B)","Actual Oblig. (B)","Realignment GAA−NEP (B)","GAA, real 2018 (B)"),
-         pct_cols = "DPWH share of GAA")
+
+# Pre-format so blanks read as "-" rather than NA
+fmt_b <- function(x) { xn <- suppressWarnings(as.numeric(x)); ifelse(is.na(xn), "--", comma(xn, accuracy = 0.1)) }
+
+dpwh_table %>%
+  mutate(
+    across(c(NEP, GAA, `Actual Oblig.`, `Realignment (GAA-NEP)`, `GAA, real 2018`), fmt_b),
+    `DPWH Share (GAA)` = ifelse(is.na(suppressWarnings(as.numeric(`DPWH Share (GAA)`))), "--",
+                                percent(`DPWH Share (GAA)`, accuracy = 0.1))
+  ) %>%
+  kbl(align = "lrrrrrr", escape = FALSE,
+      caption = "DPWH Office of the Secretary, New + Automatic Appropriations (PHP billions unless noted)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = FALSE, font_size = 13)
 ```
 
-# The budget by program, 2018–2026 {#byprogram}
+# The DPWH Budget by Program
 
-DPWH organises its budget into eight programs. These figures are **New Appropriations**, rescaled to PHP billions.
+DPWH organises its budget into eight **programs**. Consistent program labelling
+only begins with the **2018 budget**, so this section runs 2018-2026. These amounts are reported
+in **pesos** and are rescaled to **PHP billions** (`/ 1e9`). All
+figures are **New Appropriations** (the program totals reconcile to the
+New-Appropriations column used in Section 1).
 
 ```{r load-byprogram}
 byprogram <- read_xlsx(data_path, sheet = "NewAppro_ByProgram") %>%
-  mutate(Vetoed = replace_na(as.numeric(Vetoed), 0), Program = factor(Program, levels = dpwh_programs),
-         NEP_B = NEP/1e9, GAA_B = GAA/1e9, Veto_B = Vetoed/1e9, Realign = (GAA - NEP)/1e9)
-substantive <- setdiff(dpwh_programs, c("General Administration and Support","Support to Operations"))
+  mutate(
+    Vetoed  = replace_na(as.numeric(Vetoed), 0),
+    Program = factor(Program, levels = dpwh_programs),
+    NEP_B   = NEP / 1e9,
+    GAA_B   = GAA / 1e9,                 # final (post-veto) GAA
+    Veto_B  = Vetoed / 1e9,
+    Realign = (GAA - NEP) / 1e9          # NEP -> enacted change (negative = cut)
+  )
+
+# Substantive programs (drops the two overhead lines) for the NEP-vs-GAA panels
+substantive <- setdiff(dpwh_programs,
+                       c("General Administration and Support", "Support to Operations"))
 ```
 
-## Composition over time
+## Composition Over Time
 
-```{r plot-composition-abs, fig.height=5.2}
-ggplot(byprogram, aes(FY, GAA_B, fill = Program)) +
+```{r plot-composition-abs}
+ggplot(byprogram, aes(x = FY, y = GAA_B, fill = Program)) +
   geom_col(color = "black", linewidth = 0.2, width = 0.82) +
   geom_vline(xintercept = 2022.5, linetype = "dashed", alpha = 0.45) +
-  annotate("text", x = 2020, y = Inf, label = "Duterte", vjust = 1.4, size = 3, fontface = "bold") +
-  annotate("text", x = 2024.5, y = Inf, label = "Marcos Jr.", vjust = 1.4, size = 3, fontface = "bold") +
+  annotate("text", x = 2020,   y = Inf, label = "Duterte",
+           vjust = 1.4, size = 2.6, fontface = "bold") +
+  annotate("text", x = 2024.5, y = Inf, label = "Marcos Jr.",
+           vjust = 1.4, size = 2.6, fontface = "bold") +
   scale_x_continuous(breaks = 2018:2026) +
-  scale_y_continuous(labels = comma, expand = expansion(mult = c(0, 0.07))) +
+  scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.07))) +
   scale_fill_manual(values = program_colors, labels = function(x) str_wrap(x, 26)) +
-  labs(x = NULL, y = "PHP billions", title = "DPWH budget composition by program (GAA)") +
+  labs(x = NULL, y = "PHP billions", fill = NULL,
+       title = "DPWH Budget Composition by Program (GAA)",
+       caption = "**Data Sources:** GAA documents, 2018-2026.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
   guides(fill = guide_legend(ncol = 2)) +
-  theme_dpwh() + theme(legend.text = element_text(size = 8), legend.key.size = unit(0.4, "cm"))
+  theme_minimal() +
+  theme(legend.position = "bottom", legend.text = element_text(size = 6.5),
+        legend.key.size = unit(0.35, "cm"),
+        panel.grid.minor = element_blank(),
+        panel.grid.major.x = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.caption = element_markdown(size = 6))
 ```
 
-```{r plot-composition-share, fig.height=5.2}
-ggplot(byprogram, aes(FY, GAA_B, fill = Program)) +
-  geom_col(color = "black", linewidth = 0.2, width = 0.82, position = position_fill()) +
+```{r plot-composition-share}
+ggplot(byprogram, aes(x = FY, y = GAA_B, fill = Program)) +
+  geom_col(color = "black", linewidth = 0.2, width = 0.82,
+           position = position_fill()) +
   geom_vline(xintercept = 2022.5, linetype = "dashed", alpha = 0.45) +
+  annotate("text", x = 2020,   y = Inf, label = "Duterte",
+           vjust = 1.4, size = 2.6, fontface = "bold") +
+  annotate("text", x = 2024.5, y = Inf, label = "Marcos Jr.",
+           vjust = 1.4, size = 2.6, fontface = "bold") +
   scale_x_continuous(breaks = 2018:2026) +
-  scale_y_continuous(labels = percent, expand = expansion(mult = c(0, 0.04))) +
+  scale_y_continuous(labels = scales::percent, expand = expansion(mult = c(0, 0.07))) +
   scale_fill_manual(values = program_colors, labels = function(x) str_wrap(x, 26)) +
-  labs(x = NULL, y = "Share of DPWH GAA", title = "DPWH budget composition by program (100% stacked)") +
+  labs(x = NULL, y = "Share of DPWH GAA", fill = NULL,
+       title = "DPWH Budget Composition by Program (GAA, 100% stacked)",
+       caption = "**Data Sources:** GAA documents, 2018-2026.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
   guides(fill = guide_legend(ncol = 2)) +
-  theme_dpwh() + theme(legend.text = element_text(size = 8), legend.key.size = unit(0.4, "cm"))
+  theme_minimal() +
+  theme(legend.position = "bottom", legend.text = element_text(size = 6.5),
+        legend.key.size = unit(0.35, "cm"),
+        panel.grid.minor = element_blank(),
+        panel.grid.major.x = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.caption = element_markdown(size = 6))
 ```
 
-The composition shift is stark: the **Convergence and Special Support Program** (salmon) swells under the current administration, while the **Network Development** and **Flood Management** shares contract — most dramatically in the 2026 GAA, where Flood Management is cut to a sliver. The dashed line marks the Duterte-to-Marcos transition (FY 2023 is the first budget proposed by the current administration).
+The composition shift is stark: the **Convergence and Special Support Program**
+(apricot/salmon) swells under the current administration, while the **Network
+Development** and **Flood Management** shares contract — most dramatically in the
+**2026 GAA**, where Flood Management is cut to a sliver. The dashed line marks the
+Duterte-to-Marcos transition (FY2023 is the first budget proposed by the current
+administration).
 
 ```{r table-composition}
-comp_tbl <- byprogram %>% transmute(FY, Program, GAA_B = round(GAA_B,1)) %>%
-  pivot_wider(names_from = FY, values_from = GAA_B) %>% arrange(factor(Program, levels = dpwh_programs))
-dt_table(comp_tbl %>% rename(`Program — GAA (B)` = Program), page = 8)
+byprogram %>%
+  transmute(FY, Program, GAA_B) %>%
+  pivot_wider(names_from = FY, values_from = GAA_B) %>%
+  arrange(factor(Program, levels = dpwh_programs)) %>%
+  mutate(across(-Program, ~comma(.x, accuracy = 0.1))) %>%
+  kbl(align = c("l", rep("r", 9)),
+      caption = "GAA by Program, PHP billions") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = FALSE, font_size = 12)
 ```
 
-## NEP vs GAA, and the realignments
+## NEP vs GAA and Realignments
 
-```{r plot-nepvgaa-faceted, fig.height=6}
-nepvgaa <- byprogram %>% filter(Program %in% substantive) %>%
+```{r plot-nepvgaa-faceted, fig.height=5.4}
+nepvgaa <- byprogram %>%
+  filter(Program %in% substantive, FY <= 2026) %>%
   mutate(Program = factor(Program, levels = substantive)) %>%
   select(FY, Program, NEP_B, GAA_B) %>%
   pivot_longer(c(NEP_B, GAA_B), names_to = "Item", values_to = "AmountB") %>%
-  mutate(Item = factor(if_else(Item == "NEP_B", "NEP", "GAA"), levels = c("NEP","GAA")))
-nepvgaa_var <- byprogram %>% filter(Program %in% substantive) %>%
-  mutate(Program = factor(Program, levels = substantive), ypos = pmax(NEP_B, GAA_B) * 1.05,
-         lab = if_else(Realign >= 0, str_c("+", format(round(Realign,1), nsmall = 1)), format(round(Realign,1), nsmall = 1)))
+  mutate(Item = factor(if_else(Item == "NEP_B", "NEP", "GAA"), levels = c("NEP", "GAA")))
+
+nepvgaa_var <- byprogram %>%
+  filter(Program %in% substantive, FY <= 2026) %>%
+  mutate(Program = factor(Program, levels = substantive),
+         ypos = pmax(NEP_B, GAA_B) * 1.04,
+         lab  = if_else(Realign >= 0,
+                        str_c("+", format(round(Realign, 1), nsmall = 1)),
+                        format(round(Realign, 1), nsmall = 1)))
+
 ggplot(nepvgaa) +
-  geom_col(aes(FY, AmountB, fill = Item), position = position_dodge(width = 0.75), width = 0.66) +
-  geom_text(data = nepvgaa_var, aes(FY, ypos, label = lab), size = 2.3) +
-  facet_wrap(~Program, scales = "free_y", ncol = 3, labeller = label_wrap_gen(24)) +
+  geom_col(aes(x = FY, y = AmountB, fill = Item),
+           position = position_dodge(width = 0.75), width = 0.66) +
+  geom_text(data = nepvgaa_var, aes(x = FY, y = ypos, label = lab), size = 1.9) +
+  facet_wrap(~Program, scales = "free_y", ncol = 3,
+             labeller = label_wrap_gen(24)) +
   scale_x_continuous(breaks = c(2018, 2020, 2022, 2024, 2026)) +
-  scale_y_continuous(labels = comma, expand = expansion(mult = c(0, 0.13))) +
+  scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.13))) +
   scale_fill_manual(values = c("NEP" = "#ffa6b0", "GAA" = "#3994fc")) +
-  labs(x = NULL, y = "PHP billions",
-       title = "By program: NEP vs GAA, with net realignments (GAA − NEP)",
-       subtitle = "Labels show the net change from NEP to enacted GAA (PHP B)") +
-  theme_dpwh(grid_x = FALSE) + theme(strip.text = element_text(size = 8))
+  labs(x = NULL, y = "PHP billions", fill = NULL,
+       title = "DPWH by Program: NEP vs GAA, with Net Realignments (GAA - NEP)",
+       caption = "**Data Sources:** NEP and GAA documents, 2018-2026. Labels show the net change from NEP to enacted GAA (PHP B).<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_bw() +
+  theme(legend.position = "bottom", legend.text = element_text(size = 7),
+        panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.caption = element_markdown(size = 6),
+        strip.background = element_rect(fill = "white"),
+        strip.text = element_text(size = 7),
+        axis.text = element_text(size = 6.5))
 ```
 
-The same realignments read most cleanly as a matrix — each cell is the net move from the President's proposal to the enacted law, with **blue = increases** and **red = cuts**:
+The same realignments read most cleanly as a matrix — each cell is the net move
+from the President's proposal (NEP) to the enacted law (GAA), with **blue =
+increases** and **red = cuts**:
 
-```{r plot-realign-heatmap, fig.height=4.4}
-ggplot(byprogram, aes(FY, fct_rev(Program), fill = Realign)) +
+```{r plot-realign-heatmap, fig.height=4.2}
+ggplot(byprogram %>% filter(FY <= 2026), aes(x = FY, y = fct_rev(Program), fill = Realign)) +
   geom_tile(color = "white", linewidth = 0.5) +
-  geom_text(aes(label = round(Realign)), size = 2.4) +
-  scale_x_continuous(breaks = 2018:2026, position = "top", expand = expansion(mult = 0)) +
+  geom_text(aes(label = round(Realign)), size = 2.1) +
+  scale_x_continuous(breaks = 2018:2026, position = "top",
+                     expand = expansion(mult = 0)) +
   scale_y_discrete(labels = function(x) str_wrap(x, 28)) +
-  scale_fill_gradient2(low = "#ffa6b0", mid = "white", high = "#3994fc", midpoint = 0, labels = comma, name = "GAA − NEP\n(PHP B)") +
-  labs(x = NULL, y = NULL, title = "Net realignments from NEP to GAA, by program",
-       caption = "2019 nets out the ₱95.4B presidential veto (see the veto section).") +
-  theme_dpwh() + theme(panel.grid = element_blank(), axis.text.y = element_text(size = 9),
-        legend.position = "right", legend.key.width = unit(0.4, "cm"))
+  scale_fill_gradient2(low = "#ffa6b0", mid = "white", high = "#3994fc",
+                       midpoint = 0, labels = scales::comma, name = "GAA - NEP\n(PHP B)") +
+  labs(x = NULL, y = NULL,
+       title = "Net Realignments from NEP to GAA, by Program",
+       caption = "**Note:** 2019 and 2025 net out the P95.4B and P26.1B presidential vetoes respectively (see the veto section).<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.caption = element_markdown(size = 6),
+        axis.text.y = element_text(size = 7),
+        legend.key.width = unit(0.35, "cm"))
 ```
 
-Two patterns stand out: the **Convergence and Special Support Program** gains year after year (peaking at **+₱265B in 2025**), while **Network Development** and **Bridge** are routinely trimmed from their proposed levels. The **2026** column is exceptional — Flood Management is realigned **down by ~₱246B**, the largest single-program cut on record.
+Two patterns stand out for the hearing room: the **Convergence and Special
+Support Program** gains year after year (peaking at **+₱265B in 2025**),
+while **Network Development** and **Bridge** programs are routinely trimmed from
+their proposed levels. The **2026** column is exceptional — Flood Management is
+realigned **down by ~₱246B**, the largest single-program cut in the series.
 
 ```{r table-realign}
-realign_tbl <- byprogram %>% transmute(FY, Program, Realign = round(Realign,1)) %>%
-  pivot_wider(names_from = FY, values_from = Realign) %>% arrange(factor(Program, levels = dpwh_programs))
-dt_table(realign_tbl %>% rename(`Program — realignment (B)` = Program), page = 8)
+byprogram %>%
+  filter(FY <= 2026) %>%
+  transmute(FY, Program, Realign) %>%
+  pivot_wider(names_from = FY, values_from = Realign) %>%
+  arrange(factor(Program, levels = dpwh_programs)) %>%
+  mutate(across(-Program, ~comma(.x, accuracy = 0.1))) %>%
+  kbl(align = c("l", rep("r", 9)),
+      caption = "Net Realignment (GAA - NEP) by Program, PHP billions") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = FALSE, font_size = 12)
 ```
 
-# The 2019 line-item veto {#veto}
+# Inside the Programs: Sub-Programs and Line Items
 
-In FY 2019, Congress raised DPWH's New Appropriations only modestly in aggregate (from a **₱544.5B** proposal to a **₱549.4B** legislated total) but **heavily reallocated** the money — above all into the Local Program. The President then exercised **line-item vetoes worth ₱95.4B**, almost all from that program, bringing the enacted GAA down to **₱454.0B**.
+The program totals in Section 6 hide a great deal. Beneath each program sit
+**sub-programs** and, below those, the individual **line items** — "Preventive
+Maintenance – Primary Roads," "SIPAG – Access Roads... leading to Major/Strategic
+Public Buildings," and dozens more — that are where budgeting actually happens.
+This section works from a granular, multi-year encoding of those items (FY 2018
+onward) to ask three questions the aggregates cannot answer: **where has emphasis
+shifted between programs, what does Congress add to and cut at the most granular
+level, and which line items are the biggest — and has that changed?**
 
-```{r plot-veto-total, fig.height=3.8}
+For readability, line items that the budget splits only by road class — the
+separate *Primary Roads*, *Secondary Roads* and *Tertiary Roads* versions of
+Preventive Maintenance, Road Widening, and a few others — are combined here into a
+single item each.
+
+```{r granular-parse, include=FALSE}
+parse_granular <- function(sheet, years) {
+  raw <- read_xlsx(data_path, sheet = sheet, col_names = FALSE)
+  hdr <- as.character(unlist(raw[1, ]))
+  hdr[1:4] <- c("L0", "L1", "L2", "L3"); hdr[is.na(hdr)] <- paste0("x", which(is.na(hdr)))
+  names(raw) <- make.unique(hdr)
+  dat <- raw[-1, ]; dat$L3_orig <- dat$L3
+  dat <- dat %>% mutate(across(c(L0, L1, L2, L3), as.character)) %>%
+    fill(L0, .direction = "down") %>% fill(L1, .direction = "down") %>% fill(L2, .direction = "down")
+  leaf <- dat %>% filter(!is.na(L3_orig))
+  purrr::map_dfr(years, function(y) {
+    nc <- paste0("NEP", y, "_Amount"); gc <- paste0("GAA_", y, "_Amount")
+    leaf %>% transmute(Item = str_remove(L3, " - (Primary|Secondary|Tertiary) Roads$"),
+      SubProg = L2, ProgramGroup = L1, Major = L0, FY = y,
+      NEP = suppressWarnings(as.numeric(.data[[nc]])),
+      GAA = if (gc %in% names(leaf)) suppressWarnings(as.numeric(.data[[gc]])) else NA_real_)
+  }) %>%
+    mutate(Program = if_else(ProgramGroup %in% c("Convergence and Special Support Program", "Local Program"),
+                             ProgramGroup, SubProg),
+           NEP_B = NEP / 1e9, GAA_B = GAA / 1e9, Add_B = GAA_B - NEP_B)
+}
+gran <- parse_granular("2018-2027", 2018:2027)
+program_colors_short <- c("Asset Preservation" = "#3994fc", "Network Development" = "#6fcfd6",
+                          "Bridge" = "#8fd9a8", "Flood Management" = "#ffe27a",
+                          "Convergence & Special Support" = "#ffa6b0", "Local" = "#ffcf8b")
+short_item <- function(x, wrap = 30) {
+  x %>%
+    # collapsed maintenance / rehab families
+    str_replace("^Rehabilitation/ Reconstruction of Roads with Slips, Slope Collapse, and Landslide$",
+                "Roads w/ Slips & Landslide (rehab)") %>%
+    str_replace("^Rehabilitation/ Reconstruction/ Upgrading of Damaged Paved Roads$",
+                "Rehab of Damaged Paved Roads") %>%
+    str_replace("^Construction/ Upgrading/ Rehabilitation of Drainage along National Roads$",
+                "Drainage along National Roads") %>%
+    # flood management
+    str_replace("Construction/Maintenance of Flood Mitigation Structures and Drainage Systems",
+                "Flood Mitigation Structures & Drainage") %>%
+    str_replace("Construction/Rehabilitation of Flood Mitigation Facilities within Major River Basins and Principal Rivers",
+                "Flood Mitigation - Major River Basins") %>%
+    # SIPAG / BIP families
+    str_replace("SIPAG - Access Roads.*leading to Major/ Strategic Public Buildings/ Facilities", "SIPAG - Access Roads to Public Buildings") %>%
+    str_replace("BIP - Access Roads.*leading to Major/ Strategic Public Buildings/ Facilities", "BIP - Access Roads to Public Buildings") %>%
+    str_replace("(SIPAG|BIP) - Access Roads.*Indigenous People \\(IP\\) Communities", "\\1 - Access Roads to IP Communities") %>%
+    str_replace("(SIPAG|BIP) - Interjurisdictional Roads.*", "\\1 - Interjurisdictional Roads") %>%
+    str_replace("(SIPAG|BIP) - Coastal Roads/Causeway.*", "\\1 - Coastal Roads / Causeway") %>%
+    str_replace("(SIPAG|BIP) - Flood Mitigation Structures protecting Public Infrastructures/Facilities", "\\1 - Flood Mitigation Structures") %>%
+    str_replace("(SIPAG|BIP) - Multi-Purpose Buildings/ Facilities to support Social Services", "\\1 - Multi-Purpose Buildings") %>%
+    str_replace("(SIPAG|BIP) - Ma[ij]or/Strategic Public Buildings.*", "\\1 - Strategic Public Buildings") %>%
+    str_replace("(SIPAG|BIP) - Evacuation Centers.*", "\\1 - Evacuation / Health Facilities") %>%
+    str_replace("(SIPAG|BIP) - Public Water Supply System", "\\1 - Public Water Supply") %>%
+    str_replace("(SIPAG|BIP) - Local Ports and Boat Landings", "\\1 - Local Ports / Boat Landings") %>%
+    str_replace("(SIPAG|BIP) - Climate-Resilient and Green Infrastructure Features", "\\1 - Climate-Resilient Infra") %>%
+    # network / bridge
+    str_replace("Construction of By-Pass and  Diversion Roads", "By-Pass & Diversion Roads") %>%
+    str_replace("Construction of Missing Links/ New Roads", "Missing Links / New Roads") %>%
+    str_replace("Construction of Flyovers/ Interchanges/ Underpasses/ Long Span Bridges", "Flyovers / Interchanges / Underpasses") %>%
+    str_replace("Construction of New Bridges", "New Bridges") %>%
+    str_replace("Replacement of Bridges \\(Temporary to Permanent\\)", "Replacement of Bridges (Temp to Perm)") %>%
+    str_replace("Retrofitting/ Strengthening of Permanent Bridges", "Retrofitting of Permanent Bridges") %>%
+    str_replace("Rehabilitation/ Major Repair of Permanent Bridges", "Major Repair of Permanent Bridges") %>%
+    str_replace("Improvement of Capacity of Provincial Bridges along Provincial Roads", "Capacity of Provincial Bridges") %>%
+    # access roads / misc
+    str_replace("Construction/ Improvement of Access Roads leading to ", "Access Roads to ") %>%
+    str_replace("Construction/ Rehabilitation of Water Supply/ Septage and Sewerage/ Rain Water Collectors", "Water Supply / Septage / Sewerage") %>%
+    str_replace("Rehabilitation of Disaster-Related Infrastructure and Other Facilities", "Rehab of Disaster-Related Infra") %>%
+    str_replace("Philippine Seismic Risk Reduction and Resilience Project.*", "Phil. Seismic Risk Reduction Project") %>%
+    str_replace("Special Road Fund - Motor Vehicle User's Charge \\(MVUC\\) as per R.A. 11239", "Special Road Fund (MVUC)") %>%
+    str_replace("^Multipurpose / Facilities$", "Multipurpose Facilities") %>%
+    str_squish() %>%
+    str_wrap(width = wrap)
+}
+```
+
+## What's Inside the Major Programs
+
+The program names in Section 6 are broad umbrellas. Below is what each of the six
+operational programs actually contained in **FY2025** — the last full budget
+before the flood-control scandal reshaped the FY2026 cycle — shown as its
+constituent line items.
+
+```{r plot-program-innards, fig.height=8.2}
+prog6 <- c("Asset Preservation Program","Network Development Program","Bridge Program",
+           "Flood Management Program","Convergence and Special Support Program","Local Program")
+innards <- gran %>%
+  filter(FY == 2025, Program %in% prog6) %>%
+  group_by(Program, Item) %>% summarise(GAA_B = sum(GAA_B, na.rm = TRUE), .groups = "drop") %>%
+  filter(GAA_B > 0) %>%
+  group_by(Program) %>% slice_max(GAA_B, n = 8) %>% ungroup() %>%
+  mutate(ProgLab = str_replace(Program, "Convergence and Special Support Program", "Convergence & Special Support") %>%
+                   str_replace(" Program$",""),
+         ProgLab = factor(ProgLab, levels = c("Asset Preservation","Network Development","Bridge",
+                                              "Flood Management","Convergence & Special Support","Local")),
+         key = reorder(str_c(short_item(Item), Program, sep = "___"), GAA_B))
+ggplot(innards, aes(x = GAA_B, y = key, fill = ProgLab)) +
+  geom_col(width = 0.72) +
+  facet_wrap(~ProgLab, scales = "free", ncol = 2) +
+  scale_y_discrete(labels = function(x) str_remove(x, "___.*")) +
+  scale_x_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.10))) +
+  scale_fill_manual(values = program_colors_short, guide = "none") +
+  labs(x = "FY2025 enacted GAA (PHP billions)", y = NULL,
+       title = "What each major program contains: largest line items, FY2025",
+       subtitle = "Up to eight biggest items per program",
+       caption = "**Data:** granular program encoding.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_bw() +
+  theme(panel.grid.minor = element_blank(), panel.grid.major.y = element_blank(),
+        strip.background = element_rect(fill = "white"), strip.text = element_text(face = "bold", size = 8.5),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.subtitle = element_text(size = 9), plot.caption = element_markdown(size = 6),
+        axis.text.y = element_text(size = 6.3), axis.text.x = element_text(size = 6.5))
+```
+
+The contents follow the department's core mandates, with two important exceptions:
+
+- **Asset Preservation** is road *upkeep*: preventive maintenance of primary,
+  secondary and tertiary roads, plus rehabilitation of roads damaged by slips,
+  landslides and disasters.
+- **Network Development** is road *expansion*: road widening, by-pass and diversion
+  roads, missing links and new roads, flyovers and interchanges.
+- **Bridge** is exactly that — construction, replacement, widening and
+  retrofitting of bridges.
+- **Flood Management** is the government's headline flood line: construction and
+  rehabilitation of flood-mitigation structures and drainage, including works
+  along major river basins.
+- **Convergence & Special Support** is the outlier — not a single purpose but a
+  **basket** of two sub-programs, **SIPAG** and **BIP**, whose items are access
+  roads to public buildings, multi-purpose buildings, *and their own flood-
+  mitigation structures*. Much of what looks like "convergence" spending is thus
+  district road-building, construction, and flood control under a different label.
+- **Local Program** historically carried the same district works (local roads,
+  multipurpose facilities, flood control and drainage) before FY2022, when most of
+  it migrated into Convergence.
+
+The key takeaway is that **flood-control money is spread across at least three
+programs** — the Flood Management Program, the SIPAG/BIP flood-mitigation items
+inside Convergence, and the Local Program's flood-control line — which is part of
+why the total was so hard to see, and so easy to inflate, before the FY2026
+reckoning.
+
+## The Shift from the "Local Program" to "Convergence and Special Support"
+
+The clearest structural change in this period is a **relabeling of district
+infrastructure**. Through FY2021, locally-oriented projects ran through the
+**Local Program**; the **Convergence and Special Support Program** was a modest
+line. In **FY2022 the two swapped places** — Local collapsed and Convergence
+absorbed its role, then grew far larger.
+
+```{r plot-local-convergence, fig.height=4.2}
+lc <- gran %>%
+  filter(ProgramGroup %in% c("Convergence and Special Support Program", "Local Program")) %>%
+  group_by(ProgramGroup, FY) %>%
+  summarise(GAA = sum(GAA_B, na.rm = TRUE), NEP = sum(NEP_B, na.rm = TRUE), .groups = "drop") %>%
+  mutate(Enacted = if_else(FY <= 2026, GAA, NA_real_),
+         Group = recode(ProgramGroup,
+                        "Convergence and Special Support Program" = "Convergence & Special Support",
+                        "Local Program" = "Local Program"))
+ggplot(lc, aes(x = FY, y = Enacted, colour = Group, group = Group)) +
+  geom_line(linewidth = 1.1) + geom_point(size = 2.2) +
+  annotate("rect", xmin = 2021.5, xmax = 2022.5, ymin = -Inf, ymax = Inf, alpha = 0.08, fill = "red") +
+  annotate("text", x = 2022, y = max(lc$Enacted, na.rm = TRUE) * 0.55,
+           label = "FY2022:\nroles swap", size = 2.9, fontface = "bold", colour = "grey30") +
+  scale_x_continuous(breaks = 2018:2026) +
+  scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.06))) +
+  scale_colour_manual(values = c("Convergence & Special Support" = "#b8336a", "Local Program" = "#3994fc")) +
+  labs(x = NULL, y = "Enacted GAA (PHP billions)", colour = NULL,
+       title = "The Local Program gives way to Convergence & Special Support",
+       subtitle = "Enacted new appropriations by program group, FY2018-2026",
+       caption = "**Data:** granular program encoding, operations items only.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_bw() +
+  theme(legend.position = "top", panel.grid.minor = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.subtitle = element_text(size = 9), plot.caption = element_markdown(size = 6))
+```
+
+Before the swap, the Local Program ran at **₱119-281B** while Convergence sat at
+**₱30-62B**. In FY2022 the Local Program fell to **₱15B** and Convergence leapt to
+**₱353B**; it peaked at **₱504B in FY2025** before the FY2026 flood-driven cut
+brought it to **₱240B**. Convergence is not a single purpose but a **basket** —
+it houses the **SIPAG** and **BIP** sub-programs, whose items range from access
+roads and multi-purpose buildings to, notably, **flood-mitigation structures**.
+So a large share of what looks like "convergence" or "special support" spending is,
+underneath, the same district road-and-building-and-drainage work that the Local
+Program used to carry — now concentrated in one fast-growing, discretionary
+program.
+
+## What Congress Adds To — and Cuts — at the Item Level
+
+Reading Congress's changes (enacted minus proposed) at the **individual item
+level**, over FY2018-2025 (the FY2026 cycle is treated separately below, as it was
+reshaped by the flood-control scandal), reveals a consistent pattern: the legislature moves
+money **out of large, national, strategic works and into district-scale,
+insertable items**.
+
+```{r plot-item-addcut, fig.height=5.6}
+item_add <- gran %>%
+  filter(FY <= 2025) %>%
+  group_by(Item, Program) %>%
+  summarise(Add = sum(Add_B, na.rm = TRUE), .groups = "drop")
+addcut <- bind_rows(
+  item_add %>% slice_max(Add, n = 10),
+  item_add %>% slice_min(Add, n = 6)
+) %>%
+  mutate(Item = short_item(Item),
+         Dir = if_else(Add >= 0, "Added by Congress", "Cut by Congress"),
+         Item = fct_reorder(Item, Add))
+ggplot(addcut, aes(x = Add, y = Item, fill = Dir)) +
+  geom_col(width = 0.72) +
+  geom_text(aes(label = sprintf("%+.0f", Add), hjust = if_else(addcut$Add >= 0, -0.12, 1.12)),
+            size = 2.8, colour = "grey20") +
+  scale_fill_manual(values = c("Added by Congress" = "#1a9850", "Cut by Congress" = "#d73027")) +
+  scale_x_continuous(labels = function(v) paste0(v, "B"), expand = expansion(mult = c(0.14, 0.14))) +
+  labs(x = "Cumulative enacted minus proposed, FY2018-2025 (PHP billions)", y = NULL, fill = NULL,
+       title = "The line items Congress builds up --- and the ones it cuts",
+       subtitle = "Top 10 additions and 6 largest cuts, summed over FY2018-2025",
+       caption = "**Data:** granular program encoding.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_bw() +
+  theme(legend.position = "top", panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.subtitle = element_text(size = 9), plot.caption = element_markdown(size = 6),
+        axis.text.y = element_text(size = 7.5))
+```
+
+The additions are dominated by **SIPAG and BIP** items — *Access Roads to Public
+Buildings* (**+₱207B** and **+₱105B**), *Multi-Purpose Buildings* (**+₱176B**),
+and their *Flood-Mitigation Structures* variants — together with **Local Roads
+(+₱182B)** and **Multipurpose Facilities (+₱104B)**. The cuts fall on **large
+national works**: *By-Pass & Diversion Roads* (**-₱94B**), *Flood Mitigation in
+Major River Basins* (**-₱71B**), *New Bridges* (**-₱49B**), and *National Roads*
+(**-₱43B**). In other words, the legislature consistently trims the department's
+big strategic-network and major-river projects and redirects the money into
+smaller, district-level, more easily-sited items — the granular signature of the
+Central-Office-to-districts pattern documented in the operating-unit analysis that
+follows.
+
+```{r table-top-item-adds}
+item_add %>%
+  slice_max(Add, n = 15) %>%
+  transmute(`Line item` = short_item(Item), Program = str_remove(Program, " Program$"),
+            `Cumulative addition (PHP B)` = round(Add, 1)) %>%
+  arrange(desc(`Cumulative addition (PHP B)`)) %>%
+  kbl(align = c("l", "l", "r"),
+      caption = "Line items Congress most enlarged, cumulative FY2018-2025 (enacted minus proposed)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE, font_size = 11) %>%
+  row_spec(0, bold = TRUE)
+```
+
+## The FY2026 Cycle: A Scandal-Driven Revision
+
+FY2026 was unlike any other year in this dataset, and it is why the analysis above
+stops at FY2025. Midway through 2025 a **flood-control corruption scandal** broke
+open — ghost projects, kickbacks, and a wave of identically-priced "multi-purpose
+building" and flood-control insertions. The fallout ran straight through the budget.
+
+The original FY2026 NEP, prepared under then-Secretary Manuel Bonoan and submitted
+in August 2025, proposed the department's usual large flood-control program. After
+the scandal, a new Secretary — **Vivencio "Vince" Dizon** — took over in
+September and submitted an **errata to the NEP**, removing locally-funded
+flood-control projects on the President's directive. Congress then cut further.
+The result is a rare three-step collapse: **original NEP → revised NEP → enacted
+GAA**, all *downward*, the reverse of the department's usual pattern.
+
+```{r plot-2026-revision, fig.height=4.6}
+# Recompute the three FY2026 stages (incl. the revised-NEP errata column) from the sheet
+rev_raw <- read_xlsx(data_path, sheet = "2018-2027", col_names = FALSE)
+hdrx <- as.character(unlist(rev_raw[1,])); hdrx[1:4] <- c("L0","L1","L2","L3"); hdrx[is.na(hdrx)] <- paste0("z",which(is.na(hdrx)))
+names(rev_raw) <- make.unique(hdrx)
+rev_raw <- rev_raw[-1,]; rev_raw$L3o <- rev_raw$L3
+rev_raw <- rev_raw %>% mutate(across(c(L0,L1,L2,L3),as.character)) %>%
+  fill(L0,.direction="down") %>% fill(L1,.direction="down") %>% fill(L2,.direction="down") %>% filter(!is.na(L3o)) %>%
+  mutate(Program = if_else(L1 %in% c("Convergence and Special Support Program","Local Program"), L1, L2),
+         onep = suppressWarnings(as.numeric(NEP2026_Amount))/1e9,
+         rnep = suppressWarnings(as.numeric(NEPrev2026_Amount))/1e9,
+         gaa  = suppressWarnings(as.numeric(GAA_2026_Amount))/1e9)
+rev26 <- rev_raw %>% group_by(Program) %>%
+  summarise(`Original NEP`=sum(onep,na.rm=TRUE), `Revised NEP`=sum(rnep,na.rm=TRUE), `Enacted GAA`=sum(gaa,na.rm=TRUE), .groups="drop") %>%
+  filter(`Original NEP`+`Revised NEP`+`Enacted GAA` > 1)
+rev26_long <- rev26 %>% pivot_longer(-Program, names_to="Stage", values_to="B") %>%
+  mutate(Stage=factor(Stage, levels=c("Original NEP","Revised NEP","Enacted GAA")),
+         ProgLab=str_replace(Program,"Convergence and Special Support Program","Convergence & Spec. Support") %>% str_replace(" Program$",""),
+         ProgLab=fct_reorder(ProgLab, B, .fun=max, .desc=TRUE))
+ggplot(rev26_long, aes(x=B, y=fct_rev(ProgLab), fill=Stage)) +
+  geom_col(position=position_dodge(width=0.78), width=0.72) +
+  scale_x_continuous(labels=scales::comma, expand=expansion(mult=c(0,0.06))) +
+  scale_fill_manual(values=c("Original NEP"="#f4a582","Revised NEP"="#b8336a","Enacted GAA"="#3994fc")) +
+  labs(x="PHP billions", y=NULL, fill=NULL,
+       title="FY2026: Original NEP -> Revised NEP (errata) -> Enacted GAA, by Program",
+       subtitle="The errata gutted the Flood Management Program; Congress then cut Network Development further",
+       caption="**Data:** granular encoding (NEP, revised-NEP errata, and GAA columns). Operations items only.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_bw() +
+  theme(legend.position="top", panel.grid.minor=element_blank(), panel.grid.major.y=element_blank(),
+        plot.title=element_text(face="bold", size=12.5), plot.subtitle=element_text(size=8.5),
+        plot.caption=element_markdown(size=6), axis.text.y=element_text(size=8))
+```
+
+Two moves stand out. The **Flood Management Program was gutted in the errata itself**
+— from about ₱251B in the original NEP to roughly ₱16B in the revised version, a
+cut of some ₱235B before Congress even voted — as the flood-mitigation items at
+the heart of the scandal were pulled. But the revision was not purely subtractive:
+the **Convergence & Special Support Program actually rose** in the revised NEP
+(from ~₱168B to ~₱225B) and again in the enacted GAA (~₱240B), even as everything
+around it shrank. Congress then trained its knife on **Network Development**,
+cutting it from ~₱149B in the revised NEP to ~₱97B enacted.
+
+So the headline "DPWH budget cut by roughly a third" masks a reshuffle: the
+scandal removed the flood-control program that had been the vehicle for insertions,
+but the discretionary **Convergence** basket — which, as shown above, contains its
+*own* flood-mitigation and district-building items — emerged from the FY2026
+process *larger*, not smaller. Whether that represents genuine reform or the same
+spending under a cleaner-sounding label is exactly the kind of question the
+granular view is meant to surface.
+
+## The Biggest Line Items, and How They've Shifted
+
+Ranking items by **enacted** size shows how the composition of DPWH spending has
+turned over. In FY2018 the largest items were classic **road and flood works**; by
+FY2025 the **SIPAG and BIP** items — which barely existed earlier — sit at the
+very top, alongside the two big flood-mitigation lines.
+
+```{r plot-biggest-items-shift, fig.height=4.8}
+big_cmp <- gran %>%
+  filter(FY %in% c(2018, 2025)) %>%
+  group_by(FY, Item) %>% summarise(GAA_B = sum(GAA_B, na.rm = TRUE), .groups = "drop") %>%
+  group_by(FY) %>% slice_max(GAA_B, n = 10) %>% ungroup() %>%
+  mutate(ItemS = short_item(Item),
+         FYlab = factor(paste0("FY", FY), levels = c("FY2018", "FY2025")),
+         key = reorder(str_c(ItemS, FY, sep = "___"), GAA_B))
+ggplot(big_cmp, aes(x = GAA_B, y = key, fill = FYlab)) +
+  geom_col(width = 0.72) +
+  geom_text(aes(label = round(GAA_B)), hjust = -0.15, size = 2.7, colour = "grey20") +
+  facet_wrap(~FYlab, scales = "free", ncol = 2) +
+  scale_y_discrete(labels = function(x) str_remove(x, "___.*")) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.12))) +
+  scale_fill_manual(values = c("FY2018" = "#9ecae1", "FY2025" = "#08519c"), guide = "none") +
+  labs(x = "Enacted GAA (PHP billions)", y = NULL,
+       title = "The 10 biggest line items: FY2018 vs FY2025",
+       subtitle = "SIPAG and BIP items rise from nothing to the top of the budget",
+       caption = "**Data:** granular program encoding.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_bw() +
+  theme(panel.grid.minor = element_blank(), panel.grid.major.y = element_blank(),
+        strip.background = element_rect(fill = "white"), strip.text = element_text(face = "bold"),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.subtitle = element_text(size = 9), plot.caption = element_markdown(size = 6),
+        axis.text.y = element_text(size = 7))
+```
+
+The turnover is striking. In FY2018 the biggest items were **Flood Mitigation
+Structures (₱97B)**, **Road Widening (₱64B)**, **By-Pass & Diversion Roads
+(₱57B)**, **Local Roads (₱51B)** and **Missing Links / New Roads (₱36B)** — a
+portfolio of national road and flood works. By FY2025, the **SIPAG Access Roads to
+Public Buildings (₱137B)** and **BIP Multi-Purpose Buildings (₱96B)** items — which
+did not exist under those names before FY2022 — rank among the very largest,
+alongside the two big flood-mitigation lines (which Congress simultaneously *cut*
+from the proposal) and, once the road classes are combined, **Preventive
+Maintenance (₱104B)** — the quiet, recurring cost of keeping the existing network
+usable. The composition of the
+DPWH budget, in short, has tilted from building and maintaining the national
+network toward a fast-expanding, district-oriented "convergence" portfolio.
+
+
+
+# New Appropriations by Operating Unit
+
+The DPWH disburses its budget across some 200+ **operating units** — the Central
+Office, regional offices, and district engineering offices (DEOs). The data
+run from the **FY2014 budget** through **FY2026**, spanning the 16th through 20th
+Congresses — the Aquino, Duterte, and Marcos administrations, and **seven House
+Speakers**. The series is now complete across all thirteen fiscal years; the GAA
+encoded for **2019** reflects the budget *after* the President's ₱95.4-billion
+line-item veto (isolated below). That span lets us trace
+how district money has moved
+between proposal and enactment across administrations. Amounts are in **pesos**,
+rescaled to **PHP billions**.
+
+```{r load-byoperunit}
+congress_colors <- c("16th (Aquino)"  = "#c9ccd1",
+                     "17th (Duterte)" = "#ffcf8b",
+                     "18th (Duterte)" = "#ffa6b0",
+                     "19th (Marcos)"  = "#3994fc",
+                     "20th (Marcos)"  = "#7fd0d6")
+
+# Per-fiscal-year palette: one coherent hue family per Congress, shaded from the
+# oldest year (light) to the newest (dark). Grey is reserved for the vetoed amounts.
+fy_colors <- c(
+  "2014" = "#fbe7a4", "2015" = "#f3cd4e", "2016" = "#d4a417",   # 16th (Aquino)  -- yellow
+  "2017" = "#f6b0a8", "2018" = "#e36253", "2019" = "#c22d22",   # 17th (Duterte) -- red
+  "2020" = "#ddd0ee", "2021" = "#b89ad9", "2022" = "#8a5cc0",   # 18th (Duterte) -- purple
+  "2023" = "#b9d4f6", "2024" = "#6fa6e8", "2025" = "#2f6fd0",   # 19th (Marcos)  -- blue
+  "2026" = "#5cc0c4")                                           # 20th (Marcos)  -- teal
+
+byoperunit <- read_xlsx(data_path, sheet = "NewAppro_ByOperUnit") %>%
+  mutate(FY = as.integer(FY),
+         # The FY2027 NEP-by-office rows are encoded with each office's UACS code
+         # in the FY column (>= 100000); relabel them to FY 2027.
+         FY = if_else(FY >= 100000, 2027L, FY)) %>%
+  # 2019's encoded GAA is the post-veto (final authorized) budget; the P95.4B
+  # line-item veto is isolated in the Central-vs-District veto chart below.
+  mutate(NEP     = replace_na(NEP, 0),
+         # FY2027 is proposed only (no GAA yet); keep its GAA missing, not zero,
+         # so it never reads as a realignment down to zero.
+         GAA     = if_else(FY == 2027L, NA_real_, replace_na(GAA, 0)),
+         GAA_B   = GAA / 1e9,
+         NEP_B   = NEP / 1e9,
+         Realign = (GAA - NEP) / 1e9,
+         Congress = case_when(FY %in% 2014:2016 ~ "16th (Aquino)",
+                              FY %in% 2017:2019 ~ "17th (Duterte)",
+                              FY %in% 2020:2022 ~ "18th (Duterte)",
+                              FY %in% 2023:2025 ~ "19th (Marcos)",
+                              FY %in% 2026:2027 ~ "20th (Marcos)"),
+         Admin    = case_when(FY %in% 2014:2016 ~ "Aquino",
+                              FY %in% 2017:2022 ~ "Duterte",
+                              FY %in% 2023:2027 ~ "Marcos"),
+         # House Speaker presiding when each FY budget was deliberated and passed
+         Speaker  = case_when(FY %in% 2014:2016 ~ "Belmonte",
+                              FY %in% 2017:2018 ~ "Alvarez",
+                              FY == 2019        ~ "Arroyo",
+                              FY == 2020        ~ "Cayetano",
+                              FY %in% 2021:2022 ~ "Velasco",
+                              FY %in% 2023:2025 ~ "Romualdez",
+                              FY %in% 2026:2027 ~ "Dy"))
+
+# District engineering offices. `deo` covers enacted years (FY2017-2026) and
+# feeds every realignment/veto view unchanged; `deo_all` additionally carries the
+# FY2027 proposal for the levels section below.
+deo_all <- byoperunit %>% filter(str_detect(Office, "D.E. Office"), FY >= 2017)
+deo <- deo_all %>% filter(FY <= 2026)
+n_years_deo <- dplyr::n_distinct(deo$FY)
+```
+
+Because the realignments that move money toward district engineering offices are made on the
+House floor, the relevant political actor is often the **Speaker of the day** as
+much as the sitting President. **Seven** Speakers presided over the budgets in this
+window; their terms and the fiscal-year budgets each steered to passage are below.
+
+```{r speaker-table}
+tibble::tribble(
+  ~Speaker,                  ~`Term began`,   ~Congress, ~`FY budgets`,  ~Administration,
+  "Feliciano Belmonte Jr.",  "22 Jul 2013",   "16th",    "FY2014-2016",  "Aquino",
+  "Pantaleon Alvarez",       "25 Jul 2016",   "17th",    "FY2017-2018",  "Duterte",
+  "Gloria Macapagal Arroyo", "23 Jul 2018",   "17th",    "FY2019*",      "Duterte",
+  "Alan Peter Cayetano",     "22 Jul 2019",   "18th",    "FY2020",       "Duterte",
+  "Lord Allan Velasco",      "12 Oct 2020",   "18th",    "FY2021-2022",  "Duterte",
+  "Martin Romualdez",        "25 Jul 2022",   "19th",    "FY2023-2025",  "Marcos",
+  'Faustino "Bojie" Dy III', "17 Sep 2025",   "20th",    "FY2026",       "Marcos"
+) %>%
+  kbl(align = "lllll",
+      caption = "House Speakers presiding over the DPWH budgets analysed here. *FY2019's encoded GAA is post-veto; the ₱95.4B line-item veto that year fell mostly on the Central Office (see the veto chart below).") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = FALSE, font_size = 12)
+```
+
+## Most of the Money Sits in the Central Office
+
+```{r plot-central, fig.height=4}
+central_split <- byoperunit %>%
+  filter(FY <= 2026) %>%
+  mutate(Unit = if_else(Office == "Central Office", "Central Office", "All Other Offices")) %>%
+  group_by(FY, Unit) %>%
+  summarize(GAA_B = sum(GAA_B), .groups = "drop") %>%
+  mutate(Unit = factor(Unit, levels = c("All Other Offices", "Central Office")))
+
+central_lab <- central_split %>%
+  group_by(FY) %>%
+  summarize(tot = sum(GAA_B),
+            central = sum(GAA_B[Unit == "Central Office"]), .groups = "drop") %>%
+  mutate(lab = percent(central / tot, accuracy = 1))
+
+ggplot(central_split, aes(x = FY, y = GAA_B, fill = Unit)) +
+  geom_col(color = "black", linewidth = 0.2, width = 0.78) +
+  geom_text(data = central_lab, aes(x = FY, y = tot, label = lab),
+            inherit.aes = FALSE, vjust = -0.5, size = 2.8) +
+  scale_x_continuous(breaks = c(2014, 2017, 2020, 2023, 2026)) +
+  scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.09))) +
+  scale_fill_manual(values = c("All Other Offices" = "#bcbef2", "Central Office" = "#3994fc")) +
+  labs(x = NULL, y = "GAA, PHP billions", fill = NULL,
+       title = "Most of the DPWH Budget Is Lodged in the Central Office",
+       subtitle = "Labels show the Central Office's share of the GAA",
+       caption = "**Data Sources:** GAA documents, 2014-2026.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.subtitle = element_text(size = 9),
+        plot.caption = element_markdown(size = 6))
+```
+
+Across the series the Central Office holds most of the *enacted* budget —
+typically **60-75%**, peaking at **75% in 2025** — with 2015-2016
+(both under 50%) and the unusual 2026 GAA (62%) the main exceptions. A single operating unit carrying most
+of the department's budget is a reason for *closer* scrutiny of centrally-managed
+projects, not a reason to assume they are already well accounted for. The enacted
+shares also understate how concentrated the executive's *proposal* is, and how
+much Congress rearranges it on the way to enactment — the subject of the section
+that follows.
+
+```{r table-central}
+central_split %>%
+  pivot_wider(names_from = Unit, values_from = GAA_B) %>%
+  mutate(Total = `Central Office` + `All Other Offices`,
+         `Central share` = percent(`Central Office` / Total, accuracy = 0.1)) %>%
+  transmute(FY,
+            `Central Office (B)`    = comma(`Central Office`, accuracy = 0.1),
+            `All Other Offices (B)` = comma(`All Other Offices`, accuracy = 0.1),
+            `Total (B)`             = comma(Total, accuracy = 0.1),
+            `Central share`) %>%
+  kbl(align = "lrrrr",
+      caption = "DPWH GAA: Central Office vs all other operating units, PHP billions") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = FALSE, font_size = 12)
+```
+
+## From Proposal to Law: Central Office to the Districts
+
+The executive's proposal concentrates the budget in the Central Office even more
+than the enacted law does. In pesos the redistribution is large and one-directional:
+Congress channels tens — and, in recent years, hundreds — of billions toward
+district engineering offices between the proposal and the enacted law, in **every
+year on record**, while the Central Office is cut in most (first chart). In share
+terms the pattern is cleaner still: in every year (2014-2026) the Central
+Office's share of new
+appropriations *falls* from NEP to GAA while the districts' share *rises* — a
+swing reaching nearly **30 percentage points** in 2021 and 2023, when the proposal
+parked almost the entire budget centrally (second chart). Congress, in other words,
+systematically moves money toward named district engineering offices; this is the redistribution
+that the office-by-office realignment analysis below traces in detail.
+
+```{r plot-central-shift, fig.height=4.2}
+byoperunit %>%
+  filter(FY <= 2026) %>%
+  mutate(Unit = case_when(Office == "Central Office"        ~ "Central Office",
+                          str_detect(Office, "D.E. Office") ~ "District Engineering Offices",
+                          TRUE                              ~ "Other")) %>%
+  filter(Unit != "Other") %>%
+  group_by(FY, Unit) %>%
+  summarize(Shift_B = sum(GAA_B) - sum(NEP_B), .groups = "drop") %>%
+  ggplot(aes(x = factor(FY), y = Shift_B, fill = Unit)) +
+  geom_col(position = position_dodge(width = 0.72), width = 0.66,
+           color = "black", linewidth = 0.2) +
+  geom_hline(yintercept = 0, linewidth = 0.4) +
+  scale_y_continuous(labels = scales::comma) +
+  scale_fill_manual(values = c("Central Office" = "#3994fc", "District Engineering Offices" = "#bcbef2")) +
+  labs(x = NULL, y = "Change in budget, NEP -> GAA\n(PHP billions)", fill = NULL,
+       title = "Congress Redirects the Budget Toward the District Engineering Offices",
+       subtitle = "NEP-to-GAA change in each block's budget: district engineering offices gain every year; the Central Office is cut in most",
+       caption = "**Data Sources:** NEP and GAA documents, 2014-2026.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.subtitle = element_text(size = 9),
+        plot.caption = element_markdown(size = 6))
+```
+
+```{r plot-central-levels, fig.height=4}
+byoperunit %>%
+  filter(FY <= 2026) %>%
+  mutate(Unit = case_when(Office == "Central Office"        ~ "Central Office",
+                          str_detect(Office, "D.E. Office") ~ "District Engineering Offices",
+                          TRUE                              ~ "Other")) %>%
+  group_by(FY, Unit) %>%
+  summarize(NEP_B = sum(NEP_B), GAA_B = sum(GAA_B), .groups = "drop") %>%
+  group_by(FY) %>%
+  mutate(`Proposed (NEP)` = NEP_B / sum(NEP_B),
+         `Enacted (GAA)`  = GAA_B / sum(GAA_B)) %>%
+  ungroup() %>%
+  filter(Unit != "Other") %>%
+  pivot_longer(c(`Proposed (NEP)`, `Enacted (GAA)`), names_to = "Stage", values_to = "Share") %>%
+  mutate(Stage = factor(Stage, levels = c("Proposed (NEP)", "Enacted (GAA)"))) %>%
+  ggplot(aes(x = factor(FY), y = Share, fill = Stage)) +
+  geom_col(position = position_dodge(width = 0.72), width = 0.66,
+           color = "black", linewidth = 0.2) +
+  facet_wrap(~Unit) +
+  scale_y_continuous(labels = scales::percent, expand = expansion(mult = c(0, 0.06))) +
+  scale_fill_manual(values = c("Proposed (NEP)" = "#ffa6b0", "Enacted (GAA)" = "#3994fc")) +
+  labs(x = NULL, y = "Share of new appropriations", fill = NULL,
+       title = "Share of New Appropriations: Proposed vs Enacted",
+       subtitle = "The Central Office is proposed a larger share than it is enacted; for district engineering offices it is the reverse",
+       caption = "**Data Sources:** NEP and GAA documents, 2014-2026.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.subtitle = element_text(size = 9),
+        plot.caption = element_markdown(size = 6),
+        axis.text.x = element_text(size = 7),
+        strip.text = element_text(face = "bold", size = 9))
+```
+
+Two of those Central cuts come with an asterisk, because they are not really
+Congress's doing. The operating-unit GAA encoded for **2019** is the budget *after*
+the President's **₱95.4-billion line-item veto** — the largest in recent memory
+— and that veto landed overwhelmingly on the Central Office (**₱74B** of the ₱95B
+struck, versus ₱21B across the districts). That is why 2019 shows such a deep
+Central cut above. Congress's own pre-veto budget was routine: it trimmed the
+Central Office by roughly **₱26B** and added about **₱30B** to the districts, the
+usual direction of travel. The chart below splits what Congress actually passed into
+the part that survived the veto (blue) and the part the President struck out (grey);
+the diamonds mark the President's original proposal (NEP). Because the veto hit the
+Central Office hardest, it paradoxically *raised* the district share of the final
+budget (from 38% pre-veto to 42% enacted).
+
+```{r plot-veto-operunit, fig.height=4}
+veto_unit <- byoperunit %>%
+  filter(FY == 2019) %>%
+  mutate(Unit = case_when(Office == "Central Office"        ~ "Central Office",
+                          str_detect(Office, "D.E. Office") ~ "District Engineering Offices",
+                          TRUE                              ~ "Other")) %>%
+  group_by(Unit) %>%
+  summarize(NEP_B = sum(NEP_B), Enacted_B = sum(GAA_B), .groups = "drop") %>%
+  left_join(
+    read_xlsx(data_path, sheet = "2019_Veto") %>%
+      mutate(Unit = case_when(Office == "Central Office"        ~ "Central Office",
+                              str_detect(Office, "D.E. Office") ~ "District Engineering Offices",
+                              TRUE                              ~ "Other")) %>%
+      group_by(Unit) %>%
+      summarize(Vetoed_B = sum(GAA_Veto) / 1e9, .groups = "drop"),
+    by = "Unit"
+  ) %>%
+  filter(Unit != "Other") %>%
+  mutate(Vetoed_B = replace_na(Vetoed_B, 0))
+
+veto_unit %>%
+  select(Unit, `Enacted (survived)` = Enacted_B, Vetoed = Vetoed_B) %>%
+  pivot_longer(c(`Enacted (survived)`, Vetoed), names_to = "Stage", values_to = "Amount_B") %>%
+  mutate(Stage = factor(Stage, levels = c("Vetoed", "Enacted (survived)"))) %>%
+  ggplot(aes(x = Unit, y = Amount_B, fill = Stage)) +
+  geom_col(width = 0.6, color = "black", linewidth = 0.2) +
+  geom_point(data = veto_unit, aes(x = Unit, y = NEP_B),
+             inherit.aes = FALSE, shape = 18, size = 4, color = "#ffa6b0") +
+  geom_text(data = veto_unit,
+            aes(x = Unit, y = Enacted_B + Vetoed_B / 2,
+                label = paste0("vetoed\n", round(Vetoed_B), "B")),
+            inherit.aes = FALSE, size = 2.6, color = "grey25", lineheight = 0.9) +
+  scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.1))) +
+  scale_fill_manual(values = c("Enacted (survived)" = "#3994fc", "Vetoed" = "grey70")) +
+  labs(x = NULL, y = "PHP billions", fill = NULL,
+       title = "The 2019 Line-Item Veto, by Operating Unit",
+       subtitle = "Bars show what Congress passed; grey is the part the President struck. Diamonds mark the proposal (NEP).",
+       caption = "**Data Sources:** NEP, GAA, and FY2019 veto message.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.subtitle = element_text(size = 9),
+        plot.caption = element_markdown(size = 6),
+        axis.text.x = element_text(size = 9))
+```
+
+## The Largest District Engineering Offices in Each Congress
+
+Which districts command the biggest budgets is not fixed — it shifts from one
+Congress to the next as offices are created, priorities move, and realignment
+patterns change. The charts and tables below rank the **top 20 district
+engineering offices in each Congress**, showing both what the Executive
+**proposed (NEP)** and what was finally **enacted (GAA)**, summed over that
+Congress's budgets. Reading down the Congresses gives a sense of which parts of
+the country the DPWH budget has most favoured over time.
+
+```{r deo-top20-bycongress, fig.height=12}
+# Top 20 DEOs by enacted GAA within each Congress (enacted years only, FY<=2026),
+# with the matching proposed (NEP) amount shown alongside. Ranked independently
+# per facet using the Office___Congress key trick.
+deo_cong <- deo %>%
+  group_by(Congress, Office) %>%
+  summarise(NEP = sum(NEP_B, na.rm = TRUE),
+            GAA = sum(GAA_B, na.rm = TRUE), .groups = "drop")
+
+top20_cong <- deo_cong %>%
+  group_by(Congress) %>% slice_max(GAA, n = 20) %>% ungroup()
+
+cong_label <- c("17th (Duterte)" = "17th Congress (FY2017-2019)",
+                "18th (Duterte)" = "18th Congress (FY2020-2022)",
+                "19th (Marcos)"  = "19th Congress (FY2023-2025)",
+                "20th (Marcos)"  = "20th Congress (FY2026)")
+
+top20_cong %>%
+  pivot_longer(c(NEP, GAA), names_to = "Item", values_to = "AmountB") %>%
+  mutate(Item      = factor(Item, levels = c("NEP", "GAA")),
+         CongLabel = factor(recode(Congress, !!!cong_label), levels = unname(cong_label)),
+         OfficeKey = reorder(str_c(Office, Congress, sep = "___"), AmountB * (Item == "GAA"))) %>%
+  ggplot(aes(x = AmountB, y = OfficeKey, fill = Item)) +
+  geom_col(position = position_dodge(width = 0.72), width = 0.68) +
+  facet_wrap(~CongLabel, ncol = 2, scales = "free") +
+  scale_y_discrete(labels = function(x) str_remove(x, "___.*")) +
+  scale_x_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.06))) +
+  scale_fill_manual(values = c("NEP" = "#ffa6b0", "GAA" = "#3994fc")) +
+  labs(x = "PHP billions (summed over the Congress)", y = NULL, fill = NULL,
+       title = "Top 20 District Engineering Offices in Each Congress: Proposed vs Enacted",
+       subtitle = "Ranked by enacted GAA within each Congress; pink = proposed (NEP), blue = enacted (GAA)",
+       caption = "**Data Sources:** NEP and GAA documents. The 20th Congress covers FY2026 only (FY2027 is proposed and shown in the levels section below).<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_minimal() +
+  theme(legend.position = "top",
+        panel.grid.major.y = element_blank(), panel.grid.minor = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.subtitle = element_text(size = 9),
+        plot.caption = element_markdown(size = 6),
+        strip.text = element_text(size = 9, face = "bold"),
+        axis.text.y = element_text(size = 6.5),
+        axis.text.x = element_text(size = 6.5))
+```
+
+A few patterns stand out. The offices that top the list migrate over time —
+**Abra** and other Cordillera and northern-Luzon districts dominate the Duterte
+Congresses, while **Bulacan**, **Nueva Ecija**, and Metro Manila offices rise to
+the top under Marcos. And in almost every case the **enacted (blue) bar towers
+over the proposed (pink) one**: the largest districts are large not because the
+Executive proposed them so, but because Congress built them up on enactment —
+the realignment story, seen from the districts' side.
+
+### Top 20 tables, by Congress
+
+The same rankings in full, with the exact proposed and enacted amounts and the net
+addition Congress made on enactment. Each table is the **top 20 offices by enacted
+GAA** for that Congress.
+
+```{r deo-top20-tables, results="asis"}
+make_top20 <- function(cong, label) {
+  tb <- deo_cong %>%
+    filter(Congress == cong) %>%
+    slice_max(GAA, n = 20) %>%
+    arrange(desc(GAA)) %>%
+    transmute(Rank = row_number(),
+              `District Engineering Office` = str_remove(Office, " D\\.E\\. Office$"),
+              `NEP (PHP B)` = round(NEP, 2),
+              `GAA (PHP B)` = round(GAA, 2),
+              `Net add (PHP B)` = round(GAA - NEP, 2))
+  cat(sprintf("\n\n#### %s\n\n", label))
+  print(
+    kbl(tb, align = c("r", "l", "r", "r", "r"),
+        caption = sprintf("Top 20 District Engineering Offices by Enacted GAA --- %s", label)) %>%
+    kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                  full_width = FALSE, font_size = 12)
+  )
+}
+invisible(Map(make_top20, names(cong_label), unname(cong_label)))
+```
+
+
+## Top District Engineering Offices, by Size and by Realignment
+
+Setting the Central Office aside, two questions matter for the hearings: which
+district engineering offices command the **largest budgets**, and how much of each budget was
+in the President's proposal versus added on enactment. The first two charts break
+the largest offices into what was **proposed** (grey) and what Congress **added** on
+enactment — shown as a single total (purple) in the first chart, then with the
+additions split between the **Duterte** (red) and **Marcos** (blue) administrations in
+the second. The third chart ranks offices by the realignments they received within
+each Congress — now reaching back to the 16th (the three Aquino-era budgets) —
+coloured by the fiscal year that delivered each addition, with the amounts the
+President later vetoed shown in grey — the FY2019 vetoes on the 17th-Congress bars
+(medium grey) and the smaller FY2025 vetoes on the 19th (dark grey).
+
+```{r plot-deo-proposed-added, fig.height=5.4}
+pva <- deo %>%
+  group_by(Office) %>%
+  summarize(`In proposal (NEP)` = sum(NEP_B),
+            `Added by Congress` = sum(Realign),
+            GAA_B = sum(GAA_B), .groups = "drop") %>%
+  slice_max(GAA_B, n = 15)
+
+pva %>%
+  pivot_longer(c(`In proposal (NEP)`, `Added by Congress`),
+               names_to = "Component", values_to = "AmountB") %>%
+  mutate(Component = factor(Component, levels = c("In proposal (NEP)", "Added by Congress")),
+         Office    = factor(Office, levels = arrange(pva, GAA_B)$Office)) %>%
+  ggplot(aes(x = AmountB, y = Office, fill = Component)) +
+  geom_col(color = "black", linewidth = 0.2) +
+  scale_x_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.05))) +
+  scale_fill_manual(values = c("In proposal (NEP)" = "grey75", "Added by Congress" = "#9a82c9")) +
+  labs(x = "PHP billions, cumulative FY2017-2026", y = NULL, fill = NULL,
+       title = "District Engineering Offices with the Largest Enacted Budgets",
+       subtitle = "Grey = executive proposal (NEP); purple = added by Congress on enactment",
+       caption = "**Data Sources:** NEP and GAA documents, 2017-2026.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_minimal() +
+  theme(legend.position = c(0.8, 0.3),
+        panel.grid.major.y = element_blank(), panel.grid.minor = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.subtitle = element_text(size = 9),
+        plot.caption = element_markdown(size = 6),
+        axis.text.y = element_text(size = 7))
+```
+
+```{r plot-deo-proposed-added-congress, fig.height=5.4}
+pva_rank <- deo %>% filter(FY != 2026) %>%
+  group_by(Office) %>% summarize(GAA_B = sum(GAA_B), .groups = "drop") %>%
+  slice_max(GAA_B, n = 15)
+
+pva_seg <- bind_rows(
+  deo %>% filter(FY != 2026) %>% group_by(Office) %>%
+    summarize(AmountB = sum(NEP_B), .groups = "drop") %>%
+    mutate(Component = "In proposal (NEP)"),
+  deo %>% filter(FY != 2026) %>% group_by(Office, Admin) %>%
+    summarize(AmountB = sum(Realign), .groups = "drop") %>%
+    transmute(Office, Component = str_c("Added under ", Admin), AmountB)
+)
+
+pva_seg %>%
+  semi_join(pva_rank, by = "Office") %>%
+  mutate(Office    = factor(Office, levels = arrange(pva_rank, GAA_B)$Office),
+         Component = factor(Component, levels = c("In proposal (NEP)",
+                                                  "Added under Duterte",
+                                                  "Added under Marcos"))) %>%
+  ggplot(aes(x = AmountB, y = Office, fill = Component)) +
+  geom_col(color = "black", linewidth = 0.2) +
+  scale_x_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.05))) +
+  scale_fill_manual(values = c("In proposal (NEP)"  = "grey75",
+                               "Added under Duterte" = "#e15759",
+                               "Added under Marcos"  = "#3994fc")) +
+  labs(x = "PHP billions, cumulative FY2017-2025", y = NULL, fill = NULL,
+       title = "Proposed Budget and What Each Administration Added",
+       subtitle = "FY2026 omitted: the one year Congress cut, rather than added to, district budgets",
+       caption = "**Data Sources:** NEP and GAA documents, 2017-2025.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_minimal() +
+  theme(legend.position = c(0.74, 0.26),
+        panel.grid.major.y = element_blank(), panel.grid.minor = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.subtitle = element_text(size = 9),
+        plot.caption = element_markdown(size = 6),
+        axis.text.y = element_text(size = 7))
+```
+
+```{r plot-deo-insertions-fy, fig.height=12}
+ins_fy <- byoperunit %>%
+  filter(str_detect(Office, "D.E. Office"), FY <= 2025) %>%
+  group_by(Office, Congress, FY) %>%
+  summarize(Insertion = sum(Realign), .groups = "drop") %>%
+  group_by(Office, Congress) %>%
+  mutate(Insertion_total = sum(Insertion)) %>%
+  ungroup()
+
+# Top 12 offices within each Congress, ranked independently per facet
+top_per_congress <- ins_fy %>%
+  distinct(Office, Congress, Insertion_total) %>%
+  group_by(Congress) %>%
+  slice_max(Insertion_total, n = 12) %>%
+  ungroup()
+
+plotted <- ins_fy %>%
+  semi_join(top_per_congress, by = c("Office", "Congress")) %>%
+  mutate(Seg = as.character(FY)) %>%
+  select(Office, Congress, Insertion, Insertion_total, Seg)
+
+# FY2019 amounts Congress passed but the President vetoed, overlaid (grey) on the
+# 17th-Congress bars so Congress's intent and the enacted total are both visible
+veto_rows <- read_xlsx(data_path, sheet = "2019_Veto") %>%
+  filter(str_detect(Office, "D.E. Office")) %>%
+  group_by(Office) %>%
+  summarize(Insertion = sum(GAA_Veto) / 1e9, .groups = "drop") %>%
+  mutate(Congress = "17th (Duterte)", Seg = "Vetoed (2019)") %>%
+  semi_join(filter(top_per_congress, Congress == "17th (Duterte)"),
+            by = c("Office", "Congress")) %>%
+  left_join(distinct(plotted, Office, Congress, Insertion_total),
+            by = c("Office", "Congress"))
+
+# FY2025 DEO-level vetoes, overlaid (a darker grey) on the 19th-Congress bars, the
+# same way the 2019 amounts are shown on the 17th. The 2025 veto was overwhelmingly
+# a Central Office event, so only small district slivers appear here.
+veto_rows_25 <- read_xlsx(data_path, sheet = "2025_Veto") %>%
+  filter(str_detect(Office, "D.E. Office")) %>%
+  group_by(Office) %>%
+  summarize(Insertion = sum(GAA_Veto) / 1e9, .groups = "drop") %>%
+  mutate(Congress = "19th (Marcos)", Seg = "Vetoed (2025)") %>%
+  semi_join(filter(top_per_congress, Congress == "19th (Marcos)"),
+            by = c("Office", "Congress")) %>%
+  left_join(distinct(plotted, Office, Congress, Insertion_total),
+            by = c("Office", "Congress"))
+
+seg_levels <- c(as.character(c(2014, 2015, 2016, 2017, 2018, 2019, 2020:2025)), "Vetoed (2019)", "Vetoed (2025)")
+seg_colors <- c(fy_colors, "Vetoed (2019)" = "grey55", "Vetoed (2025)" = "grey30")
+
+bind_rows(plotted, veto_rows, veto_rows_25) %>%
+  mutate(
+    CongLabel = recode(Congress,
+                       "16th (Aquino)"  = "16th Congress (2014-2016)",
+                       "17th (Duterte)" = "17th Congress (2017-2019)",
+                       "18th (Duterte)" = "18th Congress (2020-2022)",
+                       "19th (Marcos)"  = "19th Congress (2023-2025)"),
+    # unique key per facet so each panel orders its own offices by total insertion
+    OfficeKey = reorder(str_c(Office, Congress, sep = "___"), Insertion_total),
+    Seg = factor(Seg, levels = seg_levels)
+  ) %>%
+  ggplot(aes(x = Insertion, y = OfficeKey, fill = Seg)) +
+  geom_col(color = "black", linewidth = 0.2, position = position_stack(reverse = TRUE)) +
+  facet_wrap(~CongLabel, ncol = 1, scales = "free_y") +
+  scale_y_discrete(labels = function(x) str_remove(x, "___.*")) +
+  scale_x_continuous(labels = scales::comma, expand = expansion(mult = c(0.04, 0.05))) +
+  scale_fill_manual(values = seg_colors, drop = FALSE) +
+  guides(fill = guide_legend(ncol = 1)) +
+  labs(x = "PHP billions (realignment over the Congress)", y = NULL, fill = NULL,
+       title = "District Engineering Offices Receiving the Largest Realignments, by Congress",
+       subtitle = "Bars stack oldest year (left) to newest; grey = amounts Congress passed that the President vetoed (medium grey = 2019, dark grey = 2025)",
+       caption = "**Data Sources:** NEP and GAA documents, 2014-2025.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_minimal() +
+  theme(legend.position = "right",
+        panel.grid.major.y = element_blank(), panel.grid.minor = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.subtitle = element_text(size = 9),
+        plot.caption = element_markdown(size = 6),
+        strip.text = element_text(size = 9, face = "bold"),
+        axis.text.y = element_text(size = 7))
+```
+
+The realignment matrix below splits each of the most-favoured offices' realignments
+between the **Duterte** and **Marcos** administrations — making clear, for instance,
+that **Abra**'s windfalls came overwhelmingly under Duterte (2017-2022), while others
+(e.g. **Bulacan 1st**, **Tarlac**) lean Marcos.
+
+```{r plot-deo-heatmap, fig.height=4.6}
+top15 <- deo %>% group_by(Office) %>%
+  summarize(tot = sum(Realign), .groups = "drop") %>% slice_max(tot, n = 15) %>% pull(Office)
+
+deo %>%
+  filter(Office %in% top15) %>%
+  mutate(Office = factor(Office, levels = rev(top15))) %>%
+  ggplot(aes(x = FY, y = Office, fill = Realign)) +
+  geom_tile(color = "white", linewidth = 0.5) +
+  geom_text(aes(label = format(round(Realign, 1), nsmall = 1)), size = 2) +
+  scale_x_continuous(breaks = 2017:2026, position = "top", expand = expansion(mult = 0)) +
+  scale_fill_gradient2(low = "#ffa6b0", mid = "white", high = "#3994fc",
+                       midpoint = 0, labels = scales::comma, name = "GAA - NEP\n(PHP B)") +
+  labs(x = NULL, y = NULL,
+       title = "Net Realignments by District Engineering Office and Year",
+       caption = "**Data Sources:** NEP and GAA documents, 2017-2026.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.caption = element_markdown(size = 6),
+        axis.text.y = element_text(size = 7),
+        legend.key.width = unit(0.35, "cm"))
+```
+
+```{r table-deo-realign}
+deo %>%
+  group_by(Office, Admin) %>%
+  summarize(Realign = sum(Realign), .groups = "drop") %>%
+  pivot_wider(names_from = Admin, values_from = Realign, values_fill = 0) %>%
+  mutate(Total = Duterte + Marcos) %>%
+  slice_max(Total, n = 20) %>%
+  arrange(desc(Total)) %>%
+  transmute(Office,
+            `Duterte (B)` = comma(Duterte, accuracy = 0.1),
+            `Marcos (B)`  = comma(Marcos, accuracy = 0.1),
+            `Total (B)`   = comma(Total, accuracy = 0.1)) %>%
+  kbl(align = "lrrr",
+      caption = "Top 20 D.E. Offices by total NEP-to-GAA realignment, FY2017-2026 (PHP billions)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = FALSE, font_size = 12)
+```
+
+## Which District Engineering Offices Merit a Closer Look?
+
+Rather than single out any one region, this section applies a transparent screen
+to *every* district engineering office and lets the data nominate which ones deserve a deeper
+dive. Each office is scored on four independent signals over FY2017-2026 (the
+Duterte and Marcos administrations):
+
+- **Size** — it is among the ten largest recipients of realignments;
+- **Intensity** — realignments make up at least 60% of the office's enacted budget;
+- **Persistence** — it received a realignment in at least eight of the ten years;
+- **Tilt** — the office's realignment totals under the two administrations differ by at least ₱4B.
+
+Every signal builds on the same yearly *realignment* — the gap between an office's
+enacted and proposed budget, **GAA − NEP** (in ₱B). The tilt signal sums those yearly
+realignments within each administration and takes the difference between the two totals:
+
+**admin tilt = (total GAA − NEP across FY2017-2022) − (total GAA − NEP across FY2023-2026),**
+
+i.e. the office's total Duterte-era realignment minus its total Marcos-era realignment. A
+positive tilt means the office gained more under Duterte and is shown **red** in the chart
+below; a negative tilt means it gained more under Marcos and is shown **blue**; values near
+zero are grey.
+
+Offices that trip several signals at once are the natural candidates for scrutiny.
+
+```{r deo-screen-data}
+screen_base <- deo %>%
+  group_by(Office) %>%
+  summarize(NEP_B         = sum(NEP_B),
+            GAA_B         = sum(GAA_B),
+            Insertion     = sum(Realign),
+            InsShare      = sum(Realign) / sum(GAA_B),
+            YearsInserted = sum(Realign > 0.5),
+            .groups = "drop") %>%
+  left_join(
+    deo %>%
+      group_by(Office, Admin) %>% summarize(r = sum(Realign), .groups = "drop") %>%
+      pivot_wider(names_from = Admin, values_from = r, values_fill = 0) %>%
+      transmute(Office, Duterte, Marcos, Tilt = Duterte - Marcos),
+    by = "Office"
+  ) %>%
+  mutate(across(c(Duterte, Marcos, Tilt), ~replace_na(.x, 0)))
+
+# Newly-created district engineering offices: nothing proposed across the window (NEP = 0),
+# so the realignment share is 100% by construction. Set aside and note in prose.
+screen_nonep <- screen_base %>% filter(NEP_B == 0) %>% arrange(desc(GAA_B))
+
+deo_screen <- screen_base %>%
+  filter(NEP_B > 0) %>%
+  mutate(
+    flag_big        = min_rank(desc(Insertion)) <= 10,
+    flag_intense    = InsShare >= 0.60,
+    flag_persistent = YearsInserted >= n_years_deo - 2,
+    flag_tilted     = abs(Tilt) >= 4,
+    nflags = flag_big + flag_intense + flag_persistent + flag_tilted,
+    Signals = str_c(
+      if_else(flag_big,                    "large; ", ""),
+      if_else(flag_intense,                "realignment-heavy; ", ""),
+      if_else(flag_persistent,             "every year; ", ""),
+      if_else(flag_tilted & Tilt > 0,      "Duterte-leaning; ", ""),
+      if_else(flag_tilted & Tilt < 0,      "Marcos-leaning; ", "")
+    ),
+    Signals = str_remove(Signals, "; $")
+  )
+
+# District engineering offices whose realignment share falls below the plotted window (net trims)
+screen_offscale <- deo_screen %>%
+  filter(InsShare < 0) %>%
+  arrange(InsShare)
+
+offscale_note <- if (nrow(screen_offscale) == 0) {
+  "none do"
+} else {
+  str_c(screen_offscale$Office, " (", round(screen_offscale$InsShare * 100), "%)",
+        collapse = "; ")
+}
+
+nonep_note <- if (nrow(screen_nonep) == 0) {
+  "none"
+} else {
+  str_c(screen_nonep$Office, collapse = "; ")
+}
+```
+
+```{r plot-deo-screen, fig.height=5}
+ggplot(deo_screen, aes(x = Insertion, y = InsShare)) +
+  geom_point(aes(size = YearsInserted, fill = Tilt), shape = 21, color = "black", alpha = 0.9) +
+  geom_text_repel(data = deo_screen %>% filter(nflags >= 2 | Insertion >= 9),
+                  aes(label = Office), size = 2.3, max.overlaps = 30, segment.alpha = 0.4) +
+  scale_fill_gradient2(low = "#3994fc", mid = "grey88", high = "#ff5d6c", midpoint = 0,
+                       labels = scales::comma,
+                       name = "Admin tilt, PHP B\n(red = Duterte,\nblue = Marcos)") +
+  scale_size(range = c(1, 6), name = "Years with a\nrealignment") +
+  scale_x_continuous(labels = scales::comma) +
+  scale_y_continuous(labels = scales::percent) +
+  coord_cartesian(ylim = c(0, NA)) +
+  labs(x = "Total realignment, FY2017-2026 (PHP billions)",
+       y = "Realignments as a share of the office's enacted budget",
+       title = "Screening District Engineering Offices: Size and Intensity of Realignments",
+       subtitle = "Top-right = both large and realignment-heavy; colour shows which administration leaned in",
+       caption = "**Data Sources:** NEP and GAA documents, 2017-2026.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.subtitle = element_text(size = 9),
+        plot.caption = element_markdown(size = 6),
+        legend.title = element_text(size = 7), legend.text = element_text(size = 7))
+```
+
+The vertical axis starts at 0% and extends only as far as the data require. Two sets of offices fall outside it. First, `r nrow(screen_nonep)` newly-created district engineering offices had **no proposed budget** (NEP = 0) anywhere in the FY2017-2026 window, so their realignment share is 100% by construction — money Congress provided where the executive proposed nothing — and they are excluded from the scatter: `r nonep_note`. Second, `r nrow(screen_offscale)` very small offices fall *below* 0%, where the cumulative *enacted* budget came in under the proposal (a net trim rather than the padding that dominates the chart): `r offscale_note`. Because these offices are tiny, a modest peso cut reads as a large negative share, so those values are denominator artefacts more than meaningful signals.
+
+The screen returns a consistent shortlist — none of it about a single region.
+**Batangas 4th D.E. Office** is the largest single recipient of realignments —
+**₱24.3B**, or **69%** of its enacted budget, padded in **all ten years** and
+favoured fairly evenly by both administrations (₱14.5B Duterte, ₱9.7B Marcos), a
+standing fixture regardless of who holds power. **Sorsogon** is similarly
+relentless (₱16.0B, 66%, every year) but tilts Marcos-ward. **Bulacan 1st**
+(₱20.7B) is the second-largest recipient and leans Marcos (₱12.7B vs ₱7.9B). At
+the politically lopsided extremes sit **Abra** — the clearest Duterte-era office
+(₱13.2B vs ₱3.1B) — and **Metro Manila 3rd**, its Marcos-era mirror (₱10.7B vs
+₱3.8B). These offices, not any one province, are where the strongest patterns lie
+and where project-level records would be worth pulling.
+
+```{r table-deo-screen}
+deo_screen %>%
+  arrange(desc(nflags), desc(Insertion)) %>%
+  slice_head(n = 15) %>%
+  transmute(
+    Office,
+    `Realignment (B)`   = comma(Insertion, accuracy = 0.1),
+    `Realignment share` = percent(InsShare, accuracy = 1),
+    `Years realigned` = str_c(YearsInserted, "/", n_years_deo),
+    `Duterte (B)`     = comma(Duterte, accuracy = 0.1),
+    `Marcos (B)`      = comma(Marcos, accuracy = 0.1),
+    Flags             = nflags,
+    Signals
+  ) %>%
+  kbl(align = "lrrcrrcl",
+      caption = "District engineering offices flagged for a closer look, sorted by number of signals then size") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = FALSE, font_size = 12) %>%
+  column_spec(8, width = "13em")
+```
+
+# The FY 2027 Proposal
+
+The FY 2027 National Expenditure Program is the live budget document now before
+Congress — the one advocates can still shape. The proposal's figures already run
+through the tables and charts in the sections above; this section draws them
+together in one place: the proposal's overall size, its distribution **by program**
+and **by district engineering office**, and how it compares to the two most useful
+benchmarks — what the Executive proposed for FY 2026 (the previous **NEP**) and
+what Congress actually enacted (the previous **GAA**).
+
+## FY 2027 in Context: Comparison with FY 2026
+
+At **₱642.6B**, the FY 2027 proposal sits between the two FY 2026 figures. It is
+about **₱113B _above_** the ₱529.6B that was finally enacted for 2026 — a budget
+slashed by the roughly ₱350B flood-control cut — but about **₱237B _below_** the
+₱880B the Executive had originally proposed for 2026. In other words, the
+Department is proposing to spend more than the shrunken 2026 law allows, but well
+short of its own ambitions a year earlier.
+
+```{r plot-2627-compare, fig.height=5.2}
+cmp <- byprogram %>%
+  filter(FY %in% c(2026, 2027)) %>%
+  transmute(Program,
+            `NEP 2026` = if_else(FY == 2026, NEP_B, NA_real_),
+            `GAA 2026` = if_else(FY == 2026, GAA_B, NA_real_),
+            `NEP 2027` = if_else(FY == 2027, NEP_B, NA_real_)) %>%
+  group_by(Program) %>%
+  summarise(across(everything(), ~ sum(.x, na.rm = TRUE)), .groups = "drop") %>%
+  pivot_longer(-Program, names_to = "Series", values_to = "AmountB") %>%
+  mutate(Series = factor(Series, levels = c("NEP 2026", "GAA 2026", "NEP 2027")),
+         Program = factor(Program, levels = dpwh_programs))
+
+ggplot(cmp, aes(x = AmountB, y = fct_rev(Program), fill = Series)) +
+  geom_col(position = position_dodge(width = 0.75), width = 0.7) +
+  scale_x_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.06))) +
+  scale_y_discrete(labels = function(x) str_wrap(x, 24)) +
+  scale_fill_manual(values = c("NEP 2026" = "#ffd0d5", "GAA 2026" = "#3994fc", "NEP 2027" = "#c0392b")) +
+  labs(x = "PHP billions", y = NULL, fill = NULL,
+       title = "FY 2027 Proposal vs FY 2026, by Program",
+       subtitle = "Light pink = FY2026 proposed; blue = FY2026 enacted; red = FY2027 proposed",
+       caption = "**Data Sources:** NEP and GAA documents.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_bw() +
+  theme(legend.position = "top", panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.subtitle = element_text(size = 9), plot.caption = element_markdown(size = 6),
+        axis.text.y = element_text(size = 8))
+```
+
+Read program by program, the FY 2027 proposal looks far more like the FY 2026
+*proposal* than the FY 2026 *enacted* budget — the Executive is, in effect,
+re-proposing much of what Congress rearranged on the way to the 2026 GAA:
+
+- **Flood Management**, gutted to just **₱4.8B** in the 2026 GAA, is restored to
+  **₱103.5B** in the FY 2027 proposal (though still below its ₱250.8B FY2026 NEP).
+- **Network Development**, which Congress cut to **₱96.8B** on enactment, returns
+  to **₱176.6B** — close to its original FY2026 proposal.
+- The **Convergence and Special Support Program** — which Congress *inflated* to
+  **₱240.5B** on enactment — is proposed back down at **₱157.3B**, roughly its
+  FY2026 proposed level.
+
+The full comparison, with the proposed change measured against the enacted 2026
+budget (the current baseline):
+
+```{r table-2627-compare}
+byprogram %>%
+  filter(FY %in% c(2026, 2027)) %>%
+  group_by(Program) %>%
+  summarise(`NEP 2026` = sum(NEP_B[FY == 2026], na.rm = TRUE),
+            `GAA 2026` = sum(GAA_B[FY == 2026], na.rm = TRUE),
+            `NEP 2027` = sum(NEP_B[FY == 2027], na.rm = TRUE), .groups = "drop") %>%
+  mutate(`Chg. vs 2026 GAA` = `NEP 2027` - `GAA 2026`,
+         Program = factor(Program, levels = dpwh_programs)) %>%
+  arrange(desc(`NEP 2027`)) %>%
+  mutate(across(where(is.numeric), ~ round(.x, 1))) %>%
+  kbl(align = c("l", "r", "r", "r", "r"),
+      caption = "FY 2027 Proposed New Appropriations vs FY 2026, by Program (PHP billions)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = FALSE, font_size = 12) %>%
+  row_spec(0, bold = TRUE)
+```
+
+
+## By Program: Proposed and Enacted Levels
+
+Zooming in on the programs, it helps to see the **overall levels** the Executive
+proposes and the legislature enacts — the raw distribution of pesos across
+programs, and where the **FY 2027 proposal** places them relative to the recent
+past.
+
+At the department level, the FY 2027 NEP proposes **₱642.6B** — a marked step
+down from the ₱880B proposed for 2026 and the ₱1,087.7B *enacted* for 2025 (the
+2025 figure is the post-veto total; see the veto section). The proposed-versus-enacted
+totals over the full window make the swings plain:
+
+```{r plot-levels-total, fig.height=3.8}
+totlevels <- byprogram %>%
+  group_by(FY) %>%
+  summarise(NEP = sum(NEP_B, na.rm = TRUE),
+            GAA = if (all(is.na(GAA_B))) NA_real_ else sum(GAA_B, na.rm = TRUE),
+            .groups = "drop") %>%
+  pivot_longer(c(NEP, GAA), names_to = "Item", values_to = "AmountB") %>%
+  filter(!is.na(AmountB)) %>%
+  mutate(Item = factor(Item, levels = c("NEP", "GAA")))
+
+ggplot(totlevels, aes(x = FY, y = AmountB, colour = Item, group = Item)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 1.8) +
+  geom_text(aes(label = round(AmountB)), vjust = -0.8, size = 2.4, show.legend = FALSE) +
+  scale_x_continuous(breaks = c(seq(2018, 2026, 2), 2027)) +
+  scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0.05, 0.14))) +
+  scale_colour_manual(values = c("NEP" = "#ffa6b0", "GAA" = "#3994fc")) +
+  labs(x = NULL, y = "PHP billions", colour = NULL,
+       title = "DPWH Total New Appropriations: Proposed (NEP) vs Enacted (GAA)",
+       caption = "**Note:** FY2027 shows the NEP only (not yet enacted). FY2025 GAA is the post-veto total.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_bw() +
+  theme(legend.position = "bottom", panel.grid.minor = element_blank(),
+        panel.grid.major.x = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.caption = element_markdown(size = 6))
+```
+
+The enacted budget ran *above* the proposal every year from 2020 to 2025 — a
+legislature adding to the President's plan — until FY2026, when the enacted
+total fell far *below* the proposal (the ₱246B flood-control cut). The FY2027
+proposal resets the level near ₱643B.
+
+**How is the FY 2027 proposal distributed across programs?** Two programs account
+for more than half of it: Network Development (₱176.6B, 27%) and the
+Convergence and Special Support Program (₱157.3B, 25%) — the latter
+historically the *discretionary* program that Congress inflated through
+realignments, now proposed at a high level in the Executive's own document.
+
+```{r plot-levels-byprogram, fig.height=5.0}
+lvl <- byprogram %>%
+  select(FY, Program, NEP_B, GAA_B) %>%
+  pivot_longer(c(NEP_B, GAA_B), names_to = "Item", values_to = "AmountB") %>%
+  mutate(Item = factor(if_else(Item == "NEP_B", "NEP (proposed)", "GAA (enacted)"),
+                       levels = c("NEP (proposed)", "GAA (enacted)"))) %>%
+  filter(!is.na(AmountB))
+
+ggplot(lvl, aes(x = FY, y = AmountB, fill = Program)) +
+  geom_col(width = 0.72) +
+  facet_wrap(~Item, ncol = 1) +
+  scale_x_continuous(breaks = c(seq(2018, 2026, 2), 2027)) +
+  scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.04))) +
+  scale_fill_manual(values = program_colors) +
+  labs(x = NULL, y = "PHP billions", fill = NULL,
+       title = "DPWH Budget Levels by Program: Proposed (NEP, to 2027) and Enacted (GAA, to 2026)",
+       caption = "**Note:** FY2027 GAA is omitted (not yet enacted). Each bar is the full department budget, split by program.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_bw() +
+  theme(legend.position = "bottom", legend.text = element_text(size = 6.5),
+        panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
+        plot.title = element_text(face = "bold", size = 12),
+        plot.caption = element_markdown(size = 6),
+        strip.background = element_rect(fill = "white"),
+        strip.text = element_text(size = 9, face = "bold")) +
+  guides(fill = guide_legend(nrow = 2))
+```
+
+Reading the two panels together is instructive. In the **enacted** budgets (lower
+panel), the Convergence and Special Support Program balloons after 2022 — the
+realignment story documented in Section 6. But the **proposed** budgets (upper
+panel) show the Executive itself steadily raising Convergence, so that by FY2027
+it is proposed at ₱157B before Congress touches it. The proposed FY2027
+distribution, in full:
+
+```{r table-levels-2027}
+byprogram %>%
+  filter(FY == 2027) %>%
+  transmute(Program,
+            `NEP 2027 (PHP B)` = round(NEP_B, 1),
+            `Share of proposal` = scales::percent(NEP_B / sum(NEP_B), accuracy = 0.1)) %>%
+  arrange(desc(`NEP 2027 (PHP B)`)) %>%
+  kbl(align = c("l", "r", "r"),
+      caption = "FY 2027 Proposed New Appropriations by Program (NEP)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = FALSE, font_size = 12)
+```
+
+
+## Inside the Proposal: The Biggest Line Items
+
+Applying the same granular lens to the **FY 2027 proposal** shows what the Executive
+is prioritising *within* the programs. The largest proposed items are a telling mix
+of the national works Congress usually trims and the district-oriented items it
+usually adds.
+
+```{r plot-2027-items, fig.height=5.4}
+items27 <- gran %>%
+  filter(FY == 2027, NEP_B > 0) %>%
+  group_by(Item, Program) %>% summarise(NEP_B = sum(NEP_B, na.rm = TRUE), .groups = "drop") %>%
+  slice_max(NEP_B, n = 15) %>%
+  mutate(ProgLab = str_replace(Program, "Convergence and Special Support Program", "Convergence & Special Support") %>%
+                   str_replace(" Program$",""),
+         ItemS = short_item(Item), ItemS = fct_reorder(ItemS, NEP_B))
+ggplot(items27, aes(x = NEP_B, y = ItemS, fill = ProgLab)) +
+  geom_col(width = 0.74) +
+  geom_text(aes(label = round(NEP_B)), hjust = -0.15, size = 2.7, colour = "grey20") +
+  scale_x_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.10))) +
+  scale_fill_manual(values = program_colors_short, name = NULL) +
+  labs(x = "FY 2027 proposed NEP (PHP billions)", y = NULL,
+       title = "The 15 biggest line items in the FY 2027 proposal",
+       subtitle = "Coloured by program; a mix of national road works and Convergence district items",
+       caption = "**Data:** granular program encoding.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_bw() +
+  theme(legend.position = "bottom", legend.text = element_text(size = 6.5),
+        panel.grid.minor = element_blank(), panel.grid.major.y = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.subtitle = element_text(size = 9), plot.caption = element_markdown(size = 6),
+        axis.text.y = element_text(size = 7.5)) +
+  guides(fill = guide_legend(nrow = 2))
+```
+
+The single largest proposed item is **By-Pass & Diversion Roads (₱127B)** — a
+national Network Development line that Congress has historically *cut* by the most
+(recall the ₱94B cumulative reduction above). Right behind it is **BIP – Access
+Roads to Public Buildings (₱106B)**, a Convergence item of exactly the type
+Congress historically *adds*. The two big flood-mitigation lines return at ₱63B and
+₱41B. In other words, the FY 2027 NEP re-proposes a large national road-and-flood
+program — much of which the legislature has a track record of trimming in favour
+of district items — setting up the same proposal-versus-enactment tug-of-war at
+the item level that the rest of this report documents at the program and district
+levels.
+
+## By District Engineering Office: The Proposed Distribution
+
+Having seen how Congress has historically built up district budgets, it is worth
+turning the same geographic lens on the **FY 2027 proposal**. Its starting
+distribution across operating units is strikingly centralized — a reminder that
+the district-level build-up documented above happens *after* the proposal, not in
+it.
+
+Of the ₱642.6B proposed for FY 2027, **₱510.0B (79%) sits in the Central Office**
+and only **₱129.7B (20%) is distributed across the 198 district engineering
+offices** (the small remainder is in regional and other units). That 79/20 split
+is the raw material Congress works on: the district-level build-up that defines
+DPWH's budget politics happens *later*, in the move from proposal to enacted law.
+
+```{r plot-levels-centraldist, fig.height=3.8}
+unit_levels <- byoperunit %>%
+  mutate(Unit = case_when(Office == "Central Office"        ~ "Central Office",
+                          str_detect(Office, "D.E. Office") ~ "District Engineering Offices",
+                          str_detect(Office, "Regional")    ~ "Regional Offices",
+                          TRUE                              ~ "Other units")) %>%
+  filter(FY >= 2018) %>%
+  group_by(FY, Unit) %>%
+  summarise(NEP_B = sum(NEP_B, na.rm = TRUE), .groups = "drop") %>%
+  group_by(FY) %>% mutate(share = NEP_B / sum(NEP_B)) %>% ungroup() %>%
+  mutate(Unit = factor(Unit, levels = c("Central Office", "District Engineering Offices",
+                                         "Regional Offices", "Other units")))
+
+ggplot(unit_levels, aes(x = FY, y = share, fill = Unit)) +
+  geom_col(width = 0.74) +
+  scale_x_continuous(breaks = c(seq(2018, 2026, 2), 2027)) +
+  scale_y_continuous(labels = scales::percent, expand = expansion(mult = c(0, 0.02))) +
+  scale_fill_manual(values = c("Central Office" = "#3994fc",
+                               "District Engineering Offices" = "#ffa6b0",
+                               "Regional Offices" = "#bcbef2", "Other units" = "#d9d9d9")) +
+  labs(x = NULL, y = "Share of proposed NEP", fill = NULL,
+       title = "Where the Proposal Places the Money: NEP Share by Operating Unit",
+       caption = "**Note:** Each bar is the FY's *proposed* (NEP) new appropriations, split by operating unit. FY2027 is proposed only.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_bw() +
+  theme(legend.position = "bottom", legend.text = element_text(size = 7),
+        panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
+        plot.title = element_text(face = "bold", size = 12.5),
+        plot.caption = element_markdown(size = 6)) +
+  guides(fill = guide_legend(nrow = 1))
+```
+
+At proposal stage the Central Office has held the overwhelming share of new
+appropriations every year — typically 75-85% — because the Executive budgets
+most district projects centrally and lets the release-and-realignment machinery
+distribute them. The FY2027 proposal (79% central) is squarely in that pattern.
+
+**Which districts fare best in the proposal?** Even within the 20% that is
+pre-allocated to named districts, the FY2027 NEP is concentrated: the top office
+is proposed ₱3.5B while the median district gets a fraction of that.
+
+```{r plot-levels-topdeo, fig.height=5.0}
+top_deo_27 <- deo_all %>%
+  filter(FY == 2027) %>%
+  slice_max(NEP_B, n = 20) %>%
+  mutate(Office = str_remove(Office, " D\\.E\\. Office$") %>% str_remove(" Engineering$"),
+         Office = fct_reorder(Office, NEP_B))
+
+ggplot(top_deo_27, aes(x = NEP_B, y = Office)) +
+  geom_col(fill = "#3994fc", width = 0.72) +
+  geom_text(aes(label = format(round(NEP_B, 2), nsmall = 2)), hjust = -0.15, size = 2.6) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.12))) +
+  labs(x = "FY 2027 proposed NEP (PHP billions)", y = NULL,
+       title = "Top 20 District Engineering Offices in the FY 2027 Proposal",
+       caption = "**Note:** Pre-allocated district amounts in the NEP, before congressional realignment.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_bw() +
+  theme(panel.grid.minor = element_blank(), panel.grid.major.y = element_blank(),
+        plot.title = element_text(face = "bold", size = 12.5),
+        plot.caption = element_markdown(size = 6),
+        axis.text.y = element_text(size = 7))
+```
+
+The offices proposed the most in FY2027 — Bulacan 2nd (₱3.5B), Metro Manila 3rd
+(₱2.9B), Nueva Ecija 1st (₱2.8B) — are a mix of high-population and
+infrastructure-heavy districts. But the more important point for scrutiny is the
+gap between this proposed geography and the *enacted* one: as the realignment
+analysis above shows, Congress adds heavily to district offices during
+deliberations, so the enacted distribution of DPWH money will look very different
+from this proposal.
+
+
+# The Line-Item Vetoes: 2019 and 2025
+
+Twice in this window the President reached past Congress's realignments and struck
+enacted amounts out of the DPWH budget by **line-item veto** — in **FY2019
+(₱95.4B)** and again in **FY2025 (₱26.1B)**. In both years the pattern was the
+same: Congress inflated the proposal (heavily in 2019's Local Program, and in
+2025's Convergence and Flood programs), and the President then vetoed a large
+block of it, almost all from the **Central Office**. The enacted GAA used
+throughout this report is the **post-veto** figure in both years.
+
+## The 2019 Veto (₱95.4B)
+
+In FY2019, Congress raised the DPWH's New Appropriations only modestly in
+aggregate (from a **₱544.5B** proposal to a **₱549.4B** legislated total) but **heavily
+reallocated** the money — above all into the Local Program. The President then
+exercised **line-item vetoes worth ₱95.37B**, almost all of it from that program,
+bringing the enacted GAA down to **₱454.0B** (the NEP-to-GAA dip visible back in
+Section 1). The three stages below are what the President **proposed** (NEP), what
+Congress **legislated** (the pre-veto total), and what was finally **enacted**
+after the line-item veto.
+
+```{r plot-veto-total, fig.height=3.6}
 veto_total <- tibble(
-  Stage = factor(c("Proposed\n(NEP)","Legislated\n(pre-veto)","Enacted\n(post-veto)"),
-                 levels = c("Proposed\n(NEP)","Legislated\n(pre-veto)","Enacted\n(post-veto)")),
+  Stage = factor(c("Proposed\n(NEP)", "Legislated\n(pre-veto)", "Enacted\n(post-veto)"),
+                 levels = c("Proposed\n(NEP)", "Legislated\n(pre-veto)", "Enacted\n(post-veto)")),
   AmountB = c(sum(byprogram$NEP_B[byprogram$FY == 2019]),
               sum(byprogram$GAA_B[byprogram$FY == 2019]) + sum(byprogram$Veto_B[byprogram$FY == 2019]),
-              sum(byprogram$GAA_B[byprogram$FY == 2019])))
-ggplot(veto_total, aes(Stage, AmountB, fill = Stage)) +
+              sum(byprogram$GAA_B[byprogram$FY == 2019]))
+)
+
+ggplot(veto_total, aes(x = Stage, y = AmountB, fill = Stage)) +
   geom_col(width = 0.62) +
-  geom_text(aes(label = comma(AmountB, accuracy = 0.1)), vjust = -0.5, size = 3.4) +
+  geom_text(aes(label = comma(AmountB, accuracy = 0.1)), vjust = -0.5, size = 3) +
   annotate("segment", x = 2, xend = 3, y = 575, yend = 575) +
-  annotate("text", x = 2.5, y = 590, label = "vetoed: −₱95.4B", size = 3.2, fontface = "bold") +
-  scale_y_continuous(labels = comma, expand = expansion(mult = c(0, 0.18))) +
-  scale_fill_manual(values = c("#ffa6b0","#bcbef2","#3994fc")) +
-  labs(x = NULL, y = "PHP billions", title = "FY 2019: proposed → legislated → enacted (after the veto)") +
-  theme_dpwh() + theme(legend.position = "none")
+  annotate("text", x = 2.5, y = 590, label = "vetoed: -P95.4B", size = 3, fontface = "bold") +
+  scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.18))) +
+  scale_fill_manual(values = c("#ffa6b0", "#bcbef2", "#3994fc")) +
+  labs(x = NULL, y = "PHP billions",
+       title = "DPWH FY2019: Proposed -> Legislated -> Enacted (after the Veto)") +
+  theme_minimal() +
+  theme(legend.position = "none",
+        panel.grid.major.x = element_blank(), panel.grid.minor = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        axis.text.x = element_text(size = 8))
 ```
 
-```{r plot-veto-byprogram, fig.height=5}
-veto_prog <- byprogram %>% filter(FY == 2019) %>%
-  transmute(Program, `Proposed (NEP)` = NEP_B, `Legislated (pre-veto)` = GAA_B + Veto_B, `Enacted (post-veto)` = GAA_B) %>%
+```{r plot-veto-byprogram, fig.height=4.6}
+veto_prog <- byprogram %>%
+  filter(FY == 2019) %>%
+  transmute(Program,
+            `Proposed (NEP)`        = NEP_B,
+            `Legislated (pre-veto)` = GAA_B + Veto_B,
+            `Enacted (post-veto)`   = GAA_B) %>%
   pivot_longer(-Program, names_to = "Stage", values_to = "AmountB") %>%
-  mutate(Stage = factor(Stage, levels = c("Proposed (NEP)","Legislated (pre-veto)","Enacted (post-veto)")),
+  mutate(Stage   = factor(Stage, levels = c("Proposed (NEP)", "Legislated (pre-veto)", "Enacted (post-veto)")),
          Program = factor(Program, levels = dpwh_programs))
-ggplot(veto_prog, aes(Stage, AmountB, fill = Stage)) +
+
+ggplot(veto_prog, aes(x = Stage, y = AmountB, fill = Stage)) +
   geom_col(width = 0.7) +
   facet_wrap(~Program, scales = "free_y", ncol = 4, labeller = label_wrap_gen(22)) +
-  scale_y_continuous(labels = comma, expand = expansion(mult = c(0, 0.1))) +
-  scale_fill_manual(values = c("Proposed (NEP)" = "#ffa6b0","Legislated (pre-veto)" = "#bcbef2","Enacted (post-veto)" = "#3994fc")) +
-  labs(x = NULL, y = "PHP billions", title = "FY 2019 by program: proposed, legislated, and enacted after the veto") +
-  theme_dpwh() + theme(strip.text = element_text(size = 8), axis.text.x = element_blank())
+  scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.1))) +
+  scale_fill_manual(values = c("Proposed (NEP)" = "#ffa6b0", "Legislated (pre-veto)" = "#bcbef2",
+                               "Enacted (post-veto)" = "#3994fc")) +
+  labs(x = NULL, y = "PHP billions", fill = NULL,
+       title = "FY2019 by Program: Proposed, Legislated, and Enacted after the Veto",
+       caption = "**Data Sources:** NEP, legislated GAA, and veto message, FY2019.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_bw() +
+  theme(legend.position = "bottom", legend.text = element_text(size = 7),
+        panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.caption = element_markdown(size = 6),
+        strip.background = element_rect(fill = "white"), strip.text = element_text(size = 6.5),
+        axis.text.x = element_text(angle = 35, hjust = 1, size = 6),
+        axis.text.y = element_text(size = 6.5))
 ```
 
-The veto was overwhelmingly a **Local Program** event: only that program (plus token overhead amounts) shows a legislated bar towering over the enacted level. Unpacking the vetoed line items by **type of work** and by **engineering office** shows where the realigned money had been parked.
+The veto was overwhelmingly a **Local Program** event: only that program (plus
+token amounts in the two overhead lines) shows a legislated (pre-veto) bar towering over the
+enacted level. Unpacking the vetoed line items by **type of work** and by **engineering
+office** shows where the realigned money had been parked:
 
 ```{r load-veto-detail}
-veto_detail <- read_xlsx(data_path, sheet = "2019_Veto") %>% mutate(Veto_B = GAA_Veto / 1e9)
+veto_detail <- read_xlsx(data_path, sheet = "2019_Veto") %>%
+  mutate(Veto_B = GAA_Veto / 1e9)
 ```
 
 ```{r plot-veto-activity, fig.height=3.8}
-veto_detail %>% group_by(Activity) %>% summarize(Veto_B = sum(Veto_B), .groups = "drop") %>%
-  ggplot(aes(Veto_B, fct_reorder(Activity, Veto_B))) +
+veto_detail %>%
+  group_by(Activity) %>%
+  summarize(Veto_B = sum(Veto_B), .groups = "drop") %>%
+  ggplot(aes(x = Veto_B, y = fct_reorder(Activity, Veto_B))) +
   geom_col(fill = "#3994fc") +
-  geom_text(aes(label = format(round(Veto_B,1), nsmall = 1)), hjust = -0.15, size = 3) +
-  scale_x_continuous(labels = comma, expand = expansion(mult = c(0, 0.12))) +
-  labs(x = "PHP billions vetoed", y = NULL, title = "What the 2019 veto struck, by type of work") +
-  theme_dpwh() + theme(panel.grid.major.y = element_blank(), axis.text.y = element_text(size = 9.5))
+  geom_text(aes(label = format(round(Veto_B, 1), nsmall = 1)), hjust = -0.15, size = 2.6) +
+  scale_x_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.12))) +
+  labs(x = "PHP billions vetoed", y = NULL,
+       title = "What the 2019 Veto Struck, by Type of Work",
+       caption = "**Data Source:** FY2019 veto message.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_minimal() +
+  theme(panel.grid.major.y = element_blank(), panel.grid.minor = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.caption = element_markdown(size = 6),
+        axis.text.y = element_text(size = 8))
 ```
 
-```{r plot-veto-office, fig.height=4.6}
-veto_detail %>% group_by(Office) %>% summarize(Veto_B = sum(Veto_B), .groups = "drop") %>%
+```{r plot-veto-office, fig.height=4.4}
+veto_detail %>%
+  group_by(Office) %>%
+  summarize(Veto_B = sum(Veto_B), .groups = "drop") %>%
   slice_max(Veto_B, n = 15) %>%
-  ggplot(aes(Veto_B, fct_reorder(Office, Veto_B))) +
+  ggplot(aes(x = Veto_B, y = fct_reorder(Office, Veto_B))) +
   geom_col(fill = "#ffa6b0") +
-  geom_text(aes(label = format(round(Veto_B,2), nsmall = 2)), hjust = -0.15, size = 2.8) +
-  scale_x_continuous(labels = comma, expand = expansion(mult = c(0, 0.14))) +
-  labs(x = "PHP billions vetoed", y = NULL, title = "Where the 2019 veto struck: top 15 offices",
-       subtitle = "The DPWH Central Office alone accounts for ~₱74B of the ₱95.4B vetoed") +
-  theme_dpwh() + theme(panel.grid.major.y = element_blank(), axis.text.y = element_text(size = 8.5))
+  geom_text(aes(label = format(round(Veto_B, 2), nsmall = 2)), hjust = -0.15, size = 2.4) +
+  scale_x_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.14))) +
+  labs(x = "PHP billions vetoed", y = NULL,
+       title = "Where the 2019 Veto Struck: Top 15 Offices",
+       subtitle = "The DPWH Central Office alone accounts for ~P74B of the P95.4B vetoed",
+       caption = "**Data Source:** FY2019 veto message.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_minimal() +
+  theme(panel.grid.major.y = element_blank(), panel.grid.minor = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.subtitle = element_text(size = 9),
+        plot.caption = element_markdown(size = 6),
+        axis.text.y = element_text(size = 7.5))
 ```
 
 ```{r table-veto-program}
-byprogram %>% filter(FY == 2019) %>%
-  transmute(Program, `Proposed (NEP)` = NEP_B, `Legislated (pre-veto)` = GAA_B + Veto_B, Vetoed = Veto_B, `Enacted (post-veto)` = GAA_B) %>%
+byprogram %>%
+  filter(FY == 2019) %>%
+  transmute(Program,
+            `Proposed (NEP)`        = NEP_B,
+            `Legislated (pre-veto)` = GAA_B + Veto_B,
+            `Vetoed`                = Veto_B,
+            `Enacted (post-veto)`   = GAA_B) %>%
   bind_rows(tibble(Program = "DPWH TOTAL",
                    `Proposed (NEP)` = sum(byprogram$NEP_B[byprogram$FY == 2019]),
                    `Legislated (pre-veto)` = sum((byprogram$GAA_B + byprogram$Veto_B)[byprogram$FY == 2019]),
                    Vetoed = sum(byprogram$Veto_B[byprogram$FY == 2019]),
                    `Enacted (post-veto)` = sum(byprogram$GAA_B[byprogram$FY == 2019]))) %>%
   mutate(across(-Program, ~comma(.x, accuracy = 0.1))) %>%
-  kbl_clean(font = 12.5, align = c("l", rep("r", 4)),
-            caption = "FY 2019 DPWH: proposed, legislated (pre-veto), vetoed, and enacted (post-veto) — PHP billions") %>%
+  kbl(align = c("l", rep("r", 4)),
+      caption = "FY2019 DPWH: proposed, legislated (pre-veto), vetoed, and enacted (post-veto) --- PHP billions") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = FALSE, font_size = 12) %>%
   row_spec(0, bold = TRUE)
 ```
 
-# The Unprogrammed Appropriations {#ua}
+```{r table-veto-activity}
+veto_detail %>%
+  group_by(Activity) %>%
+  summarize(`Vetoed (PHP B)` = sum(Veto_B), .groups = "drop") %>%
+  arrange(desc(`Vetoed (PHP B)`)) %>%
+  mutate(`Share of veto` = percent(`Vetoed (PHP B)` / sum(`Vetoed (PHP B)`), accuracy = 0.1),
+         `Vetoed (PHP B)` = comma(`Vetoed (PHP B)`, accuracy = 0.01)) %>%
+  kbl(align = "lrr",
+      caption = "FY2019 vetoed line items, by type of work") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = FALSE, font_size = 12)
+```
 
-The **Unprogrammed Appropriations (UA)** is a standby fund released only when revenue collections exceed targets or new financing is secured. Because releases happen *outside* the regular program structure, they are harder to track — and DPWH's draw on the UA has become a focus of scrutiny, as a number of flood-control projects later flagged as questionable were reportedly financed through this route.
+## The 2025 Veto (₱26.1B)
+
+FY2025 repeated the pattern on a smaller scale. Congress raised the DPWH proposal
+sharply — from a **₱898.9B** NEP to a **₱1,113.8B** legislated total, a **+₱215B**
+insertion — and the President then vetoed **₱26.1B**, bringing the enacted GAA
+to **₱1,087.7B**. Where 2019's veto fell on the Local Program, 2025's landed
+squarely on the two programs most associated with discretionary spending:
+**Convergence and Special Support (₱18.0B vetoed)** and **Flood Management
+(₱7.5B)**.
+
+```{r plot-veto2025-total, fig.height=3.6}
+veto_total_25 <- tibble(
+  Stage = factor(c("Proposed\n(NEP)", "Legislated\n(pre-veto)", "Enacted\n(post-veto)"),
+                 levels = c("Proposed\n(NEP)", "Legislated\n(pre-veto)", "Enacted\n(post-veto)")),
+  AmountB = c(sum(byprogram$NEP_B[byprogram$FY == 2025]),
+              sum(byprogram$GAA_B[byprogram$FY == 2025]) + sum(byprogram$Veto_B[byprogram$FY == 2025]),
+              sum(byprogram$GAA_B[byprogram$FY == 2025]))
+)
+
+ggplot(veto_total_25, aes(x = Stage, y = AmountB, fill = Stage)) +
+  geom_col(width = 0.62) +
+  geom_text(aes(label = comma(AmountB, accuracy = 0.1)), vjust = -0.5, size = 3) +
+  annotate("segment", x = 2, xend = 3, y = 1150, yend = 1150) +
+  annotate("text", x = 2.5, y = 1175, label = "vetoed: -P26.1B", size = 3, fontface = "bold") +
+  scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.18))) +
+  scale_fill_manual(values = c("#ffa6b0", "#bcbef2", "#3994fc")) +
+  labs(x = NULL, y = "PHP billions",
+       title = "DPWH FY2025: Proposed -> Legislated -> Enacted (after the Veto)") +
+  theme_minimal() +
+  theme(legend.position = "none",
+        panel.grid.major.x = element_blank(), panel.grid.minor = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        axis.text.x = element_text(size = 8))
+```
+
+The vetoed amounts fell on three programs, and — as in 2019 — almost entirely
+on centrally-held appropriations:
+
+```{r plot-veto2025-detail, fig.height=3.4}
+veto25_prog <- byprogram %>%
+  filter(FY == 2025, Veto_B > 0) %>%
+  transmute(Program = factor(Program, levels = dpwh_programs), Veto_B) %>%
+  arrange(desc(Veto_B))
+
+central_share_25 <- read_xlsx(data_path, sheet = "2025_Veto") %>%
+  summarise(sh = sum(GAA_Veto[Office == "Central Office"], na.rm = TRUE) /
+                 sum(GAA_Veto, na.rm = TRUE)) %>% pull(sh)
+
+ggplot(veto25_prog, aes(x = Veto_B, y = fct_reorder(Program, Veto_B))) +
+  geom_col(fill = "#8c8c8c", width = 0.6) +
+  geom_text(aes(label = comma(Veto_B, accuracy = 0.1)), hjust = -0.15, size = 3) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.15))) +
+  scale_y_discrete(labels = function(x) str_wrap(x, 24)) +
+  labs(x = "Vetoed (PHP billions)", y = NULL,
+       title = "FY2025 Line-Item Veto, by Program (₱26.1B total)",
+       subtitle = sprintf("The Central Office accounts for ~₱25.1B (%.0f%%) of the amount vetoed",
+                          100 * central_share_25),
+       caption = "**Data Source:** FY2025 veto message.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_bw() +
+  theme(panel.grid.minor = element_blank(), panel.grid.major.y = element_blank(),
+        plot.title = element_text(face = "bold", size = 12.5),
+        plot.subtitle = element_text(size = 9), plot.caption = element_markdown(size = 6),
+        axis.text.y = element_text(size = 8))
+```
+
+As in 2019, the veto was overwhelmingly a **Central Office** event — about
+**₱25.1B (96%)** of the ₱26.1B struck was drawn from centrally-held appropriations,
+with only token amounts removed from named district offices. The recurring story
+is the same across both years: the largest discretionary build-ups are inserted
+centrally during deliberations, and it is there that the veto pen, when used,
+falls.
+
+
+# DPWH and the Unprogrammed Appropriations
+
+The **Unprogrammed Appropriations (UA)** is a standby fund that may only be
+released when revenue collections exceed targets or new financing is secured.
+Because releases happen *outside* the regular program structure, they are harder
+to track — and the DPWH's draw on the UA has become a focus of scrutiny, as a
+number of flood-control projects later flagged as questionable were reportedly
+financed through this route. The table records **allotments released** (the
+spending authority granted) and **obligations** (amounts actually committed);
+obligation data before 2013 could not be sourced, and FY2015-2017 carried no UA
+releases to the DPWH at all.
 
 ```{r load-ua}
 ua <- read_xlsx(data_path, sheet = "DPWH_UA") %>%
-  mutate(Allotments_B = Allotments/1e6, Obligations_B = Obligations/1e6)
-ua_long <- ua %>% select(FY, Allotments_B, Obligations_B) %>%
+  mutate(Allotments_B  = Allotments / 1e6,    # thousand pesos -> PHP billions
+         Obligations_B = Obligations / 1e6)
+
+ua_long <- ua %>%
+  select(FY, Allotments_B, Obligations_B) %>%
   pivot_longer(-FY, names_to = "Item", values_to = "AmountB") %>%
   mutate(Item = recode(Item, Allotments_B = "Allotments", Obligations_B = "Obligations"),
-         Item = factor(Item, levels = c("Allotments","Obligations")))
+         Item = factor(Item, levels = c("Allotments", "Obligations")))
 ```
 
-```{r plot-ua, fig.height=4.4}
-ggplot(ua_long %>% filter(!is.na(AmountB)), aes(FY, AmountB, fill = Item)) +
+```{r plot-ua, fig.height=4.2}
+ggplot(ua_long %>% filter(!is.na(AmountB)), aes(x = FY, y = AmountB, fill = Item)) +
   geom_col(position = position_dodge(width = 0.7), width = 0.66) +
   scale_x_continuous(breaks = 2011:2025) +
-  scale_y_continuous(labels = comma, expand = expansion(mult = c(0, 0.06))) +
+  scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.06))) +
   scale_fill_manual(values = c("Allotments" = "#ffa6b0", "Obligations" = "#3994fc")) +
-  labs(x = NULL, y = "PHP billions", title = "DPWH releases from the Unprogrammed Appropriations",
-       subtitle = "Allotments released and obligations incurred, by fiscal year") +
-  theme_dpwh() + theme(legend.position = c(0.16, 0.78))
+  labs(x = NULL, y = "PHP billions", fill = NULL,
+       title = "DPWH Releases from the Unprogrammed Appropriations",
+       subtitle = "Allotments released and obligations incurred, by fiscal year",
+       caption = "**Data Sources:** DBM allotment and obligation records, 2011-2025.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_minimal() +
+  theme(legend.position = c(0.15, 0.75),
+        panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.subtitle = element_text(size = 9),
+        plot.caption = element_markdown(size = 6),
+        axis.text.x = element_text(size = 7))
 ```
 
-After a decade of negligible draws, UA releases to DPWH surged from **₱16B in 2022 to ₱89B in 2023 and ₱245B in 2024** — the latter alone roughly a quarter of the department's entire regular budget that year. Yet a large share of these allotments went unobligated (about **54% utilized in 2024, 50% in 2025**) — exactly the kind of pattern that merits questioning at the hearings.
+After a decade of negligible draws, UA releases to the DPWH surged from **₱16B in
+2022 to ₱89B in 2023 and ₱245B in 2024** — the latter alone roughly a quarter of
+the department's entire regular budget that year. Yet a large share of these
+allotments went unobligated (about **54% utilised in 2024**, **50% in 2025**),
+which — alongside the project-level findings reported elsewhere — is exactly the
+kind of pattern that merits questioning at the hearings.
 
 ```{r table-ua}
-ua %>% transmute(FY, `Allotments (B)` = round(Allotments_B,2), `Obligations (B)` = round(Obligations_B,2),
-                 Utilization = Obligations_B/Allotments_B) %>%
-  mutate(`Allotments (B)` = comma(`Allotments (B)`, accuracy = 0.01),
-         `Obligations (B)` = ifelse(is.na(`Obligations (B)`), "\u2013", comma(`Obligations (B)`, accuracy = 0.01)),
-         Utilization = ifelse(is.na(Utilization)|is.nan(Utilization)|is.infinite(Utilization), "\u2013", percent(Utilization, accuracy = 1))) %>%
-  kbl_clean(font = 12.5, align = "lrrr",
-            caption = "DPWH releases from the Unprogrammed Appropriations, PHP billions")
+ua %>%
+  transmute(FY,
+            `Allotments (B)`  = Allotments_B,
+            `Obligations (B)` = Obligations_B,
+            Utilization       = Obligations_B / Allotments_B) %>%
+  mutate(
+    `Allotments (B)`  = comma(`Allotments (B)`, accuracy = 0.01),
+    `Obligations (B)` = ifelse(is.na(`Obligations (B)`), "\u2013",
+                               comma(`Obligations (B)`, accuracy = 0.01)),
+    Utilization       = ifelse(is.na(Utilization) | is.nan(Utilization) | is.infinite(Utilization),
+                               "\u2013", percent(Utilization, accuracy = 1))
+  ) %>%
+  kbl(align = "lrrr",
+      caption = "DPWH releases from the Unprogrammed Appropriations, PHP billions") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = FALSE, font_size = 12)
 ```
 
-# New appropriations by operating unit {#operunit}
+# Notes
 
-DPWH disburses its budget across some 200-plus **operating units** — the Central Office, regional offices, and district engineering offices (DEOs). The office-by-office data run from the FY 2014 budget through FY 2026, spanning the 16th–20th Congresses, three administrations, and **seven House Speakers**. The FY 2019 GAA here reflects the budget *after* the ₱95.4B veto.
+**On coverage.** The Section 1 series is intentionally left with gaps where the
+physical documents have not yet been encoded; points mark observed years. The
+by-operating-unit data now runs from the FY2014 budget through FY2026, so the
+department-wide comparisons span the 16th through 20th Congresses and seven House
+Speakers (see the Speaker table in the operating-unit section). The district-office
+deep-dives center on the Duterte and Marcos administrations (FY2017 onward —
+ten budgets, 2019 included), though the realignments-by-Congress chart reaches back
+to the 16th Congress (the three Aquino-era budgets) for context. The FY2019 figures
+use the enacted, post-veto GAA; the ₱95.4B line-item veto that year is isolated in
+its own chart and section.
 
-```{r load-byoperunit}
-byoperunit <- read_xlsx(data_path, sheet = "NewAppro_ByOperUnit") %>%
-  mutate(FY = as.integer(FY), GAA = replace_na(GAA, 0), NEP = replace_na(NEP, 0),
-         GAA_B = GAA/1e9, NEP_B = NEP/1e9, Realign = (GAA - NEP)/1e9,
-         Congress = case_when(FY %in% 2014:2016 ~ "16th (Aquino)", FY %in% 2017:2019 ~ "17th (Duterte)",
-                              FY %in% 2020:2022 ~ "18th (Duterte)", FY %in% 2023:2025 ~ "19th (Marcos)", FY == 2026 ~ "20th (Marcos)"),
-         Admin = case_when(FY %in% 2014:2016 ~ "Aquino", FY %in% 2017:2022 ~ "Duterte", FY %in% 2023:2026 ~ "Marcos"))
-deo <- byoperunit %>% filter(str_detect(Office, "D.E. Office"), FY >= 2017)
-n_years_deo <- dplyr::n_distinct(deo$FY)
-```
+**On the 2019 GAA.** The GAA figures throughout are the **enacted, post-veto**
+levels (they reconcile to the Office-of-the-Secretary totals in Section 1).
+"Legislated (pre-veto)" reconstructs what Congress passed by adding the vetoed
+amounts back to the enacted GAA. Because of this, every 2019 realignment figure in
+this document reflects the *combined* effect of Congress's reallocation and the
+President's veto, not Congress alone; the veto section, the Central-vs-District veto
+chart, and the grey segments in the realignments-by-Congress chart isolate the veto
+and recover Congress's pre-veto intent.
 
-Because realignments toward district offices are made on the House floor, the relevant political actor is often the **Speaker of the day** as much as the sitting President.
-
-```{r speaker-table}
-tibble::tribble(
-  ~Speaker, ~`Term began`, ~Congress, ~`FY budgets`, ~Administration,
-  "Feliciano Belmonte Jr.","22 Jul 2013","16th","FY2014–2016","Aquino",
-  "Pantaleon Alvarez","25 Jul 2016","17th","FY2017–2018","Duterte",
-  "Gloria Macapagal Arroyo","23 Jul 2018","17th","FY2019*","Duterte",
-  "Alan Peter Cayetano","22 Jul 2019","18th","FY2020","Duterte",
-  "Lord Allan Velasco","12 Oct 2020","18th","FY2021–2022","Duterte",
-  "Martin Romualdez","25 Jul 2022","19th","FY2023–2025","Marcos",
-  'Faustino "Bojie" Dy III',"17 Sep 2025","20th","FY2026","Marcos") %>%
-  kbl_clean(font = 12.5, align = "lllll",
-            caption = "House Speakers presiding over the DPWH budgets analysed here. *FY2019's encoded GAA is post-veto.")
-```
-
-## Most of the money sits in the Central Office
-
-```{r plot-central, fig.height=4.2}
-central_split <- byoperunit %>%
-  mutate(Unit = if_else(Office == "Central Office", "Central Office", "All Other Offices")) %>%
-  group_by(FY, Unit) %>% summarize(GAA_B = sum(GAA_B), .groups = "drop") %>%
-  mutate(Unit = factor(Unit, levels = c("All Other Offices","Central Office")))
-central_lab <- central_split %>% group_by(FY) %>%
-  summarize(tot = sum(GAA_B), central = sum(GAA_B[Unit == "Central Office"]), .groups = "drop") %>%
-  mutate(lab = percent(central/tot, accuracy = 1))
-ggplot(central_split, aes(FY, GAA_B, fill = Unit)) +
-  geom_col(color = "black", linewidth = 0.2, width = 0.78) +
-  geom_text(data = central_lab, aes(FY, tot, label = lab), inherit.aes = FALSE, vjust = -0.5, size = 3) +
-  scale_x_continuous(breaks = c(2014, 2017, 2020, 2023, 2026)) +
-  scale_y_continuous(labels = comma, expand = expansion(mult = c(0, 0.09))) +
-  scale_fill_manual(values = c("All Other Offices" = "#bcbef2", "Central Office" = "#3994fc")) +
-  labs(x = NULL, y = "GAA, PHP billions", title = "Most of the DPWH budget is lodged in the Central Office",
-       subtitle = "Labels show the Central Office's share of the GAA") +
-  theme_dpwh()
-```
-
-Across the period the Central Office holds most of the *enacted* budget — typically **60–75%**, peaking at **75% in 2025** — with 2015–2016 (both under 50%) and the unusual 2026 GAA (62%) the main exceptions. A single operating unit carrying most of the department's budget is a reason for *closer* scrutiny, not less. The enacted shares also understate how concentrated the executive's *proposal* is — the subject of the next section.
-
-```{r table-central}
-central_split %>% pivot_wider(names_from = Unit, values_from = GAA_B) %>%
-  mutate(Total = `Central Office` + `All Other Offices`, `Central share` = `Central Office`/Total) %>%
-  transmute(FY, `Central Office (B)` = round(`Central Office`,1), `All Other Offices (B)` = round(`All Other Offices`,1),
-            `Total (B)` = round(Total,1), `Central share`) %>%
-  dt_table(page = 13, money_cols = c("Central Office (B)","All Other Offices (B)","Total (B)"), pct_cols = "Central share")
-```
-
-## From proposal to law: Central Office to the districts
-
-The executive's proposal concentrates the budget centrally even more than the enacted law does. In **every year on record**, Congress channels tens — and in recent years hundreds — of billions toward district engineering offices between the proposal and the enacted law, while cutting the Central Office in most.
-
-```{r plot-central-shift, fig.height=4.4}
-byoperunit %>%
-  mutate(Unit = case_when(Office == "Central Office" ~ "Central Office",
-                          str_detect(Office, "D.E. Office") ~ "District Engineering Offices", TRUE ~ "Other")) %>%
-  filter(Unit != "Other") %>%
-  group_by(FY, Unit) %>% summarize(Shift_B = sum(GAA_B) - sum(NEP_B), .groups = "drop") %>%
-  ggplot(aes(factor(FY), Shift_B, fill = Unit)) +
-  geom_col(position = position_dodge(width = 0.72), width = 0.66, color = "black", linewidth = 0.2) +
-  geom_hline(yintercept = 0, linewidth = 0.4) +
-  scale_y_continuous(labels = comma) +
-  scale_fill_manual(values = c("Central Office" = "#3994fc", "District Engineering Offices" = "#bcbef2")) +
-  labs(x = NULL, y = "Change in budget, NEP → GAA (PHP B)",
-       title = "Congress redirects the budget toward the district engineering offices",
-       subtitle = "District offices gain every year; the Central Office is cut in most") +
-  theme_dpwh()
-```
-
-```{r plot-central-levels, fig.height=4.2}
-byoperunit %>%
-  mutate(Unit = case_when(Office == "Central Office" ~ "Central Office",
-                          str_detect(Office, "D.E. Office") ~ "District Engineering Offices", TRUE ~ "Other")) %>%
-  group_by(FY, Unit) %>% summarize(NEP_B = sum(NEP_B), GAA_B = sum(GAA_B), .groups = "drop") %>%
-  group_by(FY) %>% mutate(`Proposed (NEP)` = NEP_B/sum(NEP_B), `Enacted (GAA)` = GAA_B/sum(GAA_B)) %>% ungroup() %>%
-  filter(Unit != "Other") %>%
-  pivot_longer(c(`Proposed (NEP)`,`Enacted (GAA)`), names_to = "Stage", values_to = "Share") %>%
-  mutate(Stage = factor(Stage, levels = c("Proposed (NEP)","Enacted (GAA)"))) %>%
-  ggplot(aes(factor(FY), Share, fill = Stage)) +
-  geom_col(position = position_dodge(width = 0.72), width = 0.66, color = "black", linewidth = 0.2) +
-  facet_wrap(~Unit) +
-  scale_y_continuous(labels = percent, expand = expansion(mult = c(0, 0.06))) +
-  scale_fill_manual(values = c("Proposed (NEP)" = "#ffa6b0", "Enacted (GAA)" = "#3994fc")) +
-  labs(x = NULL, y = "Share of new appropriations", title = "Share of new appropriations: proposed vs enacted",
-       subtitle = "The Central Office is proposed a larger share than enacted; for district offices it is the reverse") +
-  theme_dpwh() + theme(axis.text.x = element_text(size = 7.5, angle = 90, vjust = 0.5))
-```
-
-In share terms the pattern is cleaner still: in every year (2014–2026) the Central Office's share *falls* from NEP to GAA while the districts' share *rises* — a swing reaching nearly **30 percentage points** in 2021 and 2023, when the proposal parked almost the entire budget centrally.
-
-Two of those Central cuts come with an asterisk. The operating-unit GAA encoded for **2019** is the budget *after* the President's ₱95.4B veto, and that veto landed overwhelmingly on the Central Office (**₱74B** of the ₱95B struck, versus ₱21B across districts). Congress's own pre-veto budget was routine — it trimmed the Central Office by ~₱26B and added ~₱30B to the districts. Because the veto hit the Central Office hardest, it paradoxically *raised* the district share of the final budget.
-
-```{r plot-veto-operunit, fig.height=4.2}
-veto_unit <- byoperunit %>% filter(FY == 2019) %>%
-  mutate(Unit = case_when(Office == "Central Office" ~ "Central Office",
-                          str_detect(Office, "D.E. Office") ~ "District Engineering Offices", TRUE ~ "Other")) %>%
-  group_by(Unit) %>% summarize(NEP_B = sum(NEP_B), Enacted_B = sum(GAA_B), .groups = "drop") %>%
-  left_join(read_xlsx(data_path, sheet = "2019_Veto") %>%
-              mutate(Unit = case_when(Office == "Central Office" ~ "Central Office",
-                                      str_detect(Office, "D.E. Office") ~ "District Engineering Offices", TRUE ~ "Other")) %>%
-              group_by(Unit) %>% summarize(Vetoed_B = sum(GAA_Veto)/1e9, .groups = "drop"), by = "Unit") %>%
-  filter(Unit != "Other") %>% mutate(Vetoed_B = replace_na(Vetoed_B, 0))
-veto_unit %>% select(Unit, `Enacted (survived)` = Enacted_B, Vetoed = Vetoed_B) %>%
-  pivot_longer(c(`Enacted (survived)`, Vetoed), names_to = "Stage", values_to = "Amount_B") %>%
-  mutate(Stage = factor(Stage, levels = c("Vetoed","Enacted (survived)"))) %>%
-  ggplot(aes(Unit, Amount_B, fill = Stage)) +
-  geom_col(width = 0.6, color = "black", linewidth = 0.2) +
-  geom_point(data = veto_unit, aes(Unit, NEP_B), inherit.aes = FALSE, shape = 18, size = 4, color = "#ffa6b0") +
-  geom_text(data = veto_unit, aes(Unit, Enacted_B + Vetoed_B/2, label = paste0("vetoed\n", round(Vetoed_B), "B")),
-            inherit.aes = FALSE, size = 2.8, color = "grey25", lineheight = 0.9) +
-  scale_y_continuous(labels = comma, expand = expansion(mult = c(0, 0.1))) +
-  scale_fill_manual(values = c("Enacted (survived)" = "#3994fc", "Vetoed" = "grey70")) +
-  labs(x = NULL, y = "PHP billions", title = "The 2019 line-item veto, by operating unit",
-       subtitle = "Bars show what Congress passed; grey is the part the President struck. Diamonds mark the proposal (NEP).") +
-  theme_dpwh()
-```
-
-## Top district engineering offices, by size and realignment
-
-Setting the Central Office aside: which district offices command the **largest budgets**, and how much of each was in the proposal versus added on enactment? The bars split the largest offices into what was **proposed** (grey) and what Congress **added** (purple).
-
-```{r plot-deo-proposed-added, fig.height=5.4}
-pva <- deo %>% group_by(Office) %>%
-  summarize(`In proposal (NEP)` = sum(NEP_B), `Added by Congress` = sum(Realign), GAA_B = sum(GAA_B), .groups = "drop") %>%
-  slice_max(GAA_B, n = 15)
-pva %>% pivot_longer(c(`In proposal (NEP)`, `Added by Congress`), names_to = "Component", values_to = "AmountB") %>%
-  mutate(Component = factor(Component, levels = c("In proposal (NEP)","Added by Congress")),
-         Office = factor(Office, levels = arrange(pva, GAA_B)$Office)) %>%
-  ggplot(aes(AmountB, Office, fill = Component)) +
-  geom_col(color = "black", linewidth = 0.2) +
-  scale_x_continuous(labels = comma, expand = expansion(mult = c(0, 0.05))) +
-  scale_fill_manual(values = c("In proposal (NEP)" = "grey75", "Added by Congress" = "#9a82c9")) +
-  labs(x = "PHP billions, cumulative FY2017–2026", y = NULL,
-       title = "District engineering offices with the largest enacted budgets",
-       subtitle = "Grey = executive proposal (NEP); purple = added by Congress on enactment") +
-  theme_dpwh() + theme(legend.position = c(0.8, 0.3), panel.grid.major.y = element_blank(), axis.text.y = element_text(size = 8.5))
-```
-
-Splitting those Congressional additions by administration shows which offices were favoured by whom — Abra's windfalls came overwhelmingly under Duterte, while Bulacan 1st and Tarlac lean Marcos.
-
-```{r plot-deo-proposed-added-congress, fig.height=5.4}
-pva_rank <- deo %>% filter(FY != 2026) %>% group_by(Office) %>% summarize(GAA_B = sum(GAA_B), .groups = "drop") %>% slice_max(GAA_B, n = 15)
-pva_seg <- bind_rows(
-  deo %>% filter(FY != 2026) %>% group_by(Office) %>% summarize(AmountB = sum(NEP_B), .groups = "drop") %>% mutate(Component = "In proposal (NEP)"),
-  deo %>% filter(FY != 2026) %>% group_by(Office, Admin) %>% summarize(AmountB = sum(Realign), .groups = "drop") %>%
-    transmute(Office, Component = str_c("Added under ", Admin), AmountB))
-pva_seg %>% semi_join(pva_rank, by = "Office") %>%
-  mutate(Office = factor(Office, levels = arrange(pva_rank, GAA_B)$Office),
-         Component = factor(Component, levels = c("In proposal (NEP)","Added under Duterte","Added under Marcos"))) %>%
-  ggplot(aes(AmountB, Office, fill = Component)) +
-  geom_col(color = "black", linewidth = 0.2) +
-  scale_x_continuous(labels = comma, expand = expansion(mult = c(0, 0.05))) +
-  scale_fill_manual(values = c("In proposal (NEP)" = "grey75","Added under Duterte" = "#e15759","Added under Marcos" = "#3994fc")) +
-  labs(x = "PHP billions, cumulative FY2017–2025", y = NULL,
-       title = "Proposed budget and what each administration added",
-       subtitle = "FY2026 omitted: the one year Congress cut, rather than added to, district budgets") +
-  theme_dpwh() + theme(legend.position = c(0.74, 0.26), panel.grid.major.y = element_blank(), axis.text.y = element_text(size = 8.5))
-```
-
-The realignment matrix below splits each favoured office's realignments between the two administrations.
-
-```{r plot-deo-heatmap, fig.height=4.8}
-top15 <- deo %>% group_by(Office) %>% summarize(tot = sum(Realign), .groups = "drop") %>% slice_max(tot, n = 15) %>% pull(Office)
-deo %>% filter(Office %in% top15) %>% mutate(Office = factor(Office, levels = rev(top15))) %>%
-  ggplot(aes(FY, Office, fill = Realign)) +
-  geom_tile(color = "white", linewidth = 0.5) +
-  geom_text(aes(label = format(round(Realign,1), nsmall = 1)), size = 2.2) +
-  scale_x_continuous(breaks = 2017:2026, position = "top", expand = expansion(mult = 0)) +
-  scale_fill_gradient2(low = "#ffa6b0", mid = "white", high = "#3994fc", midpoint = 0, labels = comma, name = "GAA − NEP\n(PHP B)") +
-  labs(x = NULL, y = NULL, title = "Net realignments by district engineering office and year") +
-  theme_dpwh() + theme(panel.grid = element_blank(), axis.text.y = element_text(size = 8.5),
-        legend.position = "right", legend.key.width = unit(0.4, "cm"))
-```
-
-### Top district offices by total realignment (interactive) {.unnumbered}
-
-```{r table-deo-realign}
-deo %>% group_by(Office, Admin) %>% summarize(Realign = sum(Realign), .groups = "drop") %>%
-  pivot_wider(names_from = Admin, values_from = Realign, values_fill = 0) %>%
-  mutate(Total = Duterte + Marcos) %>% arrange(desc(Total)) %>%
-  transmute(Office, `Duterte (B)` = round(Duterte,1), `Marcos (B)` = round(Marcos,1), `Total (B)` = round(Total,1)) %>%
-  dt_table(page = 15, money_cols = c("Duterte (B)","Marcos (B)","Total (B)"))
-```
-
-## Which district offices merit a closer look?
-
-Rather than single out any region, this applies a transparent screen to *every* district office. Each is scored on four independent signals over FY 2017–2026: **size** (top-ten recipient of realignments), **intensity** (realignments ≥ 60% of its enacted budget), **persistence** (a realignment in at least eight of ten years), and **tilt** (Duterte- vs Marcos-era realignment totals differ by at least ₱4B). Offices that trip several signals at once are the natural candidates for scrutiny.
-
-```{r deo-screen-data}
-screen_base <- deo %>% group_by(Office) %>%
-  summarize(NEP_B = sum(NEP_B), GAA_B = sum(GAA_B), Insertion = sum(Realign),
-            InsShare = sum(Realign)/sum(GAA_B), YearsInserted = sum(Realign > 0.5), .groups = "drop") %>%
-  left_join(deo %>% group_by(Office, Admin) %>% summarize(r = sum(Realign), .groups = "drop") %>%
-              pivot_wider(names_from = Admin, values_from = r, values_fill = 0) %>%
-              transmute(Office, Duterte, Marcos, Tilt = Duterte - Marcos), by = "Office") %>%
-  mutate(across(c(Duterte, Marcos, Tilt), ~replace_na(.x, 0)))
-screen_nonep <- screen_base %>% filter(NEP_B == 0) %>% arrange(desc(GAA_B))
-deo_screen <- screen_base %>% filter(NEP_B > 0) %>%
-  mutate(flag_big = min_rank(desc(Insertion)) <= 10, flag_intense = InsShare >= 0.60,
-         flag_persistent = YearsInserted >= n_years_deo - 2, flag_tilted = abs(Tilt) >= 4,
-         nflags = flag_big + flag_intense + flag_persistent + flag_tilted,
-         Signals = str_c(if_else(flag_big, "large; ", ""), if_else(flag_intense, "realignment-heavy; ", ""),
-                         if_else(flag_persistent, "every year; ", ""),
-                         if_else(flag_tilted & Tilt > 0, "Duterte-leaning; ", ""),
-                         if_else(flag_tilted & Tilt < 0, "Marcos-leaning; ", "")),
-         Signals = str_remove(Signals, "; $"))
-screen_offscale <- deo_screen %>% filter(InsShare < 0) %>% arrange(InsShare)
-nonep_note <- if (nrow(screen_nonep) == 0) "none" else str_c(screen_nonep$Office, collapse = "; ")
-```
-
-```{r plot-deo-screen, fig.height=5.4}
-ggplot(deo_screen, aes(Insertion, InsShare)) +
-  geom_point(aes(size = YearsInserted, fill = Tilt), shape = 21, color = "black", alpha = 0.9) +
-  geom_text_repel(data = deo_screen %>% filter(nflags >= 2 | Insertion >= 9), aes(label = Office),
-                  size = 2.6, max.overlaps = 30, segment.alpha = 0.4) +
-  scale_fill_gradient2(low = "#3994fc", mid = "grey88", high = "#ff5d6c", midpoint = 0, labels = comma,
-                       name = "Admin tilt, PHP B\n(red = Duterte,\nblue = Marcos)") +
-  scale_size(range = c(1, 6), name = "Years with a\nrealignment") +
-  scale_x_continuous(labels = comma) + scale_y_continuous(labels = percent) +
-  coord_cartesian(ylim = c(0, NA)) +
-  labs(x = "Total realignment, FY2017–2026 (PHP billions)", y = "Realignments as a share of the office's enacted budget",
-       title = "Screening district engineering offices: size and intensity of realignments",
-       subtitle = "Top-right = both large and realignment-heavy; colour shows which administration leaned in") +
-  theme_dpwh(grid_x = TRUE) +
-  theme(legend.position = "right", legend.title = element_text(size = 8), legend.text = element_text(size = 8))
-```
-
-`r nrow(screen_nonep)` newly-created district offices had **no proposed budget** (NEP = 0) anywhere in the window — money Congress provided where the executive proposed nothing — and are excluded from the scatter: `r nonep_note`.
-
-The screen returns a consistent shortlist — none of it about a single region. **Batangas 4th D.E. Office** is the largest single recipient of realignments — **₱24.3B, or 69%** of its enacted budget, padded in **all ten years** and favoured fairly evenly by both administrations (₱14.5B Duterte, ₱9.7B Marcos), a standing fixture regardless of who holds power. **Sorsogon** is similarly relentless (₱16.0B, 66%, every year) but tilts Marcos-ward. **Bulacan 1st** (₱20.7B) leans Marcos. At the politically lopsided extremes sit **Abra** — the clearest Duterte-era office (₱13.2B vs ₱3.1B) — and **Metro Manila 3rd**, its Marcos-era mirror (₱10.7B vs ₱3.8B). These offices, not any one province, are where the strongest patterns lie and where project-level records would be worth pulling.
-
-```{r table-deo-screen}
-deo_screen %>% arrange(desc(nflags), desc(Insertion)) %>% slice_head(n = 15) %>%
-  transmute(Office, `Realignment (B)` = round(Insertion,1), `Realignment share` = InsShare,
-            `Years realigned` = str_c(YearsInserted, "/", n_years_deo),
-            `Duterte (B)` = round(Duterte,1), `Marcos (B)` = round(Marcos,1), Flags = nflags, Signals) %>%
-  dt_table(page = 15, money_cols = c("Realignment (B)","Duterte (B)","Marcos (B)"), pct_cols = "Realignment share")
-```
-
-# Questions for discussion {#discussion}
-
-1. **The 2026 anomaly.** The enacted 2026 GAA collapses to roughly 60% of its own proposal, with Flood Management realigned down ~₱246B — a reversal of every prior year's pattern. What drove this, and is it a one-year correction or a structural shift away from flood-control spending?
-2. **The Convergence program's rise.** The Convergence and Special Support Program is augmented year after year, peaking at +₱265B over its proposal in 2025. What does this catch-all program fund, and why does Congress consistently grow it beyond the executive's request?
-3. **The Unprogrammed Appropriations channel.** UA releases to DPWH leapt to ₱245B in 2024 at ~54% utilization. Given that flagged flood-control projects were reportedly financed this way, what controls govern UA releases, and why does so much go unobligated?
-4. **Central concentration vs district redistribution.** The executive proposes most of the budget centrally; Congress reliably moves it to named district offices every year. Which is the more accountable structure — and how are centrally-managed projects, which hold the majority of the budget, being scrutinized?
-5. **The flagged district offices.** A transparent four-signal screen repeatedly surfaces the same offices (Batangas 4th, Bulacan 1st, Sorsogon, Abra, Metro Manila 3rd). Are project-level records for these offices being pulled, and what explains realignments running to two-thirds of an office's enacted budget, every year?
-
----
-
-<p class="caption">
-Underlying data: DBM-published NEP, GAA, veto messages, and allotment/obligation records, FY 1988–2026, compiled by AJ Montesa / People's Budget Coalition. DPWH execution (SAAODB) is not available at the program/activity/project level, so this review covers appropriations — the long-run series, program composition, the 2019 line-item veto, the Unprogrammed Appropriations, and the office-by-office NEP-to-GAA record. "Realignment" denotes the arithmetic GAA − NEP difference and is not, on its own, evidence of irregularity. Prepared as a long-form companion to the DPWH budget briefing.
-</p>
+**On the Unprogrammed Appropriations.** UA obligation data before 2013 could not
+be sourced; FY2015-2017 had no UA releases to the DPWH. These realignments are simply the arithmetic NEP-to-GAA difference and are not, on
+their own, evidence of irregularity.
