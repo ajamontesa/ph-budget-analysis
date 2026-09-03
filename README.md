@@ -16,7 +16,7 @@ Pages from the `docs/` folder.
 budget-analysis/
 ├── data/
 │   ├── Compiled_-_NEP-GAA-SAAODB-ByPAPLabelled.xlsx   # source data (one sheet per agency)
-│   ├── Compiled_-_DPWH.xlsx                            # DPWH (separate structure: long-run + by operating unit)
+│   ├── Compiled_-_DPWH.xlsx                            # DPWH (separate structure: long-run OSec, by operating unit, and by sub-program/line item)
 │   └── Compiled_-_NEP-GAA-NoFAR1.xlsx                  # agencies without FAR No.1 (P/A/P NEP-GAA + agency-level SAAODB)
 ├── reports/                       # R Markdown sources (each is fully self-contained)
 │   ├── index.Rmd                  # landing page -> knits to index.html
@@ -129,3 +129,9 @@ R (≥ 4.2) with `rmarkdown`, `knitr`, `dplyr`, `tidyr`, `ggplot2`, `scales`,
 - **Coverage:** NEP/GAA for FY 2018-2026; execution measures (Adjusted
   Allotments, Obligations, Disbursements) for FY 2018-2025.
 - **Source:** DBM-published budget and execution data.
+- **DPWH exception:** The DPWH review is department-wide (not OSec-only) and
+  traces appropriations to 1988. It adds a granular encoding of DPWH's programs,
+  sub-programs, and line items (FY 2014-2027) used to analyze what each program
+  contains, the FY2022 shift from the Local Program to Convergence & Special
+  Support, the items Congress adds versus cuts, and the FY2026 flood-control-scandal
+  revision of the NEP.

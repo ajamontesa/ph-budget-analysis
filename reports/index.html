@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Philippine Departmental Budget Reviews</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+
+
+
+<!--
+============================================================================
+  HOME / INDEX PAGE  ->  knit this file to produce  index.html
+============================================================================
+  To update the landing page you only edit the chunk directly below:
+
+    * site_title / site_subtitle / site_intro / source_note  -> page text
+    * the `agencies` table                                   -> one row per agency
+
+  For each agency row:
+    short      short label shown in the badge (e.g. "DepEd")
+    name       full department name
+    unit       sub-unit line (e.g. "Office of the Secretary"); "" for none
+    output     the knitted report's HTML filename in docs/ (the link target)
+    status     "published"  -> clickable card
+               "planned"    -> greyed-out "coming soon" card
+    blurb      one-sentence description (used only when published)
+    highlights up to a few short stats, separated by "  |  "
+               (used only when published; leave "" otherwise)
+
+  After editing, knit to index.html and place it in docs/ alongside the
+  report HTML files. No data file or other scripts are required.
+============================================================================
+-->
+<style type="text/css">
+:root { --ink:#1a1a1a; --muted:#6e6e6e; --accent:#08519C; --rule:#e6e6e6; --bg:#fbfbfc; }
+body { margin:0; font-family:Arial,Helvetica,"IBM Plex Sans",sans-serif;
+color:var(--ink); background:var(--bg); line-height:1.6; }
+.wrap { max-width:980px; margin:0 auto; padding:0 40px; }
+.site-header { border-bottom:2px solid var(--rule); background:#fff; margin:0 -40px 0; }
+.site-header .inner { max-width:980px; margin:0 auto; padding:38px 40px 28px; }
+.site-header h1 { font-size:30px; font-weight:600; margin:0 0 6px; }
+.site-header .sub { font-size:17px; color:#3a3a3a; margin:0 0 16px; }
+.site-header .intro { font-size:15px; color:#333; max-width:760px; margin:0; }
+.site-header .repo-cta { margin:14px 0 0; font-size:13.5px; }
+.site-header .repo-cta a { color:var(--accent); font-weight:600; text-decoration:none; }
+.site-header .repo-cta a:hover { text-decoration:underline; }
+.dash-band { margin:22px 0 8px; }
+.dash-band .dash-label { font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+color:var(--muted); margin:0 0 12px; font-weight:600; }
+.dash-card { display:flex; align-items:center; justify-content:space-between; gap:20px;
+background:#1B4965; color:#fff; border-radius:10px; padding:20px 24px; flex-wrap:wrap; }
+.dash-card + .dash-card { margin-top:12px; }
+.dash-card .dash-text { min-width:240px; flex:1 1 auto; }
+.dash-card .dash-title { font-size:18px; font-weight:700; margin:0 0 4px; line-height:1.25; }
+.dash-card .dash-scope { font-size:13.5px; color:#CAE9F5; margin:0; }
+.dash-card .dash-open { display:inline-block; white-space:nowrap; background:#5FA8D3; color:#0e2433;
+font-weight:700; font-size:14.5px; text-decoration:none; padding:11px 20px; border-radius:6px; }
+.dash-card .dash-open:hover { background:#7cbde0; }
+@media (max-width:560px){ .dash-card .dash-open { width:100%; text-align:center; } }
+.sec-label { font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+color:var(--muted); margin:26px 0 12px; font-weight:600; }
+.list { display:flex; flex-direction:column; gap:14px; }
+.row { display:flex; gap:26px; background:#fff; border:1px solid var(--rule); border-radius:8px;
+padding:20px 24px; text-decoration:none; color:inherit;
+transition:box-shadow .15s, transform .15s, border-color .15s; }
+.row.pub { border-left:4px solid var(--accent); position:relative; }
+.row.pub:hover { box-shadow:0 6px 20px rgba(8,81,156,.10); transform:translateY(-1px); border-color:#cfd8e3; }
+.row.planned { border-style:dashed; background:#fcfcfd; }
+.row-id { flex:0 0 196px; }
+.row-body { flex:1 1 auto; min-width:0; }
+.badge { display:inline-block; min-width:54px; text-align:center; background:var(--accent);
+color:#fff; font-weight:700; font-size:13px; padding:5px 10px; border-radius:5px; }
+.badge.muted { background:#c7ccd1; }
+.dept-link { display:block; text-decoration:none; color:inherit; }
+.dept-link::after { content:""; position:absolute; inset:0; }
+.dept-link:hover .dept { color:var(--accent); }
+.dept { font-size:16px; font-weight:600; line-height:1.3; margin:10px 0 0; }
+.unit { font-size:12.5px; color:var(--muted); margin-top:3px; }
+.blurb { font-size:14px; color:#333; margin:0 0 11px; line-height:1.55; }
+.hl { margin:0 0 12px; padding-left:18px; }
+.hl li { font-size:13px; color:#444; margin-bottom:4px; line-height:1.5; }
+.ctas { display:flex; gap:20px; align-items:center; flex-wrap:wrap; }
+.cta { font-size:13.5px; font-weight:600; color:var(--accent); }
+.cta-slides { position:relative; z-index:1; font-size:13px; font-weight:600;
+color:var(--muted); text-decoration:none; }
+.cta-slides:hover { color:var(--accent); }
+.muted-txt { color:var(--muted); }
+@media (max-width:640px) {
+.row { flex-direction:column; gap:14px; }
+.row-id { flex-basis:auto; }
+.dept { margin-top:8px; }
+}
+.site-footer { border-top:1px solid var(--rule); margin:26px -40px 0; background:#fff; }
+.site-footer .inner { max-width:980px; margin:0 auto; padding:20px 40px 40px; }
+.site-footer p { font-size:12.5px; color:var(--muted); margin:4px 0; }
+.count { font-size:13px; color:var(--muted); text-transform:none; letter-spacing:0; }
+</style>
+<div class="wrap">
+<div class="site-header">
+<div class="inner">
+<h1>
+Philippine Departmental Budget Reviews
+</h1>
+<p class="sub">
+Budget evolution and absorptive capacity, FY 2018-2026
+</p>
+<p class="intro">
+These reviews go beyond the headline figures. For each department we
+compile the proposed (NEP) and enacted (GAA) budgets down to the level
+of individual Programs, Activities, and Projects (P/A/Ps), then match
+them against the agency Financial Accountability Reports (the SAAODB)
+that record how each peso was actually released, obligated, and
+disbursed. Assembling these sources at the P/A/P level is painstaking,
+but it is what makes a sharper reading possible — not just how much a
+department received, but where Congress redirected it, which programs
+could absorb their funding, and where promised spending never
+materialized. Every report pairs the analysis with sortable, exportable
+reference tables so you can trace the figures yourself; coverage and
+scope vary by agency, as each report’s data note explains.
+</p>
+<p class="repo-cta">
+<a href="https://github.com/ajamontesa/ph-budget-analysis/">View the
+full code &amp; datasets on GitHub →</a>
+</p>
+</div>
+</div>
+<div class="dash-band">
+<p class="dash-label">
+Interactive dashboard
+</p>
+<div class="dash-card">
+<div class="dash-text">
+<p class="dash-title">
+Agency Budget &amp; Utilization Dashboard
+</p>
+<p class="dash-scope">
+National agency level · NEP, GAA &amp; utilization · FY 2016–2027
+</p>
+</div>
+<a class="dash-open" href="agency-budget-utilization.html">Open the
+dashboard →</a>
+</div>
+</div>
+<div class="sec-label">
+Published reports · <span class="count">14 available</span>
+</div>
+<div class="list">
+<div class="row pub">
+<div class="row-id">
+<span class="badge">DAR</span><a class="dept-link" href="dar-osec.html">
+<div class="dept">
+Department of Agrarian Reform
+</div>
+</a>
+<div class="unit">
+Office of the Secretary
+</div>
+</div>
+<div class="row-body">
+<p class="blurb">
+A small department, and one Congress tends to trim rather than augment.
+The FY 2027 NEP proposes to shrink DAR-OSEC 13% (to ₱14.7B) — winding
+down the SPLIT land-titling project and pivoting the money into
+livelihood lines the agency absorbs worst. Includes a full, sortable
+per-P/A/P table with 2025–2027 amounts and the latest utilization data.
+</p>
+<ul class="hl">
+<li>
+FY 2027 NEP: ₱14.7B, −13% from the 2026 enacted ₱16.8B
+</li>
+<li>
+SPLIT cut −₱4.4B; VISTA (19% disbursed) nearly doubles; new ₱1.4B
+flagship
+</li>
+<li>
+Core programs disburse 94–99%, foreign-assisted lines just 19–38%
+</li>
+</ul>
+<div class="ctas">
+<span class="cta">Read the analysis
+→</span><a class="cta-slides" href="slides/DAR_OSEC_Budget_Analysis.html" target="_blank" rel="noopener">Briefing
+slides ↗</a>
+</div>
+</div>
+</div>
+<div class="row pub">
+<div class="row-id">
+<span class="badge">DA</span><a class="dept-link" href="da-osec.html">
+<div class="dept">
+Department of Agriculture
+</div>
+</a>
+<div class="unit">
+OSEC + 9 attached agencies
+</div>
+</div>
+<div class="row-body">
+<p class="blurb">
+The FY 2027 NEP proposes to cut DA to ₱171B (₱152B for the OSEC), −8%
+from the 2026 enacted level — nearly halving Farm-to-Market Roads while
+growing the foreign-assisted project portfolio to over half the OSEC,
+even though it disburses only 33–53%. Includes full sortable per-P/A/P
+tables (2025–2027 amounts, plus OSEC utilization) and deep-dives by
+service type and commodity.
+</p>
+<ul class="hl">
+<li>
+FY 2027 NEP: ₱171.3B dept-wide (₱152.0B OSEC), −8% from 2026 enacted
+</li>
+<li>
+Farm-to-Market Roads nearly halved (₱33B → ₱16B); foreign-assisted grows
+to 50.6% of OSEC
+</li>
+<li>
+That portfolio disbursed just 33% (2024) / 53% (2025); attached agencies
+mostly cut (BFAR the exception)
+</li>
+</ul>
+<div class="ctas">
+<span class="cta">Read the analysis
+→</span><a class="cta-slides" href="slides/DA_Budget_Analysis.html" target="_blank" rel="noopener">Briefing
+slides ↗</a>
+</div>
+</div>
+</div>
+<div class="row pub">
+<div class="row-id">
+<span class="badge">DepEd</span><a class="dept-link" href="deped-osec.html">
+<div class="dept">
+Department of Education
+</div>
+</a>
+<div class="unit">
+Office of the Secretary
+</div>
+</div>
+<div class="row-body">
+<p class="blurb">
+A payroll-dominated budget whose strong headline absorption masks
+chronic under-spending in the non-salary tail — textbooks, facilities,
+and the collapsing GASTPE subsidies.
+</p>
+<ul class="hl">
+<li>
+GAA grew 1.7×: ₱552B (2018) → ₱959B (2026)
+</li>
+<li>
+Record ₱86B Congressional augmentation in 2026
+</li>
+<li>
+Textbooks disbursed just 2–17% of allotment every year
+</li>
+</ul>
+<div class="ctas">
+<span class="cta">Read the analysis
+→</span><a class="cta-slides" href="slides/DepEd_OSEC_Budget_Analysis.html" target="_blank" rel="noopener">Briefing
+slides ↗</a>
+</div>
+</div>
+</div>
+<div class="row planned">
+<div class="row-id">
+<span class="badge muted">DOE</span>
+<div class="dept">
+Department of Energy
+</div>
+<div class="unit">
+Office of the Secretary
+</div>
+</div>
+<div class="row-body">
+<p class="blurb muted-txt">
+Report in preparation.
+</p>
+<div class="cta muted-txt">
+Coming soon
+</div>
+</div>
+</div>
+<div class="row pub">
+<div class="row-id">
+<span class="badge">DENR</span><a class="dept-link" href="denr-osec.html">
+<div class="dept">
+Department of Environment and Natural Resources
+</div>
+</a>
+<div class="unit">
+Office of the Secretary
+</div>
+</div>
+<div class="row-body">
+<p class="blurb">
+A frozen budget: held flat at ₱16–20B for nine years — a ~30% real-terms
+cut — while Congress trims the proposal and guts the reforestation line,
+and the department shifts from capital works toward payroll.
+</p>
+<ul class="hl">
+<li>
+Flat ~₱19B for 9 years — ≈₱13.6B in 2018 pesos (~30% real cut)
+</li>
+<li>
+Congress trims; Forest Development cut ₱6.6B→₱2.4B
+</li>
+<li>
+Capital Outlays fell 37%→12%; administration is the largest line (21%)
+</li>
+</ul>
+<div class="ctas">
+<span class="cta">Read the analysis
+→</span><a class="cta-slides" href="slides/DENR_OSEC_Budget_Analysis.html" target="_blank" rel="noopener">Briefing
+slides ↗</a>
+</div>
+</div>
+</div>
+<div class="row pub">
+<div class="row-id">
+<span class="badge">DOH</span><a class="dept-link" href="doh-osec.html">
+<div class="dept">
+Department of Health
+</div>
+</a>
+<div class="unit">
+Office of the Secretary
+</div>
+</div>
+<div class="row-body">
+<p class="blurb">
+An aggressively Congress-augmented budget where the binding constraint
+is a capital-outlay bottleneck — the infrastructure pipeline (HFEP)
+cannot disburse what it is given.
+</p>
+<ul class="hl">
+<li>
+GAA nearly tripled: ₱107B (2018) → ₱298B (2026)
+</li>
+<li>
+₱210B cumulative plus-ups; MAIFIP + HFEP = 73%
+</li>
+<li>
+Capital Outlays disburse at only 14–37% and falling
+</li>
+</ul>
+<div class="ctas">
+<span class="cta">Read the analysis
+→</span><a class="cta-slides" href="slides/DOH_OSEC_Budget_Analysis.html" target="_blank" rel="noopener">Briefing
+slides ↗</a>
+</div>
+</div>
+</div>
+<div class="row pub">
+<div class="row-id">
+<span class="badge">DOLE</span><a class="dept-link" href="dole.html">
+<div class="dept">
+Department of Labor and Employment
+</div>
+</a>
+<div class="unit">
+Whole department + attached agencies
+</div>
+</div>
+<div class="row-body">
+<p class="blurb">
+A large labor department that is, to a first approximation, one program:
+TUPAD emergency employment is about 70% of it. The budget surged during
+COVID and stayed high, Congress adds heavily (almost all to TUPAD), and
+in 2023 three agencies left for the new Department of Migrant Workers.
+Execution is read at the agency level only.
+</p>
+<ul class="hl">
+<li>
+TUPAD ≈ ₱25B — about 70% of the department (excl. TESDA)
+</li>
+<li>
+COVID surge: ₱11B (2018) → ₱51B (2022) → ~₱30–40B since
+</li>
+<li>
+Congress adds +₱56B to TUPAD cumulatively; OWWA/POEA/NMP → DMW in 2023
+</li>
+</ul>
+<div class="ctas">
+<span class="cta">Read the analysis
+→</span><a class="cta-slides" href="slides/DOLE_Budget_Analysis.html" target="_blank" rel="noopener">Briefing
+slides ↗</a>
+</div>
+</div>
+</div>
+<div class="row pub">
+<div class="row-id">
+<span class="badge">DSWD</span><a class="dept-link" href="dswd-osec.html">
+<div class="dept">
+Department of Social Welfare and Development
+</div>
+</a>
+<div class="unit">
+Office of the Secretary
+</div>
+</div>
+<div class="row-body">
+<p class="blurb">
+An almost pure cash-transfer budget — 4Ps, Protective Services, and the
+Social Pension — where Congress reshapes the portfolio from within:
+trimming 4Ps, scaling up Protective Services, and inventing AKAP by
+appropriation alone.
+</p>
+<ul class="hl">
+<li>
+GAA nearly doubled: ₱141B (2018) → ₱264B (2026)
+</li>
+<li>
+Three cash programs = 74–88% of the budget; 93–95% MOOE
+</li>
+<li>
+Congress redirects: Protective Services +₱116B, 4Ps −₱83B
+</li>
+</ul>
+<div class="ctas">
+<span class="cta">Read the analysis
+→</span><a class="cta-slides" href="slides/DSWD_OSEC_Budget_Analysis.html" target="_blank" rel="noopener">Briefing
+slides ↗</a>
+</div>
+</div>
+</div>
+<div class="row pub">
+<div class="row-id">
+<span class="badge">DPWH</span><a class="dept-link" href="dpwh.html">
+<div class="dept">
+Department of Public Works and Highways
+</div>
+</a>
+<div class="unit">
+Whole department + operating units
+</div>
+</div>
+<div class="row-body">
+<p class="blurb">
+A different angle: with no P/A/P-level execution data, this review
+traces DPWH’s budget back to 1988 and maps how Congress redirects money
+— every year — from the Central Office toward named district engineering
+offices. A granular section then opens up the programs line by line:
+what Asset Preservation, Network Development, and the fast-growing
+Convergence &amp; Special Support basket actually contain; the FY2022
+pivot from the Local Program to Convergence; the items Congress builds
+up (SIPAG/BIP access roads and multi-purpose buildings) versus those it
+cuts (national by-pass roads, major-river flood control, new bridges);
+and the flood-control-scandal FY2026 revision that gutted flood control
+between the original and revised NEP. Includes the FY 2027 proposal and
+both the 2019 and 2025 line-item vetoes.
+</p>
+<ul class="hl">
+<li>
+Granular line-item view of the operating budget: the Local Program →
+Convergence pivot in FY2022 (Convergence ₱62B → ₱353B, peaking at ₱504B
+in 2025)
+</li>
+<li>
+Congress builds up SIPAG/BIP district items (+₱207B, +₱176B) and cuts
+national works (by-pass −₱94B, major-river flood −₱71B)
+</li>
+<li>
+FY2026 flood-control errata: NEP ₱880B → revised ₱626B → GAA ₱530B; FY
+2027 NEP ₱642.6B; 2019 &amp; 2025 vetoes
+</li>
+</ul>
+<div class="ctas">
+<span class="cta">Read the analysis →</span>
+</div>
+</div>
+</div>
+<div class="row pub">
+<div class="row-id">
+<span class="badge">TESDA</span><a class="dept-link" href="tesda.html">
+<div class="dept">
+Technical Education and Skills Development Authority
+</div>
+</a>
+<div class="unit">
+Whole authority (no P/A/P execution)
+</div>
+</div>
+<div class="row-body">
+<p class="blurb">
+The government’s technical-vocational training authority — a
+fast-growing, ₱26B agency that is, in budget terms, a
+scholarships-and-training operation (two lines are ~92% of it). Congress
+drives much of the growth (+₱17B), but disbursement is falling behind:
+cash utilization slid to 48% in 2025. Three mother agencies in nine
+years.
+</p>
+<ul class="hl">
+<li>
+Enacted budget tripled: ₱7.6B (2018) → ₱26.1B (2026), +245%
+</li>
+<li>
+86% MOOE (scholarships/training); Congress adds +₱17B, mostly to
+provision
+</li>
+<li>
+Absorption falling: D/A 84% (2018) → 68% (2024) → 48% (2025);
+OEO→DTI→DOLE
+</li>
+</ul>
+<div class="ctas">
+<span class="cta">Read the analysis
+→</span><a class="cta-slides" href="slides/TESDA_Budget_Analysis.html" target="_blank" rel="noopener">Briefing
+slides ↗</a>
+</div>
+</div>
+</div>
+<div class="row pub">
+<div class="row-id">
+<span class="badge">CHED</span><a class="dept-link" href="ched.html">
+<div class="dept">
+Commission on Higher Education
+</div>
+</a>
+<div class="unit">
+Whole commission (no P/A/P execution)
+</div>
+</div>
+<div class="row-body">
+<p class="blurb">
+A large but stagnant ₱47B budget that is, in effect, a free-tuition
+fund: student subsidies are ~96% of it, and one line (free higher
+education) is ~79% on its own. The regulatory core is ~2%. Congress
+swings it violently (+₱37B in 2018, −₱20B in 2022), and execution is
+chronically weak — often only 40–60% disbursed.
+</p>
+<ul class="hl">
+<li>
+Flat budget: ₱49.4B (2018) → ₱47.5B (2026)
+</li>
+<li>
+Free tuition (UAQTEA) is ₱37.6B, ~79% of the agency; regulation ~2%
+</li>
+<li>
+Violent Congress swings (+₱37B / −₱20B); cash utilization often 40–60%
+</li>
+</ul>
+<div class="ctas">
+<span class="cta">Read the analysis
+→</span><a class="cta-slides" href="slides/CHED_Budget_Analysis.html" target="_blank" rel="noopener">Briefing
+slides ↗</a>
+</div>
+</div>
+</div>
+<div class="row pub">
+<div class="row-id">
+<span class="badge">NCIP</span><a class="dept-link" href="ncip.html">
+<div class="dept">
+National Commission on Indigenous Peoples
+</div>
+</a>
+<div class="unit">
+Whole commission (no P/A/P execution)
+</div>
+</div>
+<div class="row-body">
+<p class="blurb">
+A very small agency carrying an outsized IPRA mandate. With no FAR
+No. 1, execution is read only at the agency level — but the budget story
+is clear: a near-doubling since 2018, a sharp 2025 cut, and an
+administration-heavy mix, across two reorganizations.
+</p>
+<ul class="hl">
+<li>
+Budget nearly doubled: ₱968M (2018) → ₱1,804M (2026), +86%
+</li>
+<li>
+FY2025 cut 25% below proposal, across the board; capital outlay zeroed
+</li>
+<li>
+Admin + policy = 46% of 2026; agency obligation rate 92–99%
+</li>
+</ul>
+<div class="ctas">
+<span class="cta">Read the analysis
+→</span><a class="cta-slides" href="slides/NCIP_Budget_Analysis.html" target="_blank" rel="noopener">Briefing
+slides ↗</a>
+</div>
+</div>
+</div>
+<div class="row pub">
+<div class="row-id">
+<span class="badge">NCMF</span><a class="dept-link" href="ncmf.html">
+<div class="dept">
+National Commission on Muslim Filipinos
+</div>
+</a>
+<div class="unit">
+Whole commission (no P/A/P execution)
+</div>
+</div>
+<div class="row-body">
+<p class="blurb">
+A small commission with no FAR No. 1, so execution is read only at the
+agency level. A fast grower (+145% since 2018) that spends what it
+receives — but set against the community it serves, the 2026 budget is
+about ₱188 per Muslim Filipino a year, so the open questions are about
+adequacy and reach.
+</p>
+<ul class="hl">
+<li>
+Budget more than doubled: ₱535M (2018) → ₱1,314M (2026), +145%
+</li>
+<li>
+≈₱188 per Muslim Filipino per year — about fifty centavos a day
+</li>
+<li>
+One line — Muslim cultural centers &amp; heritage — is ~46% of 2026;
+obligation rate 86–99%
+</li>
+</ul>
+<div class="ctas">
+<span class="cta">Read the analysis
+→</span><a class="cta-slides" href="slides/NCMF_Budget_Analysis.html" target="_blank" rel="noopener">Briefing
+slides ↗</a>
+</div>
+</div>
+</div>
+<div class="row pub">
+<div class="row-id">
+<span class="badge">PCW</span><a class="dept-link" href="pcw.html">
+<div class="dept">
+Philippine Commission on Women
+</div>
+</a>
+<div class="unit">
+Whole commission
+</div>
+</div>
+<div class="row-body">
+<p class="blurb">
+The lead agency on gender mainstreaming, at the million-peso scale —
+small enough to read line by line. The budget nearly doubled, Congress
+tops it up every year (and funds a recurring stream of one-off “Tier 2”
+lines), but absorption is softening as MOOE outpaces what the agency can
+spend.
+</p>
+<ul class="hl">
+<li>
+GAA nearly doubled: ₱112M (2018) → ₱205M (2026), +83%
+</li>
+<li>
++₱29M 2026 add went to one line — Technical Assistance is now ~a third
+of the budget
+</li>
+<li>
+Absorption ~80%, softening to 75% (2025); MOOE allotments doubled but
+disburse 67%
+</li>
+</ul>
+<div class="ctas">
+<span class="cta">Read the analysis
+→</span><a class="cta-slides" href="slides/PCW_Budget_Analysis.html" target="_blank" rel="noopener">Briefing
+slides ↗</a>
+</div>
+</div>
+</div>
+<div class="row pub">
+<div class="row-id">
+<span class="badge">NYC</span><a class="dept-link" href="nyc.html">
+<div class="dept">
+National Youth Commission
+</div>
+</a>
+<div class="unit">
+Whole commission (no P/A/P execution)
+</div>
+</div>
+<div class="row-body">
+<p class="blurb">
+A very small agency — the government’s sole policy body for Filipino
+youth — at about ₱10 per young Filipino a year. Congress only ever adds
+to it, and in FY 2025 (an election year) nearly tripled it to ₱632M —
+but the agency disbursed only 58%, showing the limits of a sudden
+windfall. Execution is read at the agency level only.
+</p>
+<ul class="hl">
+<li>
+≈₱10 per young Filipino per year (31.4M aged 15–30)
+</li>
+<li>
+FY 2025 spike: ₱632M enacted vs ₱242M proposed (+₱391M), then reverted
+</li>
+<li>
+The surge outran capacity — only 58% disbursed in 2025; ~92% is one
+program
+</li>
+</ul>
+<div class="ctas">
+<span class="cta">Read the analysis
+→</span><a class="cta-slides" href="slides/NYC_Budget_Analysis.html" target="_blank" rel="noopener">Briefing
+slides ↗</a>
+</div>
+</div>
+</div>
+</div>
+<div class="site-footer">
+<div class="inner">
+<p>
+Underlying data: DBM-published budget and execution data (Current New
+Appropriations only). NEP/GAA cover FY 2018-2026; execution measures
+(Allotments, Obligations, Disbursements) cover FY 2018-2025. Coverage
+varies by agency; the DPWH review instead traces appropriations to 1988.
+</p>
+<p>
+<a href="https://github.com/ajamontesa/ph-budget-analysis/">Code &amp;
+data on GitHub</a> · Last updated August 2026.
+</p>
+</div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+
+</body>
+</html>
