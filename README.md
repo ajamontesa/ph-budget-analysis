@@ -36,7 +36,8 @@ budget-analysis/
 │   └── NYC_Budget_Analysis.Rmd
 └── docs/                          # GitHub Pages root (published HTML output)
     ├── index.html
-    ├── agency-budget-utilization.html  # embed page: frames the Connect Cloud dashboard
+    ├── agency-budget-utilization.html  # embed page: frames the agency-level Connect Cloud dashboard
+    ├── pap-browser.html                # embed page: frames the P/A/P-level Connect Cloud dashboard
     ├── dar-osec.html
     ├── da-osec.html
     ├── deped-osec.html
@@ -115,11 +116,14 @@ R (≥ 4.2) with `rmarkdown`, `knitr`, `dplyr`, `tidyr`, `ggplot2`, `scales`,
    Shiny apps that run on **Posit Connect Cloud** (GitHub Pages serves static
    files only and cannot run R) — they live in the separate `ph-budget-dashboards`
    repo. This repo only holds a small **embed page** per dashboard that frames the
-   live app. To add one: drop the embed page into `docs/` (e.g.
-   `docs/agency-budget-utilization.html`), then add one row to the `dashboards`
-   tribble in `reports/index.Rmd` (`title`, `scope`, `href`) and re-knit
-   `index.html`. A navy dashboard band then renders at the **top of the landing
-   page**, above the reports. Leave the tribble empty to hide the band entirely.
+   live app, each pointing to its own Connect Cloud URL. Two are published so far:
+   the agency-level **Agency Budget & Utilization** (`agency-budget-utilization.html`)
+   and the **P/A/P Browser** (`pap-browser.html`). To add another: drop the embed
+   page into `docs/`, then add one row to the `dashboards` tribble in
+   `reports/index.Rmd` (`title`, `scope`, `href`) and re-knit `index.html`. A navy
+   dashboard band then renders at the **top of the landing page**, above the reports
+   (it pluralizes its heading automatically and shows one card per dashboard). Leave
+   the tribble empty to hide the band entirely.
 8. **Commit and push.** GitHub Pages serves the update.
 
 ## Data notes

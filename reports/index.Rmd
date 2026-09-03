@@ -67,7 +67,8 @@ repo_url <- "https://github.com/ajamontesa/ph-budget-analysis/"   # GitHub repo:
 # page is dropped into docs/; the dashboard band renders at the top of the page.
 dashboards <- tibble::tribble(
   ~title,                                   ~scope,                                                        ~href,
-  "Agency Budget &amp; Utilization Dashboard", "National agency level &middot; NEP, GAA &amp; utilization &middot; FY 2016&ndash;2027", "agency-budget-utilization.html"
+  "Agency Budget &amp; Utilization Dashboard", "National agency level &middot; NEP, GAA &amp; utilization &middot; FY 2016&ndash;2027", "agency-budget-utilization.html",
+  "P/A/P Browser Dashboard",                 "Program, Activity &amp; Project level &middot; NEP &amp; GAA &middot; FY 2020&ndash;2027", "pap-browser.html"
 )
 
 # ---- EDIT THIS: one row per agency ---------------------------------------
