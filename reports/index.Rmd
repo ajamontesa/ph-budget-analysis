@@ -96,8 +96,8 @@ agencies <- tibble::tribble(
   "Flat ~\u20b119B for 9 years \u2014 \u2248\u20b113.6B in 2018 pesos (~30% real cut)  |  Congress trims; Forest Development cut \u20b16.6B\u2192\u20b12.4B  |  Capital Outlays fell 37%\u219212%; administration is the largest line (21%)",
 
   "DOH",    "Department of Health",                               "Office of the Secretary", "doh-osec.html",    "published",
-  "An aggressively Congress-augmented budget where the binding constraint is a capital-outlay bottleneck \u2014 the infrastructure pipeline (HFEP) cannot disburse what it is given.",
-  "GAA nearly tripled: \u20b1107B (2018) \u2192 \u20b1298B (2026)  |  \u20b1210B cumulative plus-ups; MAIFIP + HFEP = 73%  |  Capital Outlays disburse at only 14\u201337% and falling",
+  "The FY 2027 proposal is \u20b1264B \u2014 up 4% and the largest yet, but again far below what Congress enacts (the 2026 GAA reached \u20b1298B). An aggressively Congress-augmented budget whose binding constraint is a capital-outlay bottleneck: the infrastructure pipeline (HFEP) cannot disburse what it is given. MAIFIP and HFEP are proposed flat, so their real budgets are settled at enactment.",
+  "FY 2027 NEP \u20b1264B (+4%, largest yet); 2026 GAA \u20b1298B  |  \u20b1210B cumulative plus-ups; MAIFIP + HFEP = 73%  |  Capital Outlays disburse at only 14\u201337% and falling",
 
   "DOLE",   "Department of Labor and Employment",                 "Whole department + attached agencies", "dole.html",        "published",
   "A large labor department that is, to a first approximation, one program: TUPAD emergency employment is about 70% of it. The budget surged during COVID and stayed high, and Congress adds heavily every year \u2014 almost all to TUPAD. The FY 2027 proposal is ~\u20b126B (TUPAD \u20b116.7B, about 64%), a floor Congress has topped up every year; in 2023 three agencies left for the new Department of Migrant Workers. Execution is read at the agency level only.",

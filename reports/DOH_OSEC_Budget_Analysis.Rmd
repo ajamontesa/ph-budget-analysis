@@ -1,6 +1,6 @@
 ---
 title: "Department of Health — Office of the Secretary"
-subtitle: "Budget evolution and absorptive capacity, FY 2018–2026"
+subtitle: "The FY 2027 proposed budget in context, FY 2018–2027"
 date: "`r format(Sys.Date(), '%B %Y')`"
 output:
   html_document:
@@ -222,7 +222,7 @@ MAIFIP_LAB <- "Medical Assistance to Indigent and Financially-Incapacitated Pati
 # Overview {#overview .unnumbered}
 
 <p class="lead">
-This document tracks the budget of the **Department of Health – Office of the Secretary (DOH-OSEC)** across nine fiscal years, FY 2018 to FY 2026, following each peso from proposal (NEP) to enactment (GAA) to release (allotment), commitment (obligation), and final cash payment (disbursement).
+This document tracks the budget of the **Department of Health – Office of the Secretary (DOH-OSEC)** across ten fiscal years, FY 2018 to FY 2027 — with **FY 2027 the Executive’s proposal (NEP)**, not yet enacted — following each peso from proposal (NEP) to enactment (GAA) to release (allotment), commitment (obligation), and final cash payment (disbursement).
 </p>
 
 It is the long-form companion to the DOH-OSEC briefing deck. Where the deck fits each point on a slide, this version keeps the full argument and adds reference tables — most sortable, searchable, and exportable — so a reader can interrogate the figures directly. Every table can be copied or downloaded from its toolbar.
@@ -230,6 +230,8 @@ It is the long-form companion to the DOH-OSEC briefing deck. Where the deck fits
 Two forces shape DOH-OSEC's budget. The first is **Congress**: DOH has its budget enlarged by the legislature in every single year of this period, cumulatively by more than ₱210B, and those additions are heavily concentrated in a handful of flagship lines. The second is **absorption**, and specifically a capital-outlay bottleneck — the agency reliably spends its salaries and operating money but struggles to disburse its infrastructure budget, year after year. Most of what follows examines how those two forces interact: money is appropriated faster than the agency's procurement and construction pipeline can spend it.
 
 # Executive summary {#exec}
+
+**The FY 2027 proposal (NEP) is ₱264B for DOH-OSEC** — up about ₱10B (+4%) on the FY 2026 proposal, and the largest DOH proposal yet: a *rising*, not shrinking, proposal. But it again sits far below what Congress enacts — the FY 2026 GAA was ₱298B, ₱44B above that year’s proposal. Read against DOH’s history of double-digit-billion augmentation, the FY 2027 NEP is best treated as a floor Congress will build on, not a ceiling.
 
 The DOH-OSEC budget has **nearly tripled in nominal terms**, from a ₱107B enacted budget in 2018 to a proposed ₱298B in the 2026 GAA. Growth has been steady since the 2019 dip, with the largest single-year jumps in 2022 and 2026.
 
@@ -245,7 +247,7 @@ The **portfolio is rebalancing toward MOOE**: the MOOE share of the GAA rose fro
 
 # A note on the data {#data-notes}
 
-**Period.** FY 2018 through FY 2026 for NEP and GAA. Execution data — Adjusted Appropriations, Adjusted Allotments, Obligations, Disbursements — is available at the P/A/P level for every year FY 2018–2025; FY 2026 reflects the proposed/enacted budget only.
+**Period.** FY 2018 through FY 2027 for NEP and FY 2018 through FY 2026 for GAA — **FY 2027 is the NEP (the Executive’s proposal) only**, not yet debated or enacted and with no execution data, so wherever a chart or table shows FY 2027 the figure is *proposed*. Execution data — Adjusted Appropriations, Adjusted Allotments, Obligations, Disbursements — is available at the P/A/P level for every year FY 2018–2025; FY 2026 reflects the proposed/enacted budget only.
 
 **Scope.** **Current New Appropriations only** — excludes Continuing Appropriations, Automatic Appropriations, and transfers from Special Purpose Funds and Unprogrammed Appropriations. These figures therefore understate the DOH's full spending envelope. All amounts are nominal pesos.
 
@@ -270,10 +272,11 @@ ggplot(evo, aes(year, total, color = metric, group = metric)) +
   scale_color_manual(values = exec_pal) +
   scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6),
                      limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
-  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
-  labs(title = "DOH-OSEC budget, NEP through Disbursements (FY 2018–2026)",
-       subtitle = "GAA has nearly tripled since 2018; disbursements lag persistently behind allotments",
-       x = NULL, y = NULL, caption = "FY 2026 reflects NEP/GAA only; execution data not yet available.") +
+  scale_x_continuous(breaks = c(seq(2018, 2026, 2), 2027)) +
+  annotate("text", x = 2027, y = Inf, label = "proposed", vjust = 1.4, size = 3, color = "grey45") +
+  labs(title = "DOH-OSEC budget, NEP through Disbursements (FY 2018–2027)",
+       subtitle = "GAA has nearly tripled since 2018; disbursements lag persistently behind allotments; the FY 2027 NEP proposes ~PHP 264B",
+       x = NULL, y = NULL, caption = "FY 2027 is the NEP (proposed) only; FY 2026 reflects NEP/GAA only; execution runs through 2025.") +
   theme_doh() + guides(color = guide_legend(nrow = 1))
 ```
 
@@ -404,47 +407,88 @@ ec_share <- comp_ec %>% group_by(year) %>% mutate(share = round(amount/sum(amoun
 kbl_clean(ec_share %>% rename(`Expense class (% of GAA)` = expense_class), font = 12.5, digits = 1, na = "")
 ```
 
-## The ten largest P/A/Ps
+## The ten largest P/A/Ps (FY 2027 NEP, proposed)
 
 ```{r fig-top10, fig.height=5.4}
-top_pap <- pap_year %>% filter(year == 2026) %>% arrange(desc(GAA)) %>% slice_head(n = 10) %>%
+top_pap <- pap_year %>% filter(year == 2027) %>% arrange(desc(NEP)) %>% slice_head(n = 10) %>%
   mutate(pap = factor(pap, levels = rev(pap)))
 
-ggplot(top_pap, aes(pap, GAA)) +
-  geom_col(fill = bar_fill, width = 0.75) +
-  geom_text(aes(label = php_b(GAA)), hjust = -0.1, size = 3.3, color = "grey20") +
+ggplot(top_pap, aes(pap, NEP)) +
+  geom_col(fill = "#54278F", width = 0.75) +
+  geom_text(aes(label = php_b(NEP)), hjust = -0.1, size = 3.3, color = "grey20") +
   coord_flip() +
   scale_x_discrete(labels = function(x) str_wrap(x, 50)) +
   scale_y_continuous(labels = php_b_axis, expand = expansion(mult = c(0, .18))) +
-  labs(title = "Top 10 P/A/Ps by FY 2026 GAA",
-       subtitle = "Regional Hospitals alone is over PHP 100B; MAIFIP and HFEP both sit near the top",
+  labs(title = "Top 10 P/A/Ps by FY 2027 NEP (proposed)",
+       subtitle = "Regional Hospitals alone is over PHP 100B; MAIFIP and HFEP are proposed flat, still near the top",
        x = NULL, y = NULL) +
   theme_doh() +
   theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"))
 ```
 
-### Full P/A/P ranking (interactive) {.unnumbered}
+### The FY 2027 proposal in context: every P/A/P (interactive) {.unnumbered}
 
-Every P/A/P, ranked by 2026 GAA, with the 2026 NEP, the prior-year (2025) enacted figure, and the implied 2026 augmentation. Sort, search, or export.
+Every P/A/P, ranked by the FY 2027 proposal (NEP), shown against the FY 2026 proposal and enacted budget, with each line’s FY 2025 cash-execution rate (D/A). Sort, search, or export.
 
 ```{r tbl-allpaps}
-all_paps_2026 <- pap_year %>% filter(year == 2026) %>%
-  transmute(`P/A/P` = pap, `NEP 2026 (B)` = NEP/1e9, `GAA 2026 (B)` = GAA/1e9) %>%
-  arrange(desc(`GAA 2026 (B)`))
-gaa25 <- pap_year %>% filter(year == 2025) %>% transmute(`P/A/P` = pap, g25 = GAA/1e9)
-all_paps_2026 <- all_paps_2026 %>% left_join(gaa25, by = "P/A/P") %>%
-  rename(`GAA 2025 (B)` = g25) %>%
-  mutate(`Aug. NEP to GAA 2026 (B)` = `GAA 2026 (B)` - `NEP 2026 (B)`)
-dt_table(all_paps_2026, page = 15,
-         money_cols = c("NEP 2026 (B)","GAA 2026 (B)","GAA 2025 (B)","Aug. NEP to GAA 2026 (B)"))
+ref_2027 <- pap_year %>% filter(year == 2027) %>%
+  transmute(`P/A/P` = pap, `NEP 2027 (B)` = NEP/1e9)
+nep_gaa_26 <- pap_year %>% filter(year == 2026) %>%
+  transmute(`P/A/P` = pap, `NEP 2026 (B)` = NEP/1e9, `GAA 2026 (B)` = GAA/1e9)
+da_25 <- pap_year %>% filter(year == 2025) %>%
+  transmute(`P/A/P` = pap, `D/A 2025` = Disbursements / AdjAllot)
+ref_2027 <- ref_2027 %>%
+  left_join(nep_gaa_26, by = "P/A/P") %>% left_join(da_25, by = "P/A/P") %>%
+  arrange(desc(`NEP 2027 (B)`))
+dt_table(ref_2027, page = 15,
+         money_cols = c("NEP 2027 (B)","NEP 2026 (B)","GAA 2026 (B)"),
+         pct_cols = c("D/A 2025"))
 ```
+
+## What the FY 2027 proposal changes {#nep-change}
+
+Comparing the two *proposals* — the FY 2026 NEP against the FY 2027 NEP — isolates what the Executive itself chose to change, before Congress touches the budget. **MAIFIP and HFEP do not appear here at all**: both are proposed essentially flat (~₱24B and ~₱15B again), so any apparent "cut" in those lines exists only against the Congress-inflated 2026 GAA, not against the Executive's own prior proposal.
+
+```{r fig-nep-change, fig.height=5.2}
+nep_change <- pap_year %>%
+  filter(year %in% c(2026, 2027)) %>%
+  select(pap, year, NEP) %>%
+  pivot_wider(names_from = year, values_from = NEP, names_prefix = "y") %>%
+  mutate(change = (y2027 - y2026) / 1e9) %>%
+  filter(!is.na(change), abs(change) >= 0.3)
+ups   <- nep_change %>% filter(change > 0) %>% arrange(desc(change)) %>% slice_head(n = 8)
+downs <- nep_change %>% filter(change < 0) %>% arrange(change)       %>% slice_head(n = 6)
+nep_change <- bind_rows(ups, downs) %>% arrange(desc(change)) %>%
+  mutate(pap = factor(pap, levels = rev(pap)),
+         dir = ifelse(change >= 0, "Increased", "Reduced"))
+
+ggplot(nep_change, aes(pap, change, fill = dir)) +
+  geom_col(width = 0.72) +
+  geom_text(aes(label = sprintf("%+.1f", change),
+                hjust = ifelse(change >= 0, -0.15, 1.15)),
+            size = 3, color = "grey25") +
+  coord_flip() +
+  scale_fill_manual(values = c("Increased" = "#1B7837", "Reduced" = "#D95F02")) +
+  scale_x_discrete(labels = function(x) str_wrap(x, 46)) +
+  scale_y_continuous(labels = function(x) paste0(peso, x, "B"),
+                     expand = expansion(mult = c(0.16, 0.16))) +
+  labs(title = "What the Executive changed: FY 2026 NEP to FY 2027 NEP (PHP B)",
+       subtitle = "Proposal-to-proposal change, so Congressional augmentation is stripped out; MAIFIP and HFEP are proposed flat",
+       x = NULL, y = NULL) +
+  theme_doh() +
+  theme(panel.grid.major.y = element_blank(),
+        panel.grid.major.x = element_line(color = "grey85"),
+        legend.position = "none")
+```
+
+The biggest single increase is **Regional Hospitals (+₱7.6B)**, consistent with a proposal that leans further into direct hospital operations; the **Cancer Assistance Fund triples** (from ₱1.25B to ₱3.75B), and the health workforce (NHWSS, +₱2.0B) and personnel benefits (+₱2.7B) also rise. The reductions are smaller and land on **health information technology (−₱1.8B)** and several **nationally-procured commodity** lines. Because MAIFIP and HFEP — the two lines Congress most reliably augments — are held flat in the proposal, the real FY 2027 budget for those programs will again be settled at enactment, not in the NEP.
 
 # Congressional action: NEP → GAA {#augmentation}
 
 Congress augments DOH year after year. The chart ranks the ten P/A/Ps that have received the most cumulative plus-ups (GAA above NEP) over 2018–2026.
 
 ```{r fig-augmentation, fig.height=5.2}
-top_aug <- pap_year %>% group_by(pap) %>%
+top_aug <- pap_year %>% filter(year <= 2026) %>% group_by(pap) %>%
   summarise(total_nep = sum(NEP, na.rm = TRUE), total_gaa = sum(GAA, na.rm = TRUE), .groups = "drop") %>%
   mutate(augment = total_gaa - total_nep) %>% filter(augment > 0) %>%
   arrange(desc(augment)) %>% slice_head(n = 10) %>% mutate(pap = factor(pap, levels = rev(pap)))
@@ -469,7 +513,7 @@ Congress's additions are strikingly concentrated. **MAIFIP** (₱97B cumulative)
 The full cumulative table lists every P/A/P that Congress net-augmented over the nine years.
 
 ```{r tbl-aug-full}
-aug_full <- pap_year %>% group_by(pap) %>%
+aug_full <- pap_year %>% filter(year <= 2026) %>% group_by(pap) %>%
   summarise(nep = sum(NEP, na.rm = TRUE), gaa = sum(GAA, na.rm = TRUE), .groups = "drop") %>%
   mutate(aug = gaa - nep) %>% filter(abs(aug) >= 1e8) %>%
   transmute(`P/A/P` = pap, `Σ NEP 2018–26 (B)` = nep/1e9, `Σ GAA 2018–26 (B)` = gaa/1e9,
@@ -485,7 +529,7 @@ Congress's fiscal preference is operating-expense-heavy. Splitting the cumulativ
 
 ```{r tbl-aug-ec}
 aug_ec <- df_long_all %>%
-  filter(metric %in% c("NEP","GAA"), expense_class %in% c("1PS","2MOOE","6CO")) %>%
+  filter(metric %in% c("NEP","GAA"), year <= 2026, expense_class %in% c("1PS","2MOOE","6CO")) %>%
   group_by(metric, expense_class) %>% summarise(a = sum(amount, na.rm = TRUE), .groups = "drop") %>%
   pivot_wider(names_from = metric, values_from = a) %>%
   transmute(`Expense class` = factor(expense_class, levels = c("1PS","2MOOE","6CO"), labels = ec_levels),
@@ -511,7 +555,8 @@ ggplot(maifip, aes(year, amount, color = metric, group = metric)) +
   scale_color_manual(values = exec_pal) +
   scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6),
                      limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
-  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
+  scale_x_continuous(breaks = c(seq(2018, 2026, 2), 2027)) +
+  annotate("text", x = 2027, y = Inf, label = "proposed", vjust = 1.4, size = 3, color = "grey45") +
   labs(title = "MAIFIP: from PHP 4.9B (2018) to PHP 58B (2024 GAA)",
        subtitle = "Congressional plus-ups dwarf the Executive's proposal year after year",
        x = NULL, y = NULL,
@@ -520,6 +565,8 @@ ggplot(maifip, aes(year, amount, color = metric, group = metric)) +
 ```
 
 The GAA grew roughly twelve-fold, from ₱4.9B in 2018 to ₱58.1B in 2024, and in most years the gap between proposal and enactment is enormous: in 2024 the ₱22.3B NEP became a ₱58.1B GAA (a ₱36B plus-up); in 2026 a ₱24.2B NEP becomes a ₱51.7B GAA (₱27B). But execution tells a more cautious story — the program *obligates* well but *disburses* with a real lag, as the table makes explicit.
+
+**In the FY 2027 proposal the Executive again proposes ₱24.2B for MAIFIP — essentially identical to its FY 2026 proposal**, and roughly the figure it has put forward for three years running. If the established pattern holds, Congress will again roughly double it at enactment. Reading the ₱24.2B proposal as a *cut* against the ₱51.7B FY 2026 GAA would be a proposal-versus-enacted error: the Executive is not shrinking MAIFIP, it is under-proposing a line it fully expects Congress to restore. That keeps the annual restoration a live advocacy question rather than a foregone conclusion — and sharpens the deeper one of whether MAIFIP is functioning as a de facto substitute for PhilHealth case-rate coverage or as a discretionary assistance line.
 
 ```{r tbl-maifip}
 pap_year %>% filter(pap == MAIFIP_LAB, year %in% 2018:2025) %>%
