@@ -55,7 +55,9 @@ site_intro    <- paste(
 )
 source_note <- paste(
   "Underlying data: DBM-published budget and execution data (Current New",
-  "Appropriations only). NEP/GAA cover FY 2018-2026; execution measures",
+  "Appropriations only). NEP covers FY 2018-2027 in the most recent reviews",
+  "(FY 2027 is the Executive\u2019s proposal, not yet enacted) and GAA covers FY 2018-2026;",
+  "execution measures",
   "(Allotments, Obligations, Disbursements) cover FY 2018-2025. Coverage",
   "varies by agency; the DPWH review instead traces appropriations to 1988."
 )
@@ -98,8 +100,8 @@ agencies <- tibble::tribble(
   "GAA nearly tripled: \u20b1107B (2018) \u2192 \u20b1298B (2026)  |  \u20b1210B cumulative plus-ups; MAIFIP + HFEP = 73%  |  Capital Outlays disburse at only 14\u201337% and falling",
 
   "DOLE",   "Department of Labor and Employment",                 "Whole department + attached agencies", "dole.html",        "published",
-  "A large labor department that is, to a first approximation, one program: TUPAD emergency employment is about 70% of it. The budget surged during COVID and stayed high, Congress adds heavily (almost all to TUPAD), and in 2023 three agencies left for the new Department of Migrant Workers. Execution is read at the agency level only.",
-  "TUPAD \u2248 \u20b125B \u2014 about 70% of the department (excl. TESDA)  |  COVID surge: \u20b111B (2018) \u2192 \u20b151B (2022) \u2192 ~\u20b130\u201340B since  |  Congress adds +\u20b156B to TUPAD cumulatively; OWWA/POEA/NMP \u2192 DMW in 2023",
+  "A large labor department that is, to a first approximation, one program: TUPAD emergency employment is about 70% of it. The budget surged during COVID and stayed high, and Congress adds heavily every year \u2014 almost all to TUPAD. The FY 2027 proposal is ~\u20b126B (TUPAD \u20b116.7B, about 64%), a floor Congress has topped up every year; in 2023 three agencies left for the new Department of Migrant Workers. Execution is read at the agency level only.",
+  "FY 2027 proposal ~\u20b126B (excl. TESDA); TUPAD proposed \u20b116.7B, ~64%  |  COVID surge: \u20b111B (2018) \u2192 \u20b151B (2022) \u2192 ~\u20b130\u201340B since  |  Congress tops up every year: TUPAD \u20b114.6B proposed \u2192 \u20b125.4B enacted (2026); OWWA/POEA/NMP \u2192 DMW in 2023",
 
   "DSWD",   "Department of Social Welfare and Development",       "Office of the Secretary", "dswd-osec.html",   "published",
   "An almost pure cash-transfer budget \u2014 4Ps, Protective Services, and the Social Pension \u2014 where Congress reshapes the portfolio from within: trimming 4Ps, scaling up Protective Services, and inventing AKAP by appropriation alone.",

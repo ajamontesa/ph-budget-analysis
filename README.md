@@ -4,7 +4,8 @@ Long-form budget analyses of selected Philippine departments and agencies,
 tracing each peso from the Executive's proposal (NEP) through enactment
 (GAA), release (allotment), commitment (obligation), and final cash payment
 (disbursement). Each report covers the Office of the Secretary, current-year
-**New Appropriations only**, FY 2018-2026.
+**New Appropriations only**, FY 2018-2026 — with the FY 2027 proposal (NEP)
+added to the most recent reviews.
 
 **Live site:** <https://ajamontesa.github.io/ph-budget-analysis/index.html> —
 the home page links to every published report. The site is published via GitHub
@@ -130,8 +131,10 @@ R (≥ 4.2) with `rmarkdown`, `knitr`, `dplyr`, `tidyr`, `ggplot2`, `scales`,
 
 - **Scope:** Current New Appropriations only — excludes Continuing and
   Automatic Appropriations and Special Purpose Fund transfers.
-- **Coverage:** NEP/GAA for FY 2018-2026; execution measures (Adjusted
-  Allotments, Obligations, Disbursements) for FY 2018-2025.
+- **Coverage:** NEP (proposed) for FY 2018-2026, extended to FY 2027 in the
+  most recent reviews (the FY 2027 GAA is not yet enacted); GAA (enacted) for
+  FY 2018-2026; execution measures (Adjusted Allotments, Obligations,
+  Disbursements) for FY 2018-2025.
 - **Source:** DBM-published budget and execution data.
 - **DPWH exception:** The DPWH review is department-wide (not OSec-only) and
   traces appropriations to 1988. It adds a granular encoding of DPWH's programs,

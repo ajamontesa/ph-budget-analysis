@@ -1,6 +1,6 @@
 ---
 title: "Department of Labor and Employment"
-subtitle: "Budget evolution and agency-level utilization, FY 2018–2026"
+subtitle: "The FY 2027 proposed budget in context, FY 2018–2027"
 date: "`r format(Sys.Date(), '%B %Y')`"
 output:
   html_document:
@@ -116,12 +116,12 @@ raw <- read_excel(file_path, sheet = AGENCY_SHEET) %>% mutate(across(any_of(CODE
 TESDA_TAB <- "Technical Education and Skills Development Authority"
 agency_meta <- tibble::tribble(
   ~tab_name,                                        ~short,  ~group,     ~last_year,
-  "Office of the Secretary",                         "OSEC",  "osec",     2026,
-  "Institute for Labor Studies",                     "ILS",   "current",  2026,
-  "National Conciliation and Mediation Board",       "NCMB",  "current",  2026,
-  "National Labor Relations Commission",             "NLRC",  "current",  2026,
-  "National Wages and Productivity Commission",      "NWPC",  "current",  2026,
-  "Professional Regulation Commission",              "PRC",   "current",  2026,
+  "Office of the Secretary",                         "OSEC",  "osec",     2027,
+  "Institute for Labor Studies",                     "ILS",   "current",  2027,
+  "National Conciliation and Mediation Board",       "NCMB",  "current",  2027,
+  "National Labor Relations Commission",             "NLRC",  "current",  2027,
+  "National Wages and Productivity Commission",      "NWPC",  "current",  2027,
+  "Professional Regulation Commission",              "PRC",   "current",  2027,
   "National Maritime Polytechnic",                   "NMP",   "dmw",      2022,
   "Philippine Overseas Employment Administration",   "POEA",  "dmw",      2022,
   "Overseas Workers Welfare Administration",         "OWWA",  "dmw",      2022)
@@ -167,21 +167,25 @@ agency_evo_plot <- function(sh, subtitle = "NEP (proposed) vs GAA (enacted)") {
   ggplot(d, aes(year, total, color = metric, group = metric)) +
     geom_line(linewidth = 1) + geom_point(size = 2) + scale_color_manual(values = exec_pal) +
     scale_y_continuous(labels = php_fmt(d$total), limits = c(0, NA), breaks = pretty_breaks(5), expand = expansion(mult = c(0, .05))) +
-    scale_x_continuous(breaks = seq(2018, m$last_year, by = 2)) +
+    scale_x_continuous(breaks = unique(c(seq(2018, m$last_year, by = 2), m$last_year))) +
     labs(title = m$tab_name, subtitle = subtitle, x = NULL, y = NULL) +
     theme_dole() + guides(color = guide_legend(nrow = 1))
 }
 agency_top_paps <- function(sh, n = 7) {
   m <- ag_meta(sh)
-  d <- df_long %>% filter(agency == m$tab_name, metric == "GAA", year == m$last_year, !is.na(amount), amount > 0) %>%
+  base <- df_long %>% filter(agency == m$tab_name, year == m$last_year, !is.na(amount), amount > 0)
+  # For FY 2027 there is no enacted GAA yet, so fall back to the NEP (proposed).
+  use_metric <- if (any(base$metric == "GAA")) "GAA" else "NEP"
+  basis_lab  <- if (use_metric == "GAA") "GAA" else "NEP, proposed"
+  d <- base %>% filter(metric == use_metric) %>%
     group_by(pap) %>% summarise(amount = sum(amount), .groups = "drop") %>% arrange(desc(amount)) %>%
     slice_head(n = n) %>% mutate(pap = factor(pap, levels = rev(pap)))
   lab <- php_lab(d$amount)
-  ggplot(d, aes(pap, amount)) + geom_col(fill = bar_fill, width = 0.72) +
+  ggplot(d, aes(pap, amount)) + geom_col(fill = if (use_metric == "GAA") bar_fill else "#54278F", width = 0.72) +
     geom_text(aes(label = lab(amount)), hjust = -0.1, size = 3, color = "grey20") + coord_flip() +
     scale_x_discrete(labels = function(x) str_wrap(x, 48)) +
     scale_y_continuous(labels = php_fmt(d$amount), expand = expansion(mult = c(0, .28)), limits = c(0, NA)) +
-    labs(title = paste0(m$short, ": largest P/A/Ps (FY ", m$last_year, " GAA)"), x = NULL, y = NULL) +
+    labs(title = paste0(m$short, ": largest P/A/Ps (FY ", m$last_year, " ", basis_lab, ")"), x = NULL, y = NULL) +
     theme_dole() + theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"))
 }
 agency_exec_ratio_plot <- function(sh) {
@@ -213,7 +217,7 @@ agency_exec_dt <- function(sh, from = 2018) {
 # Overview {#overview .unnumbered}
 
 <p class="lead">
-This document profiles the budget of the **Department of Labor and Employment (DOLE)** — the whole department, its **Office of the Secretary (OSEC)** and its **attached agencies** — across nine fiscal years, FY 2018 to FY 2026. DOLE is a large, multi-agency department, so this review is organized like a portfolio: the department in aggregate, then OSEC, then each attached agency in turn, and finally a cross-agency look at how well each spends what it is given.
+This document profiles the budget of the **Department of Labor and Employment (DOLE)** — the whole department, its **Office of the Secretary (OSEC)** and its **attached agencies** — across ten fiscal years, FY 2018 to FY 2027 — with **FY 2027 represented by the Executive's proposal (NEP)**, not yet debated or enacted. DOLE is a large, multi-agency department, so this review is organized like a portfolio: the department in aggregate, then OSEC, then each attached agency in turn, and finally a cross-agency look at how well each spends what it is given.
 </p>
 
 Two features shape everything that follows. First, DOLE's budget is **overwhelmingly one program** — Livelihood and Emergency Employment, better known as **TUPAD** — which alone is roughly **70% of the department**. Second, the department has been **reorganized twice around 2023**: three agencies (OWWA, POEA, and the National Maritime Polytechnic) moved to the new **Department of Migrant Workers (DMW)**, while TESDA's classification shifted the other way. To keep the department's own story clean, **TESDA is excluded throughout** (it warrants its own review), and the three DMW-bound agencies are shown **through 2022 as pre-DMW history**.
@@ -221,6 +225,12 @@ Two features shape everything that follows. First, DOLE's budget is **overwhelmi
 One important limitation: usable **P/A/P-level execution data was not available**, so how well the budget is *spent* is measured at the **agency aggregate** only. The intent is to obtain program-level execution later; until then, this review draws as much as it can from the appropriations detail and the agency-level utilization record.
 
 # Executive summary {#exec}
+
+**The FY 2027 proposal (NEP) is about ₱26B for the department** (excluding TESDA) — roughly on par with the FY 2025 proposal and above the FY 2026 proposal (₱24.4B). It is *not* a shrinking proposal.
+
+**The proposal is built around one program.** Livelihood and Emergency Employment (**TUPAD**) is proposed at **₱16.7B in 2027 — about 64% of the department** — up from its ₱14.6B FY 2026 proposal.
+
+**The real lever is Congress, not the NEP.** For FY 2026, Congress raised TUPAD from a proposed ₱14.6B to an enacted **₱25.4B**, so the gap between the ~₱26B proposed and the ₱35B enacted in 2026 is the recurring NEP-to-GAA pattern, not a cut. The FY 2027 scrutiny question is therefore whether Congress will top TUPAD up again — and whether proposing it low each year is honest budgeting for a program the government clearly intends to fund at a much higher level.
 
 **DOLE is a labor department built around one enormous program.** A single P/A/P — **Livelihood and Emergency Employment (TUPAD)** — is about **₱25B, roughly 70%** of the whole department (excluding TESDA) and about **85% of OSEC**.
 
@@ -238,7 +248,7 @@ One important limitation: usable **P/A/P-level execution data was not available*
 
 # A note on the data {#data-notes}
 
-**Period.** FY 2018–2026 for the proposed (NEP) and enacted (GAA) budget at the P/A/P level; agency-level execution (Allotments, Obligations, Disbursements) covers FY 2011–2025.
+**Period.** FY 2018–2027 for the proposed (NEP) budget and FY 2018–2026 for the enacted (GAA) budget at the P/A/P level — **FY 2027 is the NEP (the Executive's proposal) only**, not yet debated or enacted, and wherever a chart or table shows FY 2027 the figure is *proposed*. Agency-level execution (Allotments, Obligations, Disbursements) covers FY 2011–2025. Because Congress has raised DOLE's enacted budget well above the proposal every year, the FY 2027 NEP is best read as a floor the department is likely to exceed, not a ceiling.
 
 **No P/A/P-level execution.** Usable **FAR No. 1** records were unavailable, so absorption is shown at the **agency aggregate** only — there is no program-level absorption analysis. This is the main gap this review would fill with better data.
 
@@ -257,14 +267,14 @@ DOLE was reorganized twice around 2023, so it helps to fix the moving parts befo
 ```{r org-timeline, fig.height=3.4}
 tl <- tibble::tribble(
   ~track, ~label, ~start, ~end, ~fill,
-  "Core department",  "OSEC + ILS, NCMB, NLRC, NWPC, PRC (throughout)", 2018, 2026.4, "#08519C",
+  "Core department",  "OSEC + ILS, NCMB, NLRC, NWPC, PRC (throughout)", 2018, 2027.4, "#08519C",
   "Left for DMW",     "OWWA, POEA, NMP → Dept. of Migrant Workers",     2018, 2023,   "#E6550D",
-  "TESDA (separate)", "Classification shifted in 2023 (excluded here)",  2023, 2026.4, "#969696")
+  "TESDA (separate)", "Classification shifted in 2023 (excluded here)",  2023, 2027.4, "#969696")
 ggplot(tl, aes(y = track)) +
   geom_segment(aes(x = start, xend = end, yend = track, color = fill), linewidth = 12, lineend = "butt") +
   scale_color_identity() +
   geom_text(aes(x = (start + end) / 2, label = label), color = "white", fontface = "bold", size = 3.2) +
-  scale_x_continuous(breaks = 2018:2026, limits = c(2017.7, 2026.6)) +
+  scale_x_continuous(breaks = 2018:2027, limits = c(2017.7, 2027.6)) +
   labs(title = "Two reorganizations bracket the period",
        subtitle = "DMW spun off in 2023 (taking three agencies); TESDA's classification shifted the same year",
        x = NULL, y = NULL) +
@@ -285,10 +295,11 @@ dept <- df_long %>% filter(agency != TESDA_TAB, metric %in% c("NEP","GAA"), !is.
 ggplot(dept, aes(year, total, color = metric, group = metric)) +
   geom_line(linewidth = 1) + geom_point(size = 2) + scale_color_manual(values = exec_pal) +
   scale_y_continuous(labels = php_fmt(dept$total), limits = c(0, NA), breaks = pretty_breaks(6), expand = expansion(mult = c(0, .05))) +
-  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
-  labs(title = "DOLE current-year appropriations (excl. TESDA), FY 2018–2026",
-       subtitle = "A COVID-era surge to ₱51B (2022), then settling around ₱30–40B; note the 2023 DMW spin-off",
-       x = NULL, y = NULL, caption = "Current-year new appropriations. Source: DBM NEP & GAA.") +
+  scale_x_continuous(breaks = c(seq(2018, 2026, 2), 2027)) +
+  annotate("text", x = 2027, y = Inf, label = "proposed", vjust = 1.4, size = 3, color = "grey45") +
+  labs(title = "DOLE current-year appropriations (excl. TESDA), FY 2018–2027",
+       subtitle = "The enacted (GAA) line sits well above the proposal (NEP) every year; the FY 2027 NEP proposes ~PHP 26B",
+       x = NULL, y = NULL, caption = "Current-year new appropriations. FY 2027 = NEP (proposed) only. Source: DBM NEP & GAA.") +
   theme_dole() + guides(color = guide_legend(nrow = 1))
 ```
 
@@ -297,15 +308,16 @@ The department roughly **quintupled** at its 2022 peak relative to 2018, then st
 ## Composition by agency
 
 ```{r dept-comp, fig.height=4.9}
-comp <- df_long %>% filter(agency != TESDA_TAB, metric == "GAA", !is.na(amount), amount > 0) %>%
+comp <- df_long %>% filter(agency != TESDA_TAB, (metric == "GAA") | (metric == "NEP" & year == 2027), !is.na(amount), amount > 0) %>%
   group_by(year, agency) %>% summarise(amount = sum(amount), .groups = "drop") %>%
   mutate(agency = factor(agency, levels = names(agency_pal)))
 ggplot(comp, aes(year, amount, fill = agency)) +
   geom_col(width = 0.75, color = "white", linewidth = 0.2) +
   scale_fill_manual(values = agency_pal, labels = function(x) str_wrap(x, 26)) +
   scale_y_continuous(labels = php_fmt(comp$amount), breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
-  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
-  labs(title = "GAA composition by agency, 2018–2026",
+  scale_x_continuous(breaks = c(seq(2018, 2026, 2), 2027)) +
+  annotate("text", x = 2027, y = Inf, label = "proposed", vjust = 1.3, size = 3, color = "grey45") +
+  labs(title = "Composition by agency: enacted 2018–2026, proposed 2027",
        subtitle = "The Office of the Secretary is the overwhelming majority; OWWA's 2022 bulge then exits with DMW",
        x = NULL, y = NULL) +
   theme_dole() + guides(fill = guide_legend(nrow = 3, byrow = TRUE)) +
@@ -317,15 +329,16 @@ ggplot(comp, aes(year, amount, fill = agency)) +
 ## The attached agencies, on their own scale
 
 ```{r dept-comp-attached, fig.height=4.9}
-comp2 <- df_long %>% filter(!agency %in% c(TESDA_TAB, "Office of the Secretary"), metric == "GAA", !is.na(amount), amount > 0) %>%
+comp2 <- df_long %>% filter(!agency %in% c(TESDA_TAB, "Office of the Secretary"), (metric == "GAA") | (metric == "NEP" & year == 2027), !is.na(amount), amount > 0) %>%
   group_by(year, agency) %>% summarise(amount = sum(amount), .groups = "drop") %>%
   mutate(agency = factor(agency, levels = names(agency_pal)))
 ggplot(comp2, aes(year, amount, fill = agency)) +
   geom_col(width = 0.75, color = "white", linewidth = 0.2) +
   scale_fill_manual(values = agency_pal, labels = function(x) str_wrap(x, 26)) +
   scale_y_continuous(labels = php_fmt(comp2$amount), breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
-  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
-  labs(title = "GAA composition of attached agencies only (excl. OSEC & TESDA)",
+  scale_x_continuous(breaks = c(seq(2018, 2026, 2), 2027)) +
+  annotate("text", x = 2027, y = Inf, label = "proposed", vjust = 1.3, size = 3, color = "grey45") +
+  labs(title = "Attached agencies (excl. OSEC & TESDA): enacted 2018–2026, proposed 2027",
        subtitle = "OWWA dominates until it leaves in 2023; PRC and NLRC anchor the continuing roster",
        x = NULL, y = NULL) +
   theme_dole() + guides(fill = guide_legend(nrow = 3, byrow = TRUE)) +
@@ -334,35 +347,41 @@ ggplot(comp2, aes(year, amount, fill = agency)) +
 
 With OSEC set aside, the attached agencies are modest — a few billion pesos combined. **OWWA** towers over the rest until 2022; after its exit, **PRC** (the professions' licensing body) and **NLRC** (labor arbitration) anchor the continuing roster.
 
-## The department's largest P/A/Ps (FY 2026)
+## The department's largest P/A/Ps (FY 2027 NEP, proposed)
 
 ```{r dept-top-paps, fig.height=5.0}
-dtp <- df_long %>% filter(agency != TESDA_TAB, metric == "GAA", year == 2026, !is.na(amount), amount > 0) %>%
+dtp <- df_long %>% filter(agency != TESDA_TAB, metric == "NEP", year == 2027, !is.na(amount), amount > 0) %>%
   mutate(label = paste0(str_trunc(pap, 46), "  (", str_trunc(agency, 22), ")")) %>%
   group_by(label) %>% summarise(amount = sum(amount), .groups = "drop") %>%
   arrange(desc(amount)) %>% slice_head(n = 10) %>% mutate(label = factor(label, levels = rev(label)))
 lab <- php_lab(dtp$amount)
-ggplot(dtp, aes(label, amount)) + geom_col(fill = bar_fill, width = 0.72) +
+ggplot(dtp, aes(label, amount)) + geom_col(fill = "#54278F", width = 0.72) +
   geom_text(aes(label = lab(amount)), hjust = -0.1, size = 3, color = "grey20") + coord_flip() +
   scale_x_discrete(labels = function(x) str_wrap(x, 54)) +
   scale_y_continuous(labels = php_fmt(dtp$amount), expand = expansion(mult = c(0, .2)), limits = c(0, NA)) +
-  labs(title = "Ten largest P/A/Ps department-wide (FY 2026 GAA)",
-       subtitle = "One line — Livelihood & Emergency Employment (TUPAD) — dwarfs everything else combined",
+  labs(title = "Ten largest P/A/Ps department-wide (FY 2027 NEP, proposed)",
+       subtitle = "TUPAD (proposed ~PHP 16.7B) is about 64% of the proposal — and the line Congress most often tops up",
        x = NULL, y = NULL) +
   theme_dole() + theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"))
 ```
 
 The scale gap is the point: TUPAD is larger than every other line in the department **combined**. Everything else — general management, employment facilitation, labor-standards enforcement, the attached agencies' core functions — shares what is left.
 
-### Every P/A/P in the FY 2026 budget (interactive) {.unnumbered}
+### Every P/A/P: FY 2026 enacted and FY 2027 proposed (interactive) {.unnumbered}
 
 ```{r tbl-all-paps}
-df_long %>% filter(agency != TESDA_TAB, year == 2026, metric %in% c("NEP","GAA"), !is.na(amount)) %>%
-  group_by(agency, pap, metric) %>% summarise(amount = sum(amount), .groups = "drop") %>%
-  pivot_wider(names_from = metric, values_from = amount) %>%
-  transmute(Agency = agency, `P/A/P` = pap, `NEP (M)` = NEP/1e6, `GAA (M)` = GAA/1e6,
-            `Net add (M)` = (GAA - NEP)/1e6) %>% arrange(desc(`GAA (M)`)) %>%
-  dt_table(page = 10, money_cols = c("NEP (M)","GAA (M)","Net add (M)"))
+bind_rows(
+  df_long %>% filter(agency != TESDA_TAB, year == 2026, metric == "GAA", !is.na(amount)) %>%
+    transmute(agency, pap, col = "GAA2026", amount),
+  df_long %>% filter(agency != TESDA_TAB, year == 2027, metric == "NEP", !is.na(amount)) %>%
+    transmute(agency, pap, col = "NEP2027", amount)
+) %>%
+  group_by(agency, pap, col) %>% summarise(amount = sum(amount), .groups = "drop") %>%
+  pivot_wider(names_from = col, values_from = amount) %>%
+  transmute(Agency = agency, `P/A/P` = pap,
+            `FY2026 GAA (M)` = GAA2026 / 1e6, `FY2027 NEP (M)` = NEP2027 / 1e6) %>%
+  arrange(desc(`FY2027 NEP (M)`)) %>%
+  dt_table(page = 10, money_cols = c("FY2026 GAA (M)", "FY2027 NEP (M)"))
 ```
 
 ## Where Congress adjusts the budget
@@ -379,7 +398,7 @@ ggplot(gap, aes(year, change/1e9, fill = direction)) +
   scale_x_continuous(breaks = 2018:2026) +
   scale_y_continuous(labels = function(v) paste0(peso, v, "B"), expand = expansion(mult = c(0.12, 0.15))) +
   labs(title = "Enacted minus proposed (GAA − NEP), PHP billions",
-       subtitle = "Congress consistently tops DOLE up; the +₱15B FY 2024 add is the largest in the period",
+       subtitle = "Congress consistently tops DOLE up; the +PHP 15B FY 2024 add is the largest in the period",
        x = NULL, y = NULL) +
   theme_dole() + guides(fill = guide_legend(nrow = 1))
 ```
@@ -405,7 +424,7 @@ ggplot(aug_plot, aes(delta/1e9, lab, fill = dir)) +
   scale_x_continuous(labels = function(v) paste0(peso, v, "B"), expand = expansion(mult = c(0.16, 0.16))) +
   scale_y_discrete(labels = function(x) str_wrap(x, 46)) +
   labs(title = "P/A/Ps most changed by Congress, cumulative FY 2018–2026 (GAA − NEP)",
-       subtitle = "One line absorbs almost all the augmentation: +₱56B added to Livelihood & Emergency Employment (TUPAD)",
+       subtitle = "One line absorbs almost all the augmentation: +PHP 56B added to Livelihood & Emergency Employment (TUPAD)",
        x = NULL, y = NULL) +
   theme_dole() + theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85")) +
   guides(fill = guide_legend(nrow = 1))
