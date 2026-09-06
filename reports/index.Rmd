@@ -86,8 +86,8 @@ agencies <- tibble::tribble(
   "FY 2027 NEP: \u20b1171.3B dept-wide (\u20b1152.0B OSEC), \u22128% from 2026 enacted  |  Farm-to-Market Roads nearly halved (\u20b133B \u2192 \u20b116B); foreign-assisted grows to 50.6% of OSEC  |  That portfolio disbursed just 33% (2024) / 53% (2025); attached agencies mostly cut (BFAR the exception)",
 
   "DepEd",  "Department of Education",                            "Office of the Secretary", "deped-osec.html",  "published",
-  "A payroll-dominated budget whose strong headline absorption masks chronic under-spending in the non-salary tail \u2014 textbooks, facilities, and the collapsing GASTPE subsidies.",
-  "GAA grew 1.7\u00d7: \u20b1552B (2018) \u2192 \u20b1959B (2026)  |  Record \u20b186B Congressional augmentation in 2026  |  Textbooks disbursed just 2\u201317% of allotment every year",
+  "The FY 2027 proposal is \u20b1914B \u2014 up \u20b141B (+5%) and the largest yet, though still below the Congress-augmented 2026 enacted level (\u20b1959B). A payroll-dominated budget whose strong headline absorption masks chronic under-spending in the non-salary tail \u2014 textbooks, facilities, and the collapsing GASTPE subsidies. The proposal grows school operations but trims computerization, new teacher positions, and textbooks.",
+  "FY 2027 NEP \u20b1914B (+5%, largest yet); 2026 GAA \u20b1959B  |  Record \u20b186B Congressional augmentation in 2026  |  Textbooks disbursed just 2\u201317% of allotment every year",
 
   "DOE",    "Department of Energy",                               "Office of the Secretary", "doe.html",         "planned", "", "",
 
