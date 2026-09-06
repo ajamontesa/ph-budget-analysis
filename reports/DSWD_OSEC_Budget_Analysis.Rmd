@@ -1,6 +1,6 @@
 ---
 title: "Department of Social Welfare and Development — Office of the Secretary"
-subtitle: "Budget evolution and absorptive capacity, FY 2018–2026"
+subtitle: "The FY 2027 proposed budget in context, FY 2018–2027"
 date: "`r format(Sys.Date(), '%B %Y')`"
 output:
   html_document:
@@ -209,7 +209,7 @@ SOCPEN <- "Social Pension for Indigent Senior Citizens"
 # Overview {#overview .unnumbered}
 
 <p class="lead">
-This document tracks the budget of the **Department of Social Welfare and Development – Office of the Secretary (DSWD-OSEC)** across nine fiscal years, FY 2018 to FY 2026, following each peso from the Executive's proposal (NEP) to enactment (GAA), release (allotment), commitment (obligation), and final cash payment (disbursement).
+This document tracks the budget of the **Department of Social Welfare and Development – Office of the Secretary (DSWD-OSEC)** across ten fiscal years, FY 2018 to FY 2027 — with **FY 2027 the Executive’s proposal (NEP)**, not yet enacted — following each peso from the Executive's proposal (NEP) to enactment (GAA), release (allotment), commitment (obligation), and final cash payment (disbursement).
 </p>
 
 It is the long-form companion to the DSWD-OSEC briefing deck. Where the deck fits each point on a slide, this version keeps the full argument and adds reference tables — most sortable, searchable, and exportable — so a reader can interrogate the figures directly. Every table can be copied or downloaded from its toolbar.
@@ -217,6 +217,8 @@ It is the long-form companion to the DSWD-OSEC briefing deck. Where the deck fit
 DSWD is simple to characterize and, in some ways, politically charged. It is overwhelmingly a **cash-transfer machine**: three programs — Pantawid Pamilyang Pilipino (4Ps), Protective Services, and the Social Pension — carry the great majority of the budget, and because cash assistance classifies as Maintenance and Other Operating Expenses, the agency is almost entirely MOOE. Two threads run through what follows. First, **execution has steadily improved** — DSWD's money increasingly gets paid out, reaching 96% of allotments in 2025. Second, **Congress does not so much enlarge the DSWD budget as re-shape it from within**, trimming the flagship 4Ps while building up Protective Services and inventing an entirely new program, AKAP, that never appeared in any Presidential proposal.
 
 # Executive summary {#exec}
+
+**The FY 2027 proposal (NEP) is ₱236B for DSWD-OSEC** — up about ₱14B (+6%) on the 2026 proposal and the largest yet, though it sits ₱29B below the Congress-augmented 2026 enacted level (₱264B). The striking move is internal: **the flagship 4Ps is proposed *down* ₱14B**, from ₱113B to ₱99B. This is a genuine reduction, not a proposal-versus-enacted artifact — Congress left 4Ps at the proposed ₱113B in 2026, so the drop is the Executive’s own choice, and it is the first time a Presidential proposal steps 4Ps down. In its place a **new ₱17.7B program — “Panahon ng Pagkilos: Philippine Community Resilience” — appears** with no prior-year budget and no track record, and **Protective Services (which houses the discretionary AICS) is proposed up ₱6.3B to ₱33B**. Money is shifting from the evaluated, conditional 4Ps toward a new program and more discretionary assistance. Because DSWD disburses at 96% and 4Ps at 98–99%, the reduction cannot rest on an inability to spend — it is a policy choice, not a capacity problem.
 
 **DSWD is overwhelmingly a cash-transfer agency.** Three programs — 4Ps, Protective Services, and the Social Pension — account for **74–88% of the OSEC budget every year**, and ₱229B of the proposed ₱264B 2026 budget. 4Ps alone is ₱113B in 2026, 43% of the office.
 
@@ -234,9 +236,9 @@ DSWD is simple to characterize and, in some ways, politically charged. It is ove
 
 # A note on the data {#data-notes}
 
-**Period.** FY 2018 through FY 2026 for NEP and GAA. Execution data — Adjusted Appropriations, Adjusted Allotments, Obligations, Disbursements — is available at the P/A/P level for every year FY 2018–2025; FY 2026 reflects the proposed/enacted budget only.
+**Period.** FY 2018 through FY 2027 for NEP and FY 2018 through FY 2026 for GAA — **FY 2027 is the NEP (the Executive’s proposal) only**, not yet debated or enacted and with no execution data, so wherever a chart or table shows FY 2027 the figure is *proposed*. Execution data — Adjusted Appropriations, Adjusted Allotments, Obligations, Disbursements — is available at the P/A/P level for every year FY 2018–2025; FY 2026 reflects the proposed/enacted budget only.
 
-**Scope.** DSWD **Office of the Secretary only** — excludes attached agencies (the National Commission on Indigenous Peoples, the National Anti-Poverty Commission, the Council for the Welfare of Children, and others). **Current New Appropriations only**; nominal pesos.
+**Scope.** The main analysis is **DSWD Office of the Secretary only**; the attached agencies (the National Anti-Poverty Commission, the Council for the Welfare of Children, and others) are summarised in a short **[attached-agencies section](#attached)** at the end. **Current New Appropriations only**; nominal pesos.
 
 **Expense classes.** DSWD uses four: Personnel Services (PS), Maintenance & Other Operating Expenses (MOOE), Financial Expenses (FE), and Capital Outlays (CO). MOOE dominates because cash transfers classify under MOOE; FE and CO are each under 1% of the budget, so the expense-class absorption analysis below reports only PS and MOOE.
 
@@ -257,10 +259,11 @@ ggplot(evo, aes(year, total, color = metric, group = metric)) +
   scale_color_manual(values = exec_pal) +
   scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6),
                      limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
-  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
-  labs(title = "DSWD-OSEC budget, NEP through Disbursements (FY 2018–2026)",
-       subtitle = "The budget nearly doubled; disbursements have steadily caught up to allotments",
-       x = NULL, y = NULL, caption = "FY 2026 reflects NEP/GAA only; execution data not yet available.") +
+  scale_x_continuous(breaks = c(seq(2018, 2026, 2), 2027)) +
+  annotate("text", x = 2027, y = Inf, label = "proposed", vjust = 1.4, size = 3, color = "grey45") +
+  labs(title = "DSWD-OSEC budget, NEP through Disbursements (FY 2018–2027)",
+       subtitle = "The budget nearly doubled; disbursements have caught up to allotments; the FY 2027 NEP proposes ~PHP 236B",
+       x = NULL, y = NULL, caption = "FY 2027 is the NEP (proposed) only; FY 2026 reflects NEP/GAA only; execution runs through 2025.") +
   theme_dswd() + guides(color = guide_legend(nrow = 1))
 ```
 
@@ -369,40 +372,77 @@ ec_share <- comp_ec %>% group_by(year) %>% mutate(share = round(amount/sum(amoun
 kbl_clean(ec_share %>% rename(`Expense class (% of GAA)` = expense_class), font = 12.5, digits = 1, na = "")
 ```
 
-## The ten largest P/A/Ps
+## The ten largest P/A/Ps (FY 2027 NEP, proposed)
 
 ```{r fig-top10, fig.height=5.4}
-top10 <- pap_year %>% filter(year == 2026, !is.na(GAA), GAA > 0) %>%
-  arrange(desc(GAA)) %>% slice_head(n = 10) %>% mutate(pap = factor(pap, levels = rev(pap)))
+top10 <- pap_year %>% filter(year == 2027, !is.na(NEP), NEP > 0) %>%
+  arrange(desc(NEP)) %>% slice_head(n = 10) %>% mutate(pap = factor(pap, levels = rev(pap)))
 
-ggplot(top10, aes(pap, GAA)) +
-  geom_col(fill = bar_fill, width = 0.75) +
-  geom_text(aes(label = php_b(GAA)), hjust = -0.1, size = 3.3, color = "grey20") +
+ggplot(top10, aes(pap, NEP)) +
+  geom_col(fill = "#54278F", width = 0.75) +
+  geom_text(aes(label = php_b(NEP)), hjust = -0.1, size = 3.3, color = "grey20") +
   coord_flip() +
   scale_x_discrete(labels = function(x) str_wrap(x, 46)) +
   scale_y_continuous(labels = php_b_axis, expand = expansion(mult = c(0, .20)), limits = c(0, NA)) +
-  labs(title = "Top 10 P/A/Ps by FY 2026 GAA",
-       subtitle = "4Ps alone is PHP 113B — 43% of the entire OSEC budget",
+  labs(title = "Top 10 P/A/Ps by FY 2027 NEP (proposed)",
+       subtitle = "4Ps is proposed down to PHP 99B but is still the largest line, at 42% of the proposal",
        x = NULL, y = NULL) +
   theme_dswd() +
   theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"))
 ```
 
-### Full P/A/P ranking (interactive) {.unnumbered}
+### Full P/A/P ranking, FY 2027 proposal (interactive) {.unnumbered}
 
-Every P/A/P, ranked by 2026 GAA, with the 2026 NEP, the prior-year (2025) enacted figure, and the implied 2026 net Congressional change. Sort, search, or export.
+Every P/A/P, ranked by the FY 2027 proposal (NEP), alongside the FY 2026 proposal and enacted budget. Lines that exist in only one year (a new program, or one dropped in the proposal) show a blank where they have no figure. Sort, search, or export.
 
 ```{r tbl-allpaps}
-all_paps_2026 <- pap_year %>% filter(year == 2026) %>%
-  transmute(`P/A/P` = pap, `NEP 2026 (B)` = NEP/1e9, `GAA 2026 (B)` = GAA/1e9) %>%
-  arrange(desc(`GAA 2026 (B)`))
-gaa25 <- pap_year %>% filter(year == 2025) %>% transmute(`P/A/P` = pap, g25 = GAA/1e9)
-all_paps_2026 <- all_paps_2026 %>% left_join(gaa25, by = "P/A/P") %>%
-  rename(`GAA 2025 (B)` = g25) %>%
-  mutate(`Net chg NEP to GAA 2026 (B)` = `GAA 2026 (B)` - `NEP 2026 (B)`)
-dt_table(all_paps_2026, page = 15,
-         money_cols = c("NEP 2026 (B)","GAA 2026 (B)","GAA 2025 (B)","Net chg NEP to GAA 2026 (B)"))
+all_paps <- pap_year %>% filter(year == 2027) %>%
+  transmute(`P/A/P` = pap, `NEP 2027 (B)` = NEP/1e9)
+nep_gaa_26 <- pap_year %>% filter(year == 2026) %>%
+  transmute(`P/A/P` = pap, `NEP 2026 (B)` = NEP/1e9, `GAA 2026 (B)` = GAA/1e9)
+all_paps <- all_paps %>% full_join(nep_gaa_26, by = "P/A/P") %>%
+  arrange(desc(`NEP 2027 (B)`))
+dt_table(all_paps, page = 15,
+         money_cols = c("NEP 2027 (B)","NEP 2026 (B)","GAA 2026 (B)"))
 ```
+
+## What the FY 2027 proposal changes {#nep-change}
+
+Comparing the two *proposals* — the FY 2026 NEP against the FY 2027 NEP — isolates what the Executive itself chose to change, before Congress acts. The picture is a **reallocation, not a cut to the total**: 4Ps is proposed down ₱14B while a new ₱17.7B “Panahon ng Pagkilos” community-resilience program appears and Protective Services (AICS) rises ₱6.3B. Because Congress had left 4Ps at the proposed level in 2026, the 4Ps reduction here is real, not a rebound from a prior-year Congressional trim.
+
+```{r fig-nep-change, fig.height=4.8}
+nep_change <- pap_year %>%
+  filter(year %in% c(2026, 2027)) %>%
+  select(pap, year, NEP) %>%
+  pivot_wider(names_from = year, values_from = NEP, names_prefix = "y") %>%
+  mutate(change = (coalesce(y2027, 0) - coalesce(y2026, 0)) / 1e9) %>%
+  filter(abs(change) >= 0.5)
+ups   <- nep_change %>% filter(change > 0) %>% arrange(desc(change)) %>% slice_head(n = 7)
+downs <- nep_change %>% filter(change < 0) %>% arrange(change)       %>% slice_head(n = 6)
+nep_change <- bind_rows(ups, downs) %>% arrange(desc(change)) %>%
+  mutate(pap = factor(pap, levels = rev(pap)),
+         dir = ifelse(change >= 0, "Increased / new", "Reduced"))
+
+ggplot(nep_change, aes(pap, change, fill = dir)) +
+  geom_col(width = 0.72) +
+  geom_text(aes(label = sprintf("%+.1f", change),
+                hjust = ifelse(change >= 0, -0.15, 1.15)),
+            size = 3, color = "grey25") +
+  coord_flip() +
+  scale_fill_manual(values = c("Increased / new" = "#1B7837", "Reduced" = "#D95F02")) +
+  scale_x_discrete(labels = function(x) str_wrap(x, 44)) +
+  scale_y_continuous(labels = function(v) paste0(peso, v, "B"),
+                     expand = expansion(mult = c(0.16, 0.16))) +
+  labs(title = "What the Executive changed: FY 2026 NEP to FY 2027 NEP (PHP B)",
+       subtitle = "Proposal-to-proposal change; a new program and more discretionary aid offset the 4Ps step-down",
+       x = NULL, y = NULL) +
+  theme_dswd() +
+  theme(panel.grid.major.y = element_blank(),
+        panel.grid.major.x = element_line(color = "grey85"),
+        legend.position = "none")
+```
+
+The single largest move is the appearance of **Panahon ng Pagkilos (+₱17.7B)**, a community-resilience program with no prior-year budget; **Protective Services (+₱6.3B)** and a food-security/nutrition line (+₱3.9B) also rise. Against these, **4Ps falls ₱13.9B** and an ICT line is trimmed. In net terms the additions more than replace the 4Ps reduction — the proposal does not shrink DSWD, it **re-weights it away from the rules-based conditional transfer and toward a new program and discretionary assistance**.
 
 ## Three cash-transfer programs carry the budget
 
@@ -436,12 +476,39 @@ ggplot(share, aes(year, amount, fill = grp)) +
 
 The three lines together are 74–88% of the OSEC budget in every year, and ₱229B of the ₱264B 2026 proposal. The internal mix is shifting, though: **4Ps** is being held flat-to-down while **Protective Services** climbs steeply, so the blue and mid-blue bands are trading places over the period. For anyone interested in how social protection actually reaches Filipino households, almost the entire story lives in these three lines — and increasingly in the second of them.
 
+## In focus: the 4Ps proposal steps down {#four-ps}
+
+The single most consequential line in the FY 2027 proposal is the flagship **Pantawid Pamilyang Pilipino Program (4Ps)**. The chart traces its proposed (NEP) and enacted (GAA) budgets side by side.
+
+```{r fig-4ps, fig.height=4.4}
+four_ps <- pap_year %>% filter(pap == PANTAWID) %>%
+  select(year, NEP, GAA) %>%
+  pivot_longer(c(NEP, GAA), names_to = "metric", values_to = "amount") %>%
+  filter(!is.na(amount))
+
+ggplot(four_ps, aes(year, amount/1e9, color = metric, group = metric)) +
+  geom_line(linewidth = 1.0) + geom_point(size = 2) +
+  annotate("text", x = 2027, y = Inf, label = "proposed", vjust = 1.4, size = 3, color = "grey45") +
+  scale_color_manual(values = c("NEP" = "#54278F", "GAA" = "#08519C"),
+                     labels = c("GAA (enacted)","NEP (proposed)")) +
+  scale_x_continuous(breaks = c(seq(2018, 2026, 2), 2027)) +
+  scale_y_continuous(labels = function(v) paste0(peso, v, "B"), limits = c(0, NA),
+                     expand = expansion(mult = c(0, .08))) +
+  labs(title = "4Ps: the first time the Executive's own proposal steps down",
+       subtitle = "Congress enacted 4Ps below the proposal in most years since 2021; the FY 2027 NEP proposes PHP 99B",
+       x = NULL, y = NULL, color = NULL,
+       caption = "FY 2027 is the NEP (proposed) only; no FY 2027 GAA yet.") +
+  theme_dswd() + guides(color = guide_legend(nrow = 1))
+```
+
+Two things stand out. First, **Congress has repeatedly enacted 4Ps *below* the Executive’s proposal** since 2021 — most sharply in 2025, when a proposed ₱114B was cut to a ₱64B GAA. In that light 4Ps has been a *donor* to the internal reallocation, not a beneficiary. Second, and new this year, **the FY 2027 proposal itself steps 4Ps down**, from ₱113B to ₱99B (−₱14B). In 2026 the enacted budget had matched the proposal exactly (₱113B), so this is not a rebound from a prior-year cut — it is the first time a *Presidential* proposal, rather than Congress, reduces the conditional-cash flagship. With 4Ps disbursing at 98–99%, the reduction cannot be explained by weak absorption; it reflects a caseload, graduation, or policy decision that advocates can legitimately probe.
+
 # Congressional action: NEP → GAA {#augmentation}
 
 DSWD's net augmentation is modest, but that masks a large internal reshuffle. The chart below shows the cumulative NEP-to-GAA change for the most-adjusted P/A/Ps over 2018–2026 — additions in green, cuts in orange.
 
 ```{r fig-augmentation, fig.height=4.8}
-aug <- pap_year %>% group_by(pap) %>%
+aug <- pap_year %>% filter(year <= 2026) %>% group_by(pap) %>%
   summarise(nep = sum(NEP, na.rm = TRUE), gaa = sum(GAA, na.rm = TRUE), .groups = "drop") %>%
   mutate(change = gaa - nep) %>% filter(abs(change) >= 5e8)
 
@@ -475,7 +542,7 @@ This is the most distinctive pattern at DSWD. Congress does not simply add money
 The full cumulative table lists every P/A/P with a material (≥₱0.5B) net change over the nine years.
 
 ```{r tbl-aug-full}
-aug_full <- pap_year %>% group_by(pap) %>%
+aug_full <- pap_year %>% filter(year <= 2026) %>% group_by(pap) %>%
   summarise(nep = sum(NEP, na.rm = TRUE), gaa = sum(GAA, na.rm = TRUE), .groups = "drop") %>%
   mutate(change = gaa - nep) %>% filter(abs(change) >= 5e8) %>%
   transmute(`P/A/P` = pap, `Σ NEP 2018–26 (B)` = nep/1e9, `Σ GAA 2018–26 (B)` = gaa/1e9,
@@ -686,22 +753,70 @@ ggplot(trend_dat, aes(year, amount, color = metric, group = metric)) +
 
 The **4Ps** panel is the one to watch: even as the enacted budget is held roughly flat, a visible gap persists between the GAA and disbursements — the conditional-cash flagship is the only one of the six with a consistent shortfall. **Protective Services** and **AKAP** show the steep recent climbs discussed above, both absorbing well so far. **Social Pension**, **Supplementary Feeding**, and **Sustainable Livelihood** are steadier, smaller lines that track their allotments closely.
 
-# Line-item reference {#reference}
+# Line-item reference: the FY 2027 proposal in context {#reference}
 
-The top 20 P/A/Ps by 2026 GAA, with the 2026 NEP and GAA, the prior-year (2025) enacted budget, and the most recent (2025) disbursement-to-allotment ratio. The full unabridged list is in [the ranking section above](#full-p-a-p-ranking-interactive).
+The top 20 P/A/Ps by the FY 2027 proposal (NEP), with the FY 2026 proposal and enacted budget and the most recent (2025) disbursement-to-allotment ratio, so budget levels sit beside how each line has recently absorbed. The full unabridged list is in [the ranking section above](#full-pap-ranking-fy-2027-proposal-interactive).
 
 ```{r tbl-reference}
-ref <- pap_year %>% filter(year == 2026, !is.na(GAA), GAA > 0) %>%
-  arrange(desc(GAA)) %>% slice_head(n = 20) %>%
+ref <- pap_year %>% filter(year == 2027, !is.na(NEP), NEP > 0) %>%
+  arrange(desc(NEP)) %>% slice_head(n = 20) %>%
+  transmute(pap, `NEP 2027 (B)` = NEP/1e9)
+ctx <- pap_year %>% filter(year == 2026) %>%
   transmute(pap, `NEP 2026 (B)` = NEP/1e9, `GAA 2026 (B)` = GAA/1e9)
-ctx_2025 <- pap_year %>% filter(year == 2025) %>%
-  transmute(pap, `GAA 2025 (B)` = GAA/1e9,
-            `D/A 2025` = ifelse(!is.na(AdjAllot) & AdjAllot > 0, Disbursements/AdjAllot, NA_real_))
-ref %>% left_join(ctx_2025, by = "pap") %>% rename(`P/A/P` = pap) %>%
-  dt_table(page = 20, money_cols = c("NEP 2026 (B)","GAA 2026 (B)","GAA 2025 (B)"), pct_cols = "D/A 2025")
+da_25 <- pap_year %>% filter(year == 2025) %>%
+  transmute(pap, `D/A 2025` = ifelse(!is.na(AdjAllot) & AdjAllot > 0, Disbursements/AdjAllot, NA_real_))
+ref %>% left_join(ctx, by = "pap") %>% left_join(da_25, by = "pap") %>% rename(`P/A/P` = pap) %>%
+  dt_table(page = 20, money_cols = c("NEP 2027 (B)","NEP 2026 (B)","GAA 2026 (B)"), pct_cols = "D/A 2025")
 ```
 
 <p class="kbl-note">2026 execution data is not yet available; the 2025 D/A column indicates how each line has most recently absorbed.</p>
+
+# The attached agencies {#attached}
+
+The main report covers the Office of the Secretary. DSWD also oversees a set of small **attached agencies and councils**, appropriated separately and shown here on an **appropriations basis only** — no P/A/P-level execution data is published for them. Together they are a rounding error against the OSEC total, but the FY 2027 proposal moves several of them, and two disappear from the DSWD budget entirely.
+
+```{r fig-attached, fig.height=4.2}
+attached <- read_excel(file_path, sheet = "DSWD") %>%
+  filter(UACS_AGY_DSC != "Office of the Secretary") %>%
+  pivot_longer(matches("^(NEP|GAA)_\\d{4}_EXP_TOTAL$"), names_to = "var", values_to = "amount") %>%
+  separate(var, into = c("metric","year","tag","ec"), sep = "_") %>%
+  mutate(year = as.integer(year), amount = as.numeric(amount)) %>%
+  group_by(agency = UACS_AGY_DSC, year, metric) %>%
+  summarise(amount = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE), .groups = "drop")
+
+att_2027 <- attached %>% filter(metric == "NEP", year == 2027, !is.na(amount), amount > 0) %>%
+  arrange(amount) %>% mutate(agency = factor(agency, levels = agency))
+
+ggplot(att_2027, aes(agency, amount/1e6)) +
+  geom_col(fill = "#54278F", width = 0.72) +
+  geom_text(aes(label = paste0(peso, scales::comma(round(amount/1e6)), "M")),
+            hjust = -0.1, size = 3, color = "grey20") +
+  coord_flip() +
+  scale_x_discrete(labels = function(x) str_wrap(x, 34)) +
+  scale_y_continuous(labels = function(v) paste0(peso, scales::comma(v), "M"),
+                     expand = expansion(mult = c(0, .30))) +
+  labs(title = "Attached agencies by FY 2027 NEP (proposed)",
+       subtitle = "Appropriations basis only; no execution data is published for these agencies",
+       x = NULL, y = NULL) +
+  theme_dswd() +
+  theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"))
+```
+
+```{r tbl-attached}
+att_tbl <- attached %>%
+  filter((metric == "NEP" & year %in% c(2026, 2027)) | (metric == "GAA" & year == 2026)) %>%
+  mutate(key = paste0(metric, year)) %>%
+  select(agency, key, amount) %>%
+  pivot_wider(names_from = key, values_from = amount) %>%
+  transmute(Agency = agency,
+            `NEP 2027 (M)` = NEP2027/1e6,
+            `NEP 2026 (M)` = NEP2026/1e6,
+            `GAA 2026 (M)` = GAA2026/1e6) %>%
+  arrange(desc(`NEP 2027 (M)`))
+kbl_clean(att_tbl, font = 12.5, digits = 0, format.args = list(big.mark = ","), na = "")
+```
+
+The **National Commission of Senior Citizens (₱3.8B)** is the largest and grows further; the **National Authority for Child Care (₱0.8B)** also rises. Most of the councils are proposed at or a little below their FY 2026 enacted levels, and the **National Council on Disability Affairs is roughly halved**. Two bodies carry no FY 2027 line at all: the **Inter-Country Adoption Board**, whose functions fold into the new Child Care Authority, and the **National Commission on Indigenous Peoples**, which is no longer carried under DSWD. As with the OSEC lines, none of these agencies publishes P/A/P-level execution data, so this appropriations view is as far as the analysis can go.
 
 # Questions for discussion {#discussion}
 
