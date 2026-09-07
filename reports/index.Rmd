@@ -92,8 +92,8 @@ agencies <- tibble::tribble(
   "DOE",    "Department of Energy",                               "Office of the Secretary", "doe.html",         "planned", "", "",
 
   "DENR",   "Department of Environment and Natural Resources",    "Office of the Secretary", "denr-osec.html",   "published",
-  "A frozen budget: held flat at \u20b116\u201320B for nine years \u2014 a ~30% real-terms cut \u2014 while Congress trims the proposal and guts the reforestation line, and the department shifts from capital works toward payroll.",
-  "Flat ~\u20b119B for 9 years \u2014 \u2248\u20b113.6B in 2018 pesos (~30% real cut)  |  Congress trims; Forest Development cut \u20b16.6B\u2192\u20b12.4B  |  Capital Outlays fell 37%\u219212%; administration is the largest line (21%)",
+  "The FY 2027 proposal is \u20b120.6B \u2014 essentially flat, and unusually a ceiling rather than a floor: Congress trims DENR instead of augmenting it (it cut the 2026 proposal by \u20b11.25B). A frozen budget held at \u20b116\u201320B for a decade \u2014 a ~30% real-terms cut \u2014 while the reforestation line is gutted and the department shifts from capital works toward payroll.",
+  "FY 2027 NEP \u20b120.6B (flat; a ceiling, not a floor \u2014 Congress trims)  |  \u2248\u20b113.6B in 2018 pesos (~30% real cut)  |  Forest Development cut; Capital Outlays fell 37%\u219212%; admin the largest line (21%)",
 
   "DOH",    "Department of Health",                               "Office of the Secretary", "doh-osec.html",    "published",
   "The FY 2027 proposal is \u20b1264B \u2014 up 4% and the largest yet, but again far below what Congress enacts (the 2026 GAA reached \u20b1298B). An aggressively Congress-augmented budget whose binding constraint is a capital-outlay bottleneck: the infrastructure pipeline (HFEP) cannot disburse what it is given. MAIFIP and HFEP are proposed flat, so their real budgets are settled at enactment.",

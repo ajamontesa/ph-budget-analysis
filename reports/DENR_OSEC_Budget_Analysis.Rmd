@@ -1,6 +1,6 @@
 ---
 title: "Department of Environment and Natural Resources — Office of the Secretary"
-subtitle: "Budget evolution and absorptive capacity, FY 2018–2026"
+subtitle: "The FY 2027 proposed budget in context, FY 2018–2027"
 date: "`r format(Sys.Date(), '%B %Y')`"
 output:
   html_document:
@@ -143,7 +143,7 @@ osec_absorp <- osec_totals %>% pivot_wider(names_from = metric, values_from = to
 # Overview {#overview .unnumbered}
 
 <p class="lead">
-This document tracks the budget of the **Department of Environment and Natural Resources – Office of the Secretary (DENR-OSEC)** across nine fiscal years, FY 2018 to FY 2026, following each peso from the Executive's proposal (NEP) to enactment (GAA), release (allotment), commitment (obligation), and final cash payment (disbursement). It covers the Office of the Secretary, which is the analytical scope of the briefing; the department's attached bureaus are not included.
+This document tracks the budget of the **Department of Environment and Natural Resources – Office of the Secretary (DENR-OSEC)** across ten fiscal years, FY 2018 to FY 2027 — with **FY 2027 the Executive’s proposal (NEP)**, not yet enacted — following each peso from the Executive's proposal (NEP) to enactment (GAA), release (allotment), commitment (obligation), and final cash payment (disbursement). It covers the Office of the Secretary; the department's attached bureaus are summarised in a short section at the end.
 </p>
 
 It is the long-form companion to the DENR-OSEC briefing material. Where a slide deck must compress, this version keeps the full argument and adds reference tables — sortable, searchable, and exportable — so a reader can interrogate the figures directly.
@@ -151,6 +151,8 @@ It is the long-form companion to the DENR-OSEC briefing material. Where a slide 
 DENR-OSEC has one defining feature: **its budget has not grown.** Over 2018–2026 it has been held almost perfectly flat in nominal terms at ₱16–19B — which, against the inflation of the period, is a real-terms *cut*. Three further features define it: Congress is a **net subtractor**, trimming the proposal in most years and cutting **forestry** hardest of all; **administration is the single largest line** in the budget; and the department has been **shedding capital spending** (down from 37% of the budget to 12%) in favour of payroll. The result is an environment department doing relatively less on-the-ground work, on a budget that has effectively shrunk, even as its mandate — climate resilience, Manila Bay, biodiversity, mining oversight — has expanded.
 
 # Executive summary {#exec}
+
+**The FY 2027 proposal (NEP) is ₱20.6B — essentially flat** on the 2026 proposal (₱20.5B), extending a decade of near-zero nominal growth. What makes DENR unusual is that this proposal is closer to a *ceiling* than a floor: **Congress does not reliably augment DENR — it trimmed the 2026 proposal by ₱1.25B at enactment**, so advocates arguing for more cannot assume the enacted budget will rise above the NEP. The proposal barely reshuffles internally — only a handful of lines move by more than ₱0.2B — so the story is the standstill itself, on a budget that has lost roughly 30% of its real value since 2018.
 
 **DENR-OSEC's budget has been frozen.** The enacted GAA has held at ₱16–20B for nine straight years — ₱19.4B in 2018, ₱19.3B in 2026. **2018 remains the peak.** In nominal terms that is near-zero growth; adjusting for inflation, the FY 2026 budget is worth roughly **₱13.6B in 2018 pesos — about 30% below where the department started the period**.
 
@@ -168,9 +170,9 @@ DENR-OSEC has one defining feature: **its budget has not grown.** Over 2018–20
 
 # A note on the data {#data-notes}
 
-**Period.** FY 2018 through FY 2026 for NEP and GAA. Execution data (Adjusted Appropriations, Adjusted Allotments, Obligations, Disbursements) is available for every year 2018–2025; FY 2026 reflects NEP/GAA only.
+**Period.** FY 2018 through FY 2027 for NEP and FY 2018 through FY 2026 for GAA — **FY 2027 is the NEP (the Executive’s proposal) only**, not yet debated or enacted and with no execution data, so wherever a chart or table shows FY 2027 the figure is *proposed*. Unusually for a line department, Congress has *not* reliably added to DENR-OSEC (it trimmed the 2026 proposal), so the FY 2027 NEP is closer to a ceiling than a floor. Execution data (Adjusted Appropriations, Adjusted Allotments, Obligations, Disbursements) is available for every year 2018–2025; FY 2026 reflects NEP/GAA only.
 
-**Scope.** DENR **Office of the Secretary only** — this excludes the attached bureaus (EMB, MGB, NAMRIA, NWRB, PCSDS), which is the scope of the briefing this document accompanies. **Current New Appropriations only**; nominal pesos unless a real (2018-constant) figure is named.
+**Scope.** The main analysis is **DENR Office of the Secretary only**; the attached bureaus (EMB, MGB, NAMRIA, NWRB, PCSDS) are summarised in a short **[attached-agencies section](#attached)** at the end. **Current New Appropriations only**; nominal pesos unless a real (2018-constant) figure is named.
 
 **Expense classes.** Personnel Services (PS), Maintenance & Other Operating Expenses (MOOE), and Capital Outlays (CO). DENR carries no Financial Expenses.
 
@@ -192,10 +194,11 @@ ggplot(evo, aes(year, total, color = metric, group = metric)) +
   geom_line(linewidth = 1.0) + geom_point(size = 2) +
   scale_color_manual(values = exec_pal) +
   scale_y_continuous(labels = php_b_axis, breaks = pretty_breaks(6), limits = c(0, NA), expand = expansion(mult = c(0, .05))) +
-  scale_x_continuous(breaks = seq(2018, 2026, 2)) +
-  labs(title = "DENR-OSEC budget, NEP through Disbursements (FY 2018–2026)",
-       subtitle = "Held almost perfectly flat at PHP 16–19B for nine years",
-       x = NULL, y = NULL, caption = "FY 2026 reflects NEP/GAA only; execution data not yet available.") +
+  scale_x_continuous(breaks = c(seq(2018, 2026, 2), 2027)) +
+  annotate("text", x = 2027, y = Inf, label = "proposed", vjust = 1.4, size = 3, color = "grey45") +
+  labs(title = "DENR-OSEC budget, NEP through Disbursements (FY 2018–2027)",
+       subtitle = "Held almost perfectly flat at PHP 16–20B for a decade; the FY 2027 NEP proposes ~PHP 20.6B",
+       x = NULL, y = NULL, caption = "FY 2027 is the NEP (proposed) only; FY 2026 reflects NEP/GAA only; execution runs through 2025.") +
   theme_denr() + guides(color = guide_legend(nrow = 1))
 ```
 
@@ -298,19 +301,19 @@ ec_share <- comp_ec %>% group_by(year) %>% mutate(share = round(amount/sum(amoun
 kbl_clean(ec_share %>% rename(`Expense class (% of GAA)` = expense_class), font = 12.5, digits = 1, na = "")
 ```
 
-## The largest P/A/Ps
+## The largest P/A/Ps (FY 2027 NEP, proposed)
 
 ```{r fig-top10, fig.height=5.4}
-top10 <- osec_pap_year %>% filter(year == 2026, !is.na(GAA), GAA > 0) %>%
-  arrange(desc(GAA)) %>% slice_head(n = 10) %>% mutate(pap = factor(pap, levels = rev(pap)))
-ggplot(top10, aes(pap, GAA)) +
-  geom_col(fill = bar_fill, width = 0.75) +
-  geom_text(aes(label = php_b(GAA)), hjust = -0.1, size = 3.3, color = "grey20") +
+top10 <- osec_pap_year %>% filter(year == 2027, !is.na(NEP), NEP > 0) %>%
+  arrange(desc(NEP)) %>% slice_head(n = 10) %>% mutate(pap = factor(pap, levels = rev(pap)))
+ggplot(top10, aes(pap, NEP)) +
+  geom_col(fill = "#54278F", width = 0.75) +
+  geom_text(aes(label = php_b(NEP)), hjust = -0.1, size = 3.3, color = "grey20") +
   coord_flip() +
   scale_x_discrete(labels = function(x) str_wrap(x, 44)) +
   scale_y_continuous(labels = php_b_axis, expand = expansion(mult = c(0, .20)), limits = c(0, NA)) +
-  labs(title = "Top 10 P/A/Ps by FY 2026 GAA",
-       subtitle = "General Management & Supervision is the single largest line — bigger than any one field program",
+  labs(title = "Top 10 P/A/Ps by FY 2027 NEP (proposed)",
+       subtitle = "General Management & Supervision is still the single largest line — bigger than any one field program",
        x = NULL, y = NULL) +
   theme_denr() +
   theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"))
@@ -321,13 +324,52 @@ That administration tops the list is itself a finding: in a department whose pur
 ### Full P/A/P ranking (interactive) {.unnumbered}
 
 ```{r tbl-allpaps}
-allp <- osec_pap_year %>% filter(year == 2026) %>%
-  transmute(`P/A/P` = pap, `NEP 2026 (B)` = NEP/1e9, `GAA 2026 (B)` = GAA/1e9) %>% arrange(desc(`GAA 2026 (B)`))
-g25 <- osec_pap_year %>% filter(year == 2025) %>% transmute(`P/A/P` = pap, g = GAA/1e9)
-allp <- allp %>% left_join(g25, by = "P/A/P") %>% rename(`GAA 2025 (B)` = g) %>%
-  mutate(`Net chg 2026 (B)` = `GAA 2026 (B)` - `NEP 2026 (B)`)
-dt_table(allp, page = 12, money_cols = c("NEP 2026 (B)","GAA 2026 (B)","GAA 2025 (B)","Net chg 2026 (B)"))
+allp <- osec_pap_year %>% filter(year == 2027) %>%
+  transmute(`P/A/P` = pap, `NEP 2027 (B)` = NEP/1e9)
+nep_gaa_26 <- osec_pap_year %>% filter(year == 2026) %>%
+  transmute(`P/A/P` = pap, `NEP 2026 (B)` = NEP/1e9, `GAA 2026 (B)` = GAA/1e9)
+da25 <- osec_pap_year %>% filter(year == 2025) %>%
+  transmute(`P/A/P` = pap, `D/A 2025` = ifelse(!is.na(AdjAllot) & AdjAllot > 0, Disbursements/AdjAllot, NA_real_))
+allp <- allp %>% full_join(nep_gaa_26, by = "P/A/P") %>% left_join(da25, by = "P/A/P") %>%
+  arrange(desc(`NEP 2027 (B)`))
+dt_table(allp, page = 12, money_cols = c("NEP 2027 (B)","NEP 2026 (B)","GAA 2026 (B)"), pct_cols = "D/A 2025")
 ```
+
+# What the FY 2027 proposal changes {#nep-change}
+
+Comparing the two *proposals* — the FY 2026 NEP against the FY 2027 NEP — isolates what the Executive itself chose to change. For DENR the answer is: **almost nothing.** The FY 2027 proposal is close to a line-by-line copy of the FY 2026 one; only a handful of P/A/Ps move by more than ₱0.15B, and the largest single move is well under half a billion pesos. In a portfolio of this size that near-total stillness is the finding — there is no reallocation to scrutinise, only a standstill to question.
+
+```{r fig-nep-change, fig.height=3.6}
+nep_change <- osec_pap_year %>%
+  filter(year %in% c(2026, 2027)) %>%
+  select(pap, year, NEP) %>%
+  pivot_wider(names_from = year, values_from = NEP, names_prefix = "y") %>%
+  mutate(change = (coalesce(y2027, 0) - coalesce(y2026, 0)) / 1e9) %>%
+  filter(abs(change) >= 0.15) %>%
+  arrange(desc(change)) %>%
+  mutate(pap = factor(pap, levels = rev(pap)),
+         dir = ifelse(change >= 0, "Increased", "Reduced"))
+
+ggplot(nep_change, aes(pap, change, fill = dir)) +
+  geom_col(width = 0.6) +
+  geom_text(aes(label = sprintf("%+.2f", change),
+                hjust = ifelse(change >= 0, -0.15, 1.15)),
+            size = 3, color = "grey25") +
+  coord_flip() +
+  scale_fill_manual(values = c("Increased" = "#1B7837", "Reduced" = "#D95F02")) +
+  scale_x_discrete(labels = function(x) str_wrap(x, 44)) +
+  scale_y_continuous(labels = function(v) paste0(peso, v, "B"),
+                     expand = expansion(mult = c(0.22, 0.22))) +
+  labs(title = "What the Executive changed: FY 2026 NEP to FY 2027 NEP (PHP B)",
+       subtitle = "Only three lines move by more than PHP 0.15B \u2014 a standstill proposal",
+       x = NULL, y = NULL) +
+  theme_denr() +
+  theme(panel.grid.major.y = element_blank(),
+        panel.grid.major.x = element_line(color = "grey85"),
+        legend.position = "none")
+```
+
+The only material moves are a top-up to **natural-resource management arrangements (+₱0.42B)** and to **land survey (+₱0.21B)**, set against a trim to **data-management and IT systems (−₱0.48B)**. Everything else is held within a rounding error of its 2026 proposed level. For an agency whose mandate — climate resilience, biodiversity, Manila Bay, mining oversight — has only expanded, a proposal that changes essentially nothing is itself the point of scrutiny.
 
 # The shrinking of forestry {#forestry}
 
@@ -366,7 +408,7 @@ The forestry retreat has a mirror image. As **active reforestation (Forest Devel
 # Congressional action: NEP → GAA {#augmentation}
 
 ```{r fig-augmentation, fig.height=4.6}
-aug <- osec_pap_year %>% group_by(pap) %>%
+aug <- osec_pap_year %>% filter(year <= 2026) %>% group_by(pap) %>%
   summarise(nep = sum(NEP, na.rm = TRUE), gaa = sum(GAA, na.rm = TRUE), .groups = "drop") %>%
   mutate(change = gaa - nep) %>% filter(abs(change) >= 2e8)
 aug_plot <- bind_rows(aug %>% arrange(desc(change)) %>% slice_head(n = 7),
@@ -391,7 +433,7 @@ ggplot(aug_plot, aes(pap, change/1e9, fill = direction)) +
 The pattern is lopsided. Forest Development absorbs essentially all of the cutting (−₱12.4B). On the additions side, Congress consistently tops up **Protected Areas** (+₱2.9B cumulative), **Coastal and Marine Resources** (+₱0.7B), and **Land Survey** (+₱0.6B) — reallocating, in effect, from reforestation toward conservation and land administration. The full list of material movers is below.
 
 ```{r tbl-aug-full}
-aug_full <- osec_pap_year %>% group_by(pap) %>%
+aug_full <- osec_pap_year %>% filter(year <= 2026) %>% group_by(pap) %>%
   summarise(nep = sum(NEP, na.rm = TRUE), gaa = sum(GAA, na.rm = TRUE), .groups = "drop") %>%
   mutate(change = gaa - nep) %>% filter(abs(change) >= 1e8) %>%
   transmute(`P/A/P` = pap, `Σ NEP (B)` = nep/1e9, `Σ GAA (B)` = gaa/1e9, `Cumulative change (B)` = change/1e9) %>%
@@ -535,6 +577,48 @@ ggplot(trend_dat, aes(year, amount, color = metric, group = metric)) +
 ```
 
 The panels capture the reallocation cleanly. **Forest Development** slopes down throughout. **Administration** is flat-to-rising and executes tightly. **Protected Areas**, **Land Survey**, and the court-mandated **Manila Bay** rehabilitation hold their ground or grow — the conservation-and-administration core that Congress has protected even as it cut reforestation.
+
+# The attached bureaus {#attached}
+
+The main report covers the Office of the Secretary. DENR also has five **attached bureaus and councils**, appropriated separately and shown here on an **appropriations basis only** — no P/A/P-level execution data is published for them. Together they add roughly ₱9B to the DENR total, and the FY 2027 proposal leaves them close to their recent levels, with one notable trim.
+
+```{r fig-attached, fig.height=3.8}
+attached <- df_long_all %>%
+  filter(agency != "Office of the Secretary", expense_class == "TOTAL") %>%
+  group_by(agency, year, metric) %>%
+  summarise(amount = if (all(is.na(amount))) NA_real_ else sum(amount, na.rm = TRUE), .groups = "drop")
+
+att_2027 <- attached %>% filter(metric == "NEP", year == 2027, !is.na(amount), amount > 0) %>%
+  arrange(amount) %>% mutate(agency = factor(agency, levels = agency))
+
+ggplot(att_2027, aes(agency, amount)) +
+  geom_col(fill = "#54278F", width = 0.66) +
+  geom_text(aes(label = php_b(amount)), hjust = -0.1, size = 3.2, color = "grey20") +
+  coord_flip() +
+  scale_x_discrete(labels = function(x) str_wrap(x, 40)) +
+  scale_y_continuous(labels = php_b_axis, expand = expansion(mult = c(0, .22)), limits = c(0, NA)) +
+  labs(title = "Attached bureaus by FY 2027 NEP (proposed)",
+       subtitle = "Appropriations basis only; no execution data is published for these bureaus",
+       x = NULL, y = NULL) +
+  theme_denr() +
+  theme(panel.grid.major.y = element_blank(), panel.grid.major.x = element_line(color = "grey85"))
+```
+
+```{r tbl-attached}
+att_tbl <- attached %>%
+  filter((metric == "NEP" & year %in% c(2026, 2027)) | (metric == "GAA" & year == 2026)) %>%
+  mutate(key = paste0(metric, year)) %>%
+  select(agency, key, amount) %>%
+  pivot_wider(names_from = key, values_from = amount) %>%
+  transmute(Bureau = agency,
+            `NEP 2027 (B)` = NEP2027/1e9,
+            `NEP 2026 (B)` = NEP2026/1e9,
+            `GAA 2026 (B)` = GAA2026/1e9) %>%
+  arrange(desc(`NEP 2027 (B)`))
+kbl_clean(att_tbl, font = 13, digits = 2, format.args = list(big.mark = ","), na = "")
+```
+
+The **Environmental Management Bureau (₱3.1B)** — which handles pollution control and environmental compliance — is the largest attached body, and it is proposed **down** from its ₱3.46B FY 2026 enacted level. **NAMRIA (mapping, ₱2.0B)** and the **Mines and Geosciences Bureau (₱1.9B)** are close to flat, and the **National Water Resources Board** and **Palawan Council** are small and steady. As with the OSEC lines, none of these bureaus publishes P/A/P-level execution data, so this appropriations view is as far as the analysis can go.
 
 # Questions for discussion {#discussion}
 
