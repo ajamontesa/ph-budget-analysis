@@ -8,8 +8,9 @@ tracing each peso from the Executive's proposal (NEP) through enactment
 added to the most recent reviews.
 
 **Live site:** <https://ajamontesa.github.io/ph-budget-analysis/index.html> —
-the home page links to every published report. The site is published via GitHub
-Pages from the `docs/` folder.
+the home page links to every published report, plus a set of cross-cutting
+**sectoral / cluster briefings** that follow a theme across several departments.
+The site is published via GitHub Pages from the `docs/` folder.
 
 ## Repository structure
 
@@ -53,7 +54,7 @@ budget-analysis/
     ├── ncmf.html
     ├── pcw.html
     ├── nyc.html
-    └── slides/                     # briefing decks (standalone HTML, one per agency)
+    ├── slides/                     # briefing decks (standalone HTML, one per agency)
         ├── DAR_OSEC_Budget_Analysis.html
         ├── DA_Budget_Analysis.html
         ├── DepEd_OSEC_Budget_Analysis.html
@@ -67,6 +68,10 @@ budget-analysis/
         ├── NCMF_Budget_Analysis.html
         ├── PCW_Budget_Analysis.html
         └── NYC_Budget_Analysis.html
+    └── clusters/                   # sectoral / cluster briefing decks (standalone HTML)
+        ├── ARE_Cluster_Budget_Analysis.html   # Accountability, Rights, and Environment
+        ├── EH_Cluster_Budget_Analysis.html    # Education and Health
+        └── LSP_Cluster_Budget_Analysis.html   # Labor and Social Protection
 ```
 
 Every `.Rmd` is **self-contained**: it carries its own CSS and R setup, so it
@@ -125,7 +130,16 @@ R (≥ 4.2) with `rmarkdown`, `knitr`, `dplyr`, `tidyr`, `ggplot2`, `scales`,
    dashboard band then renders at the **top of the landing page**, above the reports
    (it pluralizes its heading automatically and shows one card per dashboard). Leave
    the tribble empty to hide the band entirely.
-8. **Commit and push.** GitHub Pages serves the update.
+8. **(Optional) Add a sectoral / cluster briefing.** These are cross-cutting
+   briefing decks organised by sector rather than by a single agency. Drop the
+   self-contained deck into `docs/clusters/` (keeping its source-style name,
+   e.g. `docs/clusters/ARE_Cluster_Budget_Analysis.html`), then add one row to
+   the `clusters` tribble in `reports/index.Rmd` (`code`, `title`, `scope`,
+   `href`) and re-knit `index.html`. A **"Sectoral briefings"** section then
+   renders near the bottom of the landing page, one card per deck. Leave the
+   tribble empty to hide the section. The same self-contained rule applies as
+   for agency slides — knit the deck with `self_contained: true`.
+9. **Commit and push.** GitHub Pages serves the update.
 
 ## Data notes
 

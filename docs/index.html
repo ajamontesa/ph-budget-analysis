@@ -145,6 +145,22 @@ color:var(--muted); text-decoration:none; }
 .site-footer .inner { max-width:980px; margin:0 auto; padding:20px 40px 40px; }
 .site-footer p { font-size:12.5px; color:var(--muted); margin:4px 0; }
 .count { font-size:13px; color:var(--muted); text-transform:none; letter-spacing:0; }
+.cluster-list { display:flex; flex-direction:column; gap:14px; }
+.cluster-card { display:flex; gap:20px; align-items:center; justify-content:space-between;
+background:#fff; border:1px solid var(--rule); border-left:4px solid #6a4a9c;
+border-radius:8px; padding:18px 24px;
+transition:box-shadow .15s, transform .15s, border-color .15s; }
+.cluster-card:hover { box-shadow:0 6px 20px rgba(106,74,156,.12); transform:translateY(-1px); border-color:#d8cfe6; }
+.cluster-text { min-width:0; flex:1 1 auto; }
+.cluster-title { font-size:16px; font-weight:700; margin:0 0 5px; line-height:1.3; }
+.cluster-badge { display:inline-block; min-width:44px; text-align:center; background:#6a4a9c; color:#fff;
+font-weight:700; font-size:12.5px; padding:3px 9px; border-radius:5px; margin-right:11px; }
+.cluster-scope { font-size:13.5px; color:var(--muted); margin:0; line-height:1.5; }
+.cluster-open { display:inline-block; white-space:nowrap; background:#6a4a9c; color:#fff; font-weight:600;
+font-size:13.5px; padding:9px 16px; border-radius:6px; text-decoration:none; }
+.cluster-open:hover { background:#7d5cb0; }
+.cluster-intro { font-size:13.5px; color:var(--muted); margin:0 0 14px; max-width:74ch; }
+@media (max-width:560px){ .cluster-card { flex-direction:column; align-items:flex-start; } .cluster-open { width:100%; text-align:center; } }
 </style>
 <div class="wrap">
 <div class="site-header">
@@ -769,6 +785,56 @@ program
 slides ↗</a>
 </div>
 </div>
+</div>
+</div>
+<div class="sec-label" style="margin-top:36px;">
+Sectoral briefings · <span class="count">3 available</span>
+</div>
+<p class="cluster-intro">
+Cross-cutting briefing decks that follow a theme or sector across
+several departments, rather than analysing a single agency. These are
+slide decks; more will be added over time.
+</p>
+<div class="cluster-list">
+<div class="cluster-card">
+<div class="cluster-text">
+<p class="cluster-title">
+<span class="cluster-badge">ARE</span>Accountability, Rights, and
+Environment
+</p>
+<p class="cluster-scope">
+Farmers, marginalized sectors, commuters and housing, justice, and the
+environment · FY 2020–2027
+</p>
+</div>
+<a class="cluster-open" href="clusters/ARE_Cluster_Budget_Analysis.html" target="_blank" rel="noopener">Open
+the briefing ↗</a>
+</div>
+<div class="cluster-card">
+<div class="cluster-text">
+<p class="cluster-title">
+<span class="cluster-badge">EH</span>Education and Health
+</p>
+<p class="cluster-scope">
+The trifocal education system, the state universities and colleges, and
+the health system · FY 2020–2027
+</p>
+</div>
+<a class="cluster-open" href="clusters/EH_Cluster_Budget_Analysis.html" target="_blank" rel="noopener">Open
+the briefing ↗</a>
+</div>
+<div class="cluster-card">
+<div class="cluster-text">
+<p class="cluster-title">
+<span class="cluster-badge">LSP</span>Labor and Social Protection
+</p>
+<p class="cluster-scope">
+Ayuda, wages, welfare, farms, housing, and the workers who leave · FY
+2020–2027
+</p>
+</div>
+<a class="cluster-open" href="clusters/LSP_Cluster_Budget_Analysis.html" target="_blank" rel="noopener">Open
+the briefing ↗</a>
 </div>
 </div>
 <div class="site-footer">
