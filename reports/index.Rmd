@@ -73,6 +73,17 @@ dashboards <- tibble::tribble(
   "P/A/P Browser Dashboard",                 "Program, Activity &amp; Project level &middot; NEP &amp; GAA &middot; FY 2020&ndash;2027", "pap-browser.html"
 )
 
+# ---- EDIT THIS: featured lead report (the backdrop) ----------------------
+# A single prominent report that sets the macro-fiscal backdrop for the whole
+# budget. Renders right after the dashboards and before the department reports.
+# Set `feature <- NULL` to hide it.
+feature <- list(
+  label = "Start here \u00b7 the backdrop",
+  title = "The Macroeconomic and Fiscal Situation",
+  scope = "How fast the economy is growing, what prices are doing, and how much room the fiscal position leaves the budget. The setting every department and sector report reads against.",
+  href  = "macro-fiscal.html"
+)
+
 # ---- EDIT THIS: one row per agency ---------------------------------------
 agencies <- tibble::tribble(
   ~short,   ~name,                                                ~unit,                     ~output,            ~status,      ~blurb, ~highlights,
@@ -239,6 +250,16 @@ body { margin:0; font-family:Arial,Helvetica,"IBM Plex Sans",sans-serif;
 .site-footer .inner { max-width:980px; margin:0 auto; padding:20px 40px 40px; }
 .site-footer p { font-size:12.5px; color:var(--muted); margin:4px 0; }
 .count { font-size:13px; color:var(--muted); text-transform:none; letter-spacing:0; }
+.feature-card { display:block; text-decoration:none; color:inherit; margin:20px 0 6px;
+  background:linear-gradient(180deg,#f4f8fc,#ffffff); border:1px solid #cfe0f0;
+  border-left:5px solid var(--accent); border-radius:10px; padding:22px 26px;
+  transition:box-shadow .15s, transform .15s, border-color .15s; }
+.feature-card:hover { box-shadow:0 8px 26px rgba(8,81,156,.13); transform:translateY(-1px); border-color:#b7d2ec; }
+.feature-label { font-size:11.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--accent); font-weight:700; margin-bottom:7px; }
+.feature-title { font-size:21px; font-weight:700; line-height:1.25; margin:0 0 8px; color:#12233a; }
+.feature-card:hover .feature-title { color:var(--accent); }
+.feature-scope { font-size:14.5px; color:#333; margin:0 0 12px; line-height:1.55; max-width:80ch; }
+.feature-cta { font-size:14px; font-weight:700; color:var(--accent); }
 .cluster-list { display:flex; flex-direction:column; gap:14px; }
 .cluster-card { display:flex; gap:20px; align-items:center; justify-content:space-between;
                 background:#fff; border:1px solid var(--rule); border-left:4px solid #6a4a9c;
@@ -310,6 +331,12 @@ if (exists("dashboards") && nrow(dashboards) > 0) {
   cat(sprintf('<p class="dash-label">Interactive dashboard%s</p>', if (nrow(dashboards) > 1) "s" else ""))
   cat(paste(dash_cards, collapse = "\n"))
   cat('</div>')
+}
+
+# ---- Featured lead report (the macro-fiscal backdrop) --------------------
+if (exists("feature") && !is.null(feature)) {
+  cat(sprintf('<a class="feature-card" href="%s"><div class="feature-label">%s</div><div class="feature-title">%s</div><p class="feature-scope">%s</p><span class="feature-cta">Read the analysis &rarr;</span></a>',
+              esc(feature$href), esc(feature$label), esc(feature$title), esc(feature$scope)))
 }
 
 cat(sprintf('<div class="sec-label">Published reports &middot; <span class="count">%d available</span></div>', n_pub))
