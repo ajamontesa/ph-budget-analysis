@@ -73,15 +73,14 @@ dashboards <- tibble::tribble(
   "P/A/P Browser Dashboard",                 "Program, Activity &amp; Project level &middot; NEP &amp; GAA &middot; FY 2020&ndash;2027", "pap-browser.html"
 )
 
-# ---- EDIT THIS: featured lead report (the backdrop) ----------------------
-# A single prominent report that sets the macro-fiscal backdrop for the whole
-# budget. Renders right after the dashboards and before the department reports.
-# Set `feature <- NULL` to hide it.
-feature <- list(
-  label = "Start here \u00b7 the backdrop",
-  title = "The Macroeconomic and Fiscal Situation",
-  scope = "How fast the economy is growing, what prices are doing, and how much room the fiscal position leaves the budget. The setting every department and sector report reads against.",
-  href  = "macro-fiscal.html"
+# ---- EDIT THIS: featured top-level reports ------------------------------
+# Prominent whole-of-budget reports that frame the entire budget. They render
+# right after the dashboards and before the department reports, in this order.
+# Add a row per top-level report; set `features <- features[0, ]` to hide all.
+features <- tibble::tribble(
+  ~label,                                  ~title,                                                            ~scope,                                                                                                                                                                              ~href,
+  "Start here \u00b7 the backdrop",         "The Macroeconomic and Fiscal Situation",                          "How fast the economy is growing, what prices are doing, and how much room the fiscal position leaves the budget. The setting every department and sector report reads against.",       "macro-fiscal.html",
+  "Whole-of-budget \u00b7 the proposal",    "The FY 2027 National Expenditure Program: An Overall Assessment", "What the FY 2027 budget proposes: the biggest increases and cuts against 2026, how well it answers the year's crises, the red flags to watch, and what advocates can push to amend in Congress.", "nep-2027-assessment.html"
 )
 
 # ---- EDIT THIS: one row per agency ---------------------------------------
@@ -333,10 +332,13 @@ if (exists("dashboards") && nrow(dashboards) > 0) {
   cat('</div>')
 }
 
-# ---- Featured lead report (the macro-fiscal backdrop) --------------------
-if (exists("feature") && !is.null(feature)) {
-  cat(sprintf('<a class="feature-card" href="%s"><div class="feature-label">%s</div><div class="feature-title">%s</div><p class="feature-scope">%s</p><span class="feature-cta">Read the analysis &rarr;</span></a>',
-              esc(feature$href), esc(feature$label), esc(feature$title), esc(feature$scope)))
+# ---- Featured top-level reports (backdrop + whole-of-budget) -------------
+if (exists("features") && nrow(features) > 0) {
+  for (i in seq_len(nrow(features))) {
+    f <- features[i, ]
+    cat(sprintf('<a class="feature-card" href="%s"><div class="feature-label">%s</div><div class="feature-title">%s</div><p class="feature-scope">%s</p><span class="feature-cta">Read the analysis &rarr;</span></a>',
+                esc(f$href), esc(f$label), esc(f$title), esc(f$scope)))
+  }
 }
 
 cat(sprintf('<div class="sec-label">Published reports &middot; <span class="count">%d available</span></div>', n_pub))

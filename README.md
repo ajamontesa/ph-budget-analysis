@@ -8,8 +8,10 @@ tracing each peso from the Executive's proposal (NEP) through enactment
 added to the most recent reviews.
 
 **Live site:** <https://ajamontesa.github.io/ph-budget-analysis/index.html> —
-the home page links to every published report, plus a set of cross-cutting
-**sectoral / cluster briefings** that follow a theme across several departments.
+the home page opens with two whole-of-budget reports, a macro-fiscal backdrop
+and an overall assessment of the FY 2027 NEP, then links to every published
+department report, plus a set of cross-cutting **sectoral / cluster briefings**
+that follow a theme across several departments.
 The site is published via GitHub Pages from the `docs/` folder.
 
 ## Repository structure
@@ -22,6 +24,8 @@ budget-analysis/
 │   └── Compiled_-_NEP-GAA-NoFAR1.xlsx                  # agencies without FAR No.1 (P/A/P NEP-GAA + agency-level SAAODB)
 ├── reports/                       # R Markdown sources (each is fully self-contained)
 │   ├── index.Rmd                  # landing page -> knits to index.html
+│   ├── Macro_Fiscal_Situation.Rmd # macro-fiscal backdrop -> macro-fiscal.html (pulls live data, see below)
+│   ├── NEP_2027_Overall_Assessment.Rmd # whole-of-budget FY 2027 NEP assessment -> nep-2027-assessment.html
 │   ├── DAR_OSEC_Budget_Analysis.Rmd
 │   ├── DA_Budget_Analysis.Rmd
 │   ├── DepEd_OSEC_Budget_Analysis.Rmd
@@ -40,6 +44,8 @@ budget-analysis/
     ├── index.html
     ├── agency-budget-utilization.html  # embed page: frames the agency-level Connect Cloud dashboard
     ├── pap-browser.html                # embed page: frames the P/A/P-level Connect Cloud dashboard
+    ├── macro-fiscal.html               # macro & fiscal backdrop report (featured, leads the page)
+    ├── nep-2027-assessment.html         # whole-of-budget FY 2027 NEP assessment (featured)
     ├── dar-osec.html
     ├── da-osec.html
     ├── deped-osec.html
@@ -83,6 +89,19 @@ shared helper scripts or stylesheets to manage.
 R (≥ 4.2) with `rmarkdown`, `knitr`, `dplyr`, `tidyr`, `ggplot2`, `scales`,
 `kableExtra`, `readxl`, `stringr`, `DT`, plus Pandoc. (`index.Rmd` needs only
 `rmarkdown` + `tibble`; it does not read the data workbook.)
+
+**The macro-fiscal backdrop report is different from the agency reports.**
+`reports/Macro_Fiscal_Situation.Rmd` does not read a workbook in `data/`. It
+pulls its actuals (national accounts, Treasury cash operations, debt, tax, and
+CPI series) live at knit time from the public
+[`PH-Econ-Data`](https://github.com/ajamontesa/PH-Econ-Data) repository, and the
+medium-term fiscal targets (MTFF) are embedded in the Rmd itself. So it re-knits
+from just the `.Rmd` with a network connection, and no macro workbook is
+committed here. It and the FY 2027 NEP overall assessment
+(`nep-2027-assessment.html`) are the two featured top-level reports, placed on
+the landing page by the `features` table in `reports/index.Rmd` (edit or clear
+that table to change them); they render right after the dashboards and before
+the department reports.
 
 ## Workflow
 
