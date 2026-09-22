@@ -173,6 +173,17 @@ slides_paths <- c(
   NYC   = "slides/NYC_Budget_Analysis.html"
 )
 
+# ---- EDIT THIS: special / cross-cutting funds ----------------------------
+# Cross-cutting funds reviewed in the same long-form format as the department
+# reports, rendered as their own section after the departments and before the
+# cluster briefings. Same columns as `agencies`; add a row per fund.
+special_funds <- tibble::tribble(
+  ~short, ~name,                          ~unit,                        ~output,              ~status,      ~blurb, ~highlights,
+  "UA",   "Unprogrammed Appropriations",  "The budget's standby fund",  "unprogrammed.html",  "published",
+  "The standby fund that releases only if revenue overshoots the program or new loans come in. It ballooned under Marcos, reaching a \u20b1807B enacted fund in 2023, with Congress adding as much as \u20b1449B over the President's proposal before reversing course in 2026. Includes the year-by-year trajectory, the NEP-versus-GAA gap, utilisation rates, and sortable line-item and department breakdowns.",
+  "Enacted fund peaked at \u20b1807B in 2023, up from \u20b175B in 2018  |  Congress added \u20b1449B over the NEP in 2024, then cut \u20b199B in 2026  |  Most of it goes unreleased; when it does, DPWH and transport lead"
+)
+
 # ---- EDIT THIS: sectoral / cluster briefings -----------------------------
 # Cross-cutting briefing decks organised by sector/cluster rather than by a
 # single agency. Each is a self-contained slide deck under docs/clusters/.
@@ -343,6 +354,13 @@ if (exists("features") && nrow(features) > 0) {
 
 cat(sprintf('<div class="sec-label">Published reports &middot; <span class="count">%d available</span></div>', n_pub))
 cat('<div class="list">', paste(cards, collapse = "\n"), '</div>', sep = "\n")
+# ---- Special / cross-cutting funds ---------------------------------------
+if (exists("special_funds") && nrow(special_funds) > 0) {
+  sf_cards <- apply(special_funds, 1, card)
+  cat(sprintf('<div class="sec-label" style="margin-top:36px;">Special funds &middot; <span class="count">%d available</span></div>', nrow(special_funds)))
+  cat('<p class="cluster-intro">Cross-cutting funds and special-purpose appropriations that sit outside any single department, reviewed in the same long-form format as the department reports.</p>')
+  cat('<div class="list">', paste(sf_cards, collapse = "\n"), '</div>', sep = "\n")
+}
 # ---- Sectoral / cluster briefings ----------------------------------------
 if (exists("clusters") && nrow(clusters) > 0) {
   cl_cards <- apply(clusters, 1, function(cl) sprintf(

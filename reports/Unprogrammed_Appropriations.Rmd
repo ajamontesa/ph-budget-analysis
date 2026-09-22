@@ -1,0 +1,338 @@
+---
+title: "The Unprogrammed Appropriations"
+subtitle: "The budget's standby fund: how it grew, and who gets it, FY 2016–2027"
+date: "`r format(Sys.Date(), '%B %Y')`"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    toc_depth: 3
+    number_sections: true
+    code_folding: hide
+    self_contained: true
+    df_print: paged
+    fig_width: 10
+    fig_height: 5.5
+---
+
+```{css, echo=FALSE}
+:root { --ink:#1a1a1a; --muted:#6e6e6e; --accent:#08519C; --rule:#e6e6e6; }
+body, .main-container { font-family: Arial, Helvetica, "IBM Plex Sans", sans-serif; color: var(--ink); }
+.main-container { max-width: 980px; }
+h1, h2, h3, h4 { font-family: Arial, Helvetica, sans-serif; font-weight: 600; }
+h1.title { font-size: 30px; }
+h1 { font-size: 25px; margin-top: 1.6em; padding-top: .3em; border-top: 2px solid var(--rule); }
+h2 { font-size: 20px; margin-top: 1.4em; }
+h3 { font-size: 17px; color: #333; }
+.author, .date { color: var(--muted); }
+p, li { font-size: 15.5px; line-height: 1.62; }
+blockquote { border-left: 3px solid var(--accent); background: #f5f8fc; color: #25405e;
+  font-size: 14.5px; padding: .6em 1em; margin: 1.2em 0; }
+.lead { font-size: 16.5px; color: #2b2b2b; }
+.takeaway { background: #f7f9fb; border: 1px solid var(--rule); border-radius: 6px;
+  padding: .4em 1.1em; margin: 1.1em 0; }
+.takeaway p, .takeaway li { font-size: 14.5px; }
+.caption, .figcaption { color: var(--muted); font-size: 13px; }
+table.dataTable { font-size: 13px; }
+.kbl-note { color: var(--muted); font-size: 12.5px; margin-top: -.5em; }
+hr { border-top: 1px solid var(--rule); }
+.home-link { font-size: 13.5px; }
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                     dpi = 150, fig.align = "center", out.width = "100%")
+options(knitr.kable.NA = "")
+library(readxl); library(dplyr); library(tidyr); library(stringr)
+library(ggplot2); library(scales); library(knitr); library(kableExtra); library(DT)
+
+.candidates <- c(
+  "../data/Compiled_-_Unprogrammed.xlsx",
+  "data/Compiled_-_Unprogrammed.xlsx",
+  "Compiled_-_Unprogrammed.xlsx")
+file_path <- .candidates[file.exists(.candidates)][1]
+stopifnot(!is.na(file_path))
+
+theme_ua <- function(base_size = 12) {
+  theme_minimal(base_size = base_size, base_family = "sans") +
+    theme(
+      plot.title = element_text(face = "bold", size = base_size + 2, color = "black"),
+      plot.subtitle = element_text(color = "grey30", size = base_size),
+      plot.caption = element_text(color = "grey40", size = base_size - 3, hjust = 0),
+      panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
+      axis.title = element_text(size = base_size - 1, color = "grey20"),
+      axis.text = element_text(color = "grey20"),
+      legend.position = "bottom", legend.title = element_blank(),
+      legend.text = element_text(size = base_size - 1))
+}
+
+ua_pal  <- c("NEP (proposed)" = "#9E9AC8", "GAA (enacted)" = "#54278F", "Obligations" = "#E6550D")
+gap_pal <- c("Congress added" = "#54278F", "Congress cut" = "#E6550D")
+
+peso <- "PHP "
+php_b      <- function(x) paste0(peso, scales::comma(x / 1e9, accuracy = 0.1), "B")
+php_b_axis <- function(x) paste0(peso, scales::comma(x / 1e9, accuracy = 1), "B")
+
+dt_table <- function(df, caption = NULL, page = 10, money_cols = NULL, pct_cols = NULL, money_digits = 1) {
+  dt <- datatable(df, rownames = FALSE, caption = caption, extensions = "Buttons",
+    options = list(pageLength = page, lengthMenu = c(10, 20, 50, 100), dom = "Bfrtip",
+      buttons = c("copy", "csv"), scrollX = TRUE, autoWidth = FALSE,
+      columnDefs = list(list(className = "dt-right", targets = which(sapply(df, is.numeric)) - 1))),
+    class = "stripe hover compact")
+  if (!is.null(money_cols)) { mc <- which(names(df) %in% money_cols)
+    if (length(mc)) dt <- formatRound(dt, mc, digits = money_digits, mark = ",") }
+  if (!is.null(pct_cols)) { pc <- which(names(df) %in% pct_cols)
+    if (length(pc)) dt <- formatPercentage(dt, pc, digits = 0) }
+  dt
+}
+kbl_clean <- function(x, font = 14, ...) {
+  x %>% kable(...) %>% kable_styling(full_width = TRUE, font_size = font,
+    bootstrap_options = c("condensed", "striped", "hover"))
+}
+
+## ---- Data: workbook is in thousands of pesos; scale to pesos -----------
+ua <- read_excel(file_path, sheet = "NEP_UA", skip = 2) %>%
+  transmute(Year = as.integer(YYYY),
+            NEP = Proposed * 1e3, GAA = Program * 1e3,
+            Obligations = `Total Obligations` * 1e3, As_of = As_of) %>%
+  filter(Year >= 2011)
+
+prog <- read_excel(file_path, sheet = "prog") %>%
+  mutate(across(c(NEP, GAA, Allotment), ~ .x * 1e3),
+         Particular = str_squish(Particular))
+
+prog_dept <- read_excel(file_path, sheet = "prog_dept") %>%
+  mutate(Amount = Amount * 1e3, Particular = str_squish(Particular))
+
+## Scalars for prose (verified against the workbook)
+g23  <- ua$GAA[ua$Year == 2023]
+add24 <- ua$GAA[ua$Year == 2024] - ua$NEP[ua$Year == 2024]
+u24  <- ua$Obligations[ua$Year == 2024] / ua$GAA[ua$Year == 2024]
+cut26 <- ua$NEP[ua$Year == 2026] - ua$GAA[ua$Year == 2026]
+nep27 <- ua$NEP[ua$Year == 2027]
+```
+
+# Overview {.unnumbered}
+
+Most of the budget is programmed: it names a purpose, a peso amount, and a funding source that the revenue projections can cover. The Unprogrammed Appropriations are the exception. They're authorised in the General Appropriations Act, but no revenue is set aside for them at enactment. They release only if a specific trigger fires later in the year, a collection windfall above the revenue program, a new foreign loan or grant, or a specific earmarked source coming in. Until then they sit as a standby list, spendable at the executive's discretion once a condition is met.
+
+That design is the point and the problem. Because unprogrammed items carry no funding at enactment, they don't count against the deficit target when the budget is passed, which makes them an easy place to add spending on paper without appearing to widen the deficit. Under the Marcos administration the fund grew from a rounding error into one of the largest and most argued-over blocks in the entire budget, and Congress has used it to add hundreds of billions above what the President proposed. This report traces how big it got, how much of it actually gets spent, what's inside it, and which departments the releases flow to.
+
+The data cover FY 2011 to 2027: year totals from the `NEP_UA` sheet, the standby line items from `prog`, and the department breakdown of releases from `prog_dept`.
+
+# Key takeaways {#takeaways}
+
+<div class="takeaway">
+- **The fund exploded under Marcos.** From about `r php_b(ua$GAA[ua$Year==2018])` in 2018, the enacted Unprogrammed Appropriations peaked at `r php_b(g23)` in 2023, the largest it has ever been.
+- **Congress inflated it far above the proposal.** In FY 2024 the enacted fund came in `r php_b(add24)` above the President's NEP, the single largest congressional add-on to the fund on record. The pattern held from 2022 through 2025.
+- **Then it reversed.** For FY 2026 Congress cut the fund `r php_b(cut26)` below the NEP, and the FY 2027 proposal is back down to `r php_b(nep27)`.
+- **A large share never gets released.** Obligations have run well below the enacted fund in most years, since release depends on a trigger that may not fire. That leaves the executive holding discretion over a very large standby pot.
+- **Releases flow to hard infrastructure.** When the fund is released, the biggest single recipient is the DPWH, with transport agencies next.
+</div>
+
+# How big it got {#trajectory}
+
+```{r fig-trajectory, fig.height=5.4}
+yrs <- 2011:2027
+ua_bars <- ua %>%
+  select(Year, `NEP (proposed)` = NEP, `GAA (enacted)` = GAA) %>%
+  pivot_longer(-Year, names_to = "series", values_to = "amount") %>%
+  mutate(series = factor(series, levels = c("NEP (proposed)", "GAA (enacted)")),
+         Year = factor(Year, levels = yrs)) %>%
+  filter(!is.na(amount))
+ua_line <- ua %>% filter(!is.na(Obligations)) %>%
+  transmute(Year = factor(Year, levels = yrs), Obligations, series = "Obligations")
+ggplot() +
+  geom_col(data = ua_bars, aes(Year, amount, fill = series),
+           position = position_dodge(width = 0.8), width = 0.72) +
+  geom_line(data = ua_line, aes(Year, Obligations, group = 1, colour = series), linewidth = 0.9) +
+  geom_point(data = ua_line, aes(Year, Obligations, colour = series), size = 1.9) +
+  scale_fill_manual(values = ua_pal[c("NEP (proposed)", "GAA (enacted)")]) +
+  scale_colour_manual(values = c("Obligations" = unname(ua_pal["Obligations"]))) +
+  scale_x_discrete(drop = FALSE) +
+  scale_y_continuous(labels = php_b_axis, expand = expansion(mult = c(0, 0.05))) +
+  labs(x = NULL, y = NULL,
+       title = "The standby fund ballooned under Marcos, then Congress pulled it back",
+       subtitle = "Unprogrammed Appropriations: proposed (NEP) and enacted (GAA) as bars, obligated as the line",
+       caption = str_c("From the NEP_UA sheet. FY 2027 shows the NEP only (GAA not yet enacted). ",
+                       "FY 2026 obligations are as of August; all others full-year.")) +
+  theme_ua() +
+  guides(fill = guide_legend(order = 1), colour = guide_legend(order = 2)) +
+  theme(axis.text.x = element_text(size = 9))
+```
+
+Through the 2010s the Unprogrammed Appropriations were modest and mostly uncontested. They ran between about `r php_b(ua$GAA[ua$Year==2016])` and `r php_b(ua$GAA[ua$Year==2012])` in the first half of the decade, dipped to around `r php_b(ua$GAA[ua$Year==2018])` in 2016–2018, and Congress generally passed them close to what the President proposed. Then the fund stepped up: to `r php_b(ua$GAA[ua$Year==2019])` in 2019, and through the pandemic it became a live channel for emergency spending. What changed under Marcos is the scale. The enacted fund hit `r php_b(ua$GAA[ua$Year==2022])` in 2022, `r php_b(g23)` in 2023, and `r php_b(ua$GAA[ua$Year==2024])` in 2024, several times its historical size.
+
+The obligations line tells the second half of the story. In almost every year the amount actually obligated stayed well below the enacted fund, because these appropriations only release when their trigger fires. So the tall GAA bars in 2023 and 2024 are better read as spending authority the executive *could* tap, not spending that happened.
+
+# Congress and the standby fund {#congress}
+
+The gap between what the President proposed and what Congress enacted is where the Unprogrammed Appropriations became a fight.
+
+```{r fig-gap, fig.height=4.8}
+gap <- ua %>% filter(!is.na(GAA)) %>%
+  transmute(Year, gap = GAA - NEP,
+            dir = ifelse(gap >= 0, "Congress added", "Congress cut"))
+ggplot(gap, aes(factor(Year), gap, fill = dir)) +
+  geom_col(width = 0.7) +
+  geom_hline(yintercept = 0, color = "grey40") +
+  geom_text(aes(label = ifelse(abs(gap) >= 5e9, php_b(gap), ""),
+                vjust = ifelse(gap >= 0, -0.4, 1.3)), size = 3, fontface = "bold") +
+  scale_fill_manual(values = gap_pal) +
+  scale_y_continuous(labels = php_b_axis, expand = expansion(mult = c(0.08, 0.12))) +
+  labs(x = NULL, y = "Enacted minus proposed",
+       title = "Congress added hundreds of billions to the fund, then reversed",
+       subtitle = "Enacted (GAA) less proposed (NEP) Unprogrammed Appropriations, by fiscal year",
+       caption = "From the NEP_UA sheet. Positive = Congress raised the fund above the President's proposal; negative = cut below it.") +
+  theme_ua() + theme(legend.position = "bottom")
+```
+
+Through 2021 the enacted fund tracked the proposal closely, the only real exception a small `r php_b(abs(ua$GAA[ua$Year==2012]-ua$NEP[ua$Year==2012]))` trim in 2012. From FY 2022 that changed. Congress added `r php_b(ua$GAA[ua$Year==2022]-ua$NEP[ua$Year==2022])` to the fund in 2022, `r php_b(g23-ua$NEP[ua$Year==2023])` in 2023, and `r php_b(add24)` in 2024, the largest top-up on record. In 2025 it added another `r php_b(ua$GAA[ua$Year==2025]-ua$NEP[ua$Year==2025])`. Because unprogrammed items don't count against the deficit ceiling at enactment, this was a way to expand the budget's spending authority without formally widening the programmed deficit, and the released funds could then be steered later.
+
+The 2024 and 2025 versions drew enough scrutiny that the fund became a headline issue in the budget debates, and FY 2026 reversed course: Congress enacted the fund `r php_b(cut26)` *below* the NEP. Whether that restraint holds is a live question, since the FY 2027 proposal starts the cycle over at `r php_b(nep27)`.
+
+# Can the government spend it? {#utilisation}
+
+A standby fund is only real to the extent it gets released. Obligations as a share of the enacted fund show how much actually moves.
+
+```{r fig-util, fig.height=4.6}
+util <- ua %>% filter(!is.na(GAA), !is.na(Obligations)) %>%
+  transmute(Year, rate = Obligations / GAA, As_of)
+ggplot(util, aes(factor(Year), rate)) +
+  geom_col(fill = "#3182BD", width = 0.7) +
+  geom_text(aes(label = percent(rate, accuracy = 1)), vjust = -0.4, size = 3, fontface = "bold") +
+  geom_hline(yintercept = 1, linetype = "dotted", color = "grey50") +
+  scale_y_continuous(labels = percent, limits = c(0, 1.05), expand = expansion(mult = c(0, 0.02))) +
+  labs(x = NULL, y = "Obligations / enacted fund",
+       title = "Most years, a large slice of the fund goes unreleased",
+       subtitle = "Obligations as a share of the enacted Unprogrammed Appropriations, by fiscal year",
+       caption = str_c("From the NEP_UA sheet. FY 2026 is as of August, so its rate is partial and understated. ",
+                       "A low rate is partly by design: release depends on a trigger that may not fire.")) +
+  theme_ua()
+```
+
+The one year the fund was nearly fully used was 2020, when the pandemic gave the government both the triggers and the urgency to release it. Outside that, the obligation rate has mostly run between a third and three-quarters of the enacted amount, and in the early 2010s it was often lower still. In 2023, the peak GAA year, only `r percent(ua$Obligations[ua$Year==2023]/g23, accuracy=1)` was obligated. In 2024, `r percent(u24, accuracy=1)`.
+
+The unreleased balance isn't waste in the usual sense, since these funds were never guaranteed to release. It's discretion. A large enacted Unprogrammed Appropriation hands the executive a menu of pre-authorised spending it can switch on, item by item, once a revenue windfall or a new loan gives it cover. That's the transparency concern: the decision on what actually gets funded moves from the enacted budget to in-year releases that are much harder to watch.
+
+# What's inside {#composition}
+
+The fund is a list of named standby items. To see what it has actually contained recently, this totals each line item's enacted (GAA) amount across the four most recent enacted budgets, FY 2023 to 2026.
+
+```{r fig-items, fig.height=5.8}
+items_tot <- prog %>% filter(FY >= 2023, FY <= 2026, !is.na(GAA), GAA > 0) %>%
+  group_by(Particular) %>% summarise(GAA = sum(GAA), .groups = "drop") %>%
+  arrange(desc(GAA)) %>% slice_head(n = 10)
+ggplot(items_tot, aes(reorder(Particular, GAA), GAA)) +
+  geom_col(fill = "#54278F", width = 0.72) +
+  geom_text(aes(label = php_b(GAA)), hjust = -0.1, size = 3) +
+  coord_flip(clip = "off") +
+  scale_x_discrete(labels = function(x) str_wrap(x, 44)) +
+  scale_y_continuous(labels = php_b_axis, expand = expansion(mult = c(0, 0.2))) +
+  labs(x = NULL, y = NULL,
+       title = "The biggest standby items, FY 2023 to 2026 combined",
+       subtitle = "Largest line items by total enacted (GAA) amount over the four years",
+       caption = "From the prog sheet. Totals sum each item's enacted amount across FY 2023 to 2026.") +
+  theme_ua() + theme(axis.text.y = element_text(size = 8.5, lineheight = 0.9))
+```
+
+Over the four years, "Support to Foreign Assisted Projects" is the single largest standby item, enacted at a combined `r php_b(items_tot$GAA[1])`, followed by the broad "Strengthening Assistance for Government Infrastructure and Social Programs" line. Both are wide, flexible headings rather than specific projects, which is part of what makes the fund attractive as a place to park spending authority. The full list of items and their combined FY 2023–2026 enacted amounts is below.
+
+```{r tbl-items}
+prog %>% filter(FY >= 2023, FY <= 2026, !is.na(GAA)) %>%
+  group_by(Particular) %>%
+  summarise(`GAA, 2023–2026` = sum(GAA), .groups = "drop") %>%
+  arrange(desc(`GAA, 2023–2026`)) %>%
+  rename(`Line item` = Particular) %>%
+  dt_table(page = 10, money_cols = "GAA, 2023–2026", money_digits = 0,
+           caption = "Unprogrammed Appropriations line items by total enacted amount, FY 2023–2026 (PHP thousand).")
+```
+
+<p class="kbl-note">Amounts in PHP thousand, summed across the FY 2023–2026 enacted budgets.</p>
+
+## The FY 2027 proposal {.unnumbered}
+
+The FY 2027 NEP proposes a much smaller fund, `r php_b(nep27)`, built from just a handful of items. Unlike the sprawling enacted lists of recent years, the proposal concentrates in a bank-recapitalisation line and foreign-assisted project support.
+
+```{r tbl-2027}
+prog %>% filter(FY == 2027, !is.na(NEP)) %>%
+  arrange(desc(NEP)) %>%
+  transmute(`Line item` = Particular, `NEP (proposed)` = NEP) %>%
+  dt_table(page = 10, money_cols = "NEP (proposed)", money_digits = 0,
+           caption = "FY 2027 proposed Unprogrammed Appropriations line items (PHP thousand).")
+```
+
+<p class="kbl-note">Amounts in PHP thousand. The FY 2027 GAA is not yet enacted.</p>
+
+# Which departments get it {#departments}
+
+When items release, the money is allotted to implementing departments. Totalling releases over three periods, roughly the Aquino, Duterte, and Marcos budget years, shows how the fund's destination shifted.
+
+```{r fig-dept, fig.height=5.6}
+periods <- c("2011–2016", "2017–2022", "2023–2026")
+pdp <- prog_dept %>%
+  mutate(period = case_when(FY >= 2011 & FY <= 2016 ~ periods[1],
+                            FY >= 2017 & FY <= 2022 ~ periods[2],
+                            FY >= 2023 & FY <= 2026 ~ periods[3], TRUE ~ NA_character_),
+         Dept = str_extract(Department, "\\(([^)]+)\\)$") %>% str_remove_all("[()]"),
+         Dept = coalesce(Dept, str_trunc(Department, 26))) %>%
+  filter(!is.na(period), !is.na(Amount))
+ord <- pdp %>% group_by(Dept) %>% summarise(t = sum(Amount), .groups = "drop") %>%
+  arrange(t) %>% pull(Dept)
+dept_top <- tail(ord, 10)
+dept_per <- pdp %>% filter(Dept %in% dept_top) %>%
+  group_by(Dept, period) %>% summarise(Amount = sum(Amount), .groups = "drop") %>%
+  mutate(Dept = factor(Dept, levels = dept_top),
+         period = factor(period, levels = periods))
+ggplot(dept_per, aes(Dept, Amount, fill = period)) +
+  geom_col(position = position_dodge(width = 0.78), width = 0.72) +
+  coord_flip(clip = "off") +
+  scale_fill_manual(values = setNames(c("#BDBDBD", "#F16913", "#54278F"), periods)) +
+  scale_y_continuous(labels = php_b_axis, expand = expansion(mult = c(0, 0.06))) +
+  labs(x = NULL, y = NULL,
+       title = "The fund's destination shifted from GOCC support to infrastructure",
+       subtitle = "Total Unprogrammed Appropriations releases by department, three periods",
+       caption = str_c("From the prog_dept sheet. Top 10 departments by total release across FY 2011 to 2026. ",
+                       "FY 2026 releases are as of August, so the latest period is partial.")) +
+  theme_ua()
+```
+
+The destination changed markedly across the three periods. In 2011 to 2016 the largest releases went to budgetary support for government corporations. During 2017 to 2022 the fund tilted toward health, reflecting the pandemic response, alongside a growing transport share. Under Marcos, in 2023 to 2026, it swung to hard infrastructure: the DPWH went from almost nothing in the early 2010s to the second-largest recipient overall, and transport (DOTr) is the single largest across the whole period. That connects the Unprogrammed Appropriations to the wider concern about how much of the budget's infrastructure money moves through channels that open after enactment. The full period breakdown by department is below.
+
+```{r tbl-dept}
+prog_dept %>%
+  mutate(period = case_when(FY >= 2011 & FY <= 2016 ~ "2011–2016",
+                            FY >= 2017 & FY <= 2022 ~ "2017–2022",
+                            FY >= 2023 & FY <= 2026 ~ "2023–2026", TRUE ~ NA_character_)) %>%
+  filter(!is.na(period), !is.na(Amount)) %>%
+  group_by(Department, period) %>% summarise(Amount = sum(Amount), .groups = "drop") %>%
+  pivot_wider(names_from = period, values_from = Amount, values_fill = 0) %>%
+  mutate(Total = `2011–2016` + `2017–2022` + `2023–2026`) %>%
+  arrange(desc(Total)) %>%
+  dt_table(page = 10, money_digits = 0,
+           money_cols = c("2011–2016", "2017–2022", "2023–2026", "Total"),
+           caption = "Unprogrammed Appropriations releases by department and period (PHP thousand).")
+```
+
+<p class="kbl-note">Amounts in PHP thousand. FY 2026 releases are as of August, so the 2023–2026 column is partial.</p>
+
+# Why it matters {#why}
+
+Three features make the Unprogrammed Appropriations worth watching more closely than their release rate alone would suggest.
+
+They sit outside the programmed ceiling, so adding to them doesn't show up as a wider deficit when the budget is enacted. That makes the fund a low-friction place to expand spending authority, which is exactly what Congress did from 2022 to 2025. The real fiscal cost only appears later, if and when the items release and the government borrows or spends against them.
+
+They move discretion from the enacted budget to in-year releases. A programmed appropriation is scrutinised when the GAA is debated and passed. An unprogrammed one is scrutinised then too, but the decision that matters, whether to release it and to whom, happens months later, in executive issuances that are far less visible than a floor debate. The bigger the standby fund, the more of the budget effectively gets decided after enactment.
+
+And the money, when it moves, concentrates in hard infrastructure at the DPWH and transport, the same agencies that recur in the budget's other transparency flags. A large, flexible, lightly-watched fund flowing mostly to civil works is the combination worth tracking as the FY 2027 budget moves through Congress.
+
+# A note on the data {#data-notes}
+
+**Source.** The DBM Budget of Expenditures and Sources of Financing and the General Appropriations Act, compiled in `Compiled_-_Unprogrammed.xlsx`: year totals (`NEP_UA`), standby line items (`prog`), and the department breakdown of releases (`prog_dept`). Amounts in the workbook are in thousands of pesos; charts here are shown in billions.
+
+**Reading the figures.** "NEP" is the President's proposed fund, "GAA" the enacted fund, and "Obligations" or "Allotment released" the amount actually drawn. FY 2027 shows the NEP only, since the GAA is not yet enacted. FY 2026 figures are as of August, so its obligation rate is partial. A low obligation rate is partly by design: these appropriations release only when a specific trigger is met, so an unreleased balance reflects a trigger that did not fire, not necessarily an implementation failure.
+
+<p class="home-link"><a href="index.html">&larr; Back to all reports</a></p>
