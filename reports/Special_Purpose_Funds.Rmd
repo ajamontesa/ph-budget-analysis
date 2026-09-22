@@ -1,0 +1,345 @@
+---
+title: "The Lump-Sum Special Purpose Funds"
+subtitle: "The budget's discretionary lump sums, outside the LGU and GOCC transfers, FY 2011–2027"
+date: "`r format(Sys.Date(), '%B %Y')`"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    toc_depth: 3
+    number_sections: true
+    code_folding: hide
+    self_contained: true
+    df_print: paged
+    fig_width: 10
+    fig_height: 5.5
+---
+
+```{css, echo=FALSE}
+:root { --ink:#1a1a1a; --muted:#6e6e6e; --accent:#08519C; --rule:#e6e6e6; }
+body, .main-container { font-family: Arial, Helvetica, "IBM Plex Sans", sans-serif; color: var(--ink); }
+.main-container { max-width: 980px; }
+h1, h2, h3, h4 { font-family: Arial, Helvetica, sans-serif; font-weight: 600; }
+h1.title { font-size: 30px; }
+h1 { font-size: 25px; margin-top: 1.6em; padding-top: .3em; border-top: 2px solid var(--rule); }
+h2 { font-size: 20px; margin-top: 1.4em; }
+h3 { font-size: 17px; color: #333; }
+.author, .date { color: var(--muted); }
+p, li { font-size: 15.5px; line-height: 1.62; }
+blockquote { border-left: 3px solid var(--accent); background: #f5f8fc; color: #25405e;
+  font-size: 14.5px; padding: .6em 1em; margin: 1.2em 0; }
+.lead { font-size: 16.5px; color: #2b2b2b; }
+.takeaway { background: #f7f9fb; border: 1px solid var(--rule); border-radius: 6px;
+  padding: .4em 1.1em; margin: 1.1em 0; }
+.takeaway p, .takeaway li { font-size: 14.5px; }
+.caption, .figcaption { color: var(--muted); font-size: 13px; }
+table.dataTable { font-size: 13px; }
+.kbl-note { color: var(--muted); font-size: 12.5px; margin-top: -.5em; }
+hr { border-top: 1px solid var(--rule); }
+.home-link { font-size: 13.5px; }
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                     dpi = 150, fig.align = "center", out.width = "100%")
+options(knitr.kable.NA = "")
+library(readxl); library(dplyr); library(tidyr); library(stringr)
+library(ggplot2); library(scales); library(knitr); library(kableExtra); library(DT)
+
+.candidates <- c(
+  "../data/Compiled_-_Special_Purpose_Funds.xlsx",
+  "data/Compiled_-_Special_Purpose_Funds.xlsx",
+  "Compiled_-_Special_Purpose_Funds.xlsx")
+file_path <- .candidates[file.exists(.candidates)][1]
+stopifnot(!is.na(file_path))
+
+theme_spf <- function(base_size = 12) {
+  theme_minimal(base_size = base_size, base_family = "sans") +
+    theme(
+      plot.title = element_text(face = "bold", size = base_size + 2, color = "black"),
+      plot.subtitle = element_text(color = "grey30", size = base_size),
+      plot.caption = element_text(color = "grey40", size = base_size - 3, hjust = 0),
+      panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
+      axis.title = element_text(size = base_size - 1, color = "grey20"),
+      axis.text = element_text(color = "grey20"),
+      legend.position = "bottom", legend.title = element_blank(),
+      legend.text = element_text(size = base_size - 1))
+}
+
+spf_pal <- c("NEP (proposed)" = "#9E9AC8", "GAA (enacted)" = "#54278F", "Releases" = "#E6550D")
+gap_pal <- c("Congress added" = "#54278F", "Congress cut" = "#E6550D")
+
+peso <- "PHP "
+php_b      <- function(x) paste0(peso, scales::comma(x / 1e9, accuracy = 0.1), "B")
+php_b_axis <- function(x) paste0(peso, scales::comma(x / 1e9, accuracy = 1), "B")
+
+short_fund <- function(x) x %>%
+  str_replace("National Disaster Risk Reduction and Management Fund \\(Calamity Fund\\)", "NDRRM / Calamity Fund") %>%
+  str_replace("Miscellaneous Personnel Benefits Fund", "MPBF") %>%
+  str_replace("Revised AFP Modernization Program", "AFP Modernization") %>%
+  str_replace("DepEd - School Building Program/Educational Facilities Fund", "DepEd School Building") %>%
+  str_replace("Payapa at Masaganang Pamayanan Fund", "PAMANA") %>%
+  str_replace("Priority Development Assistance Fund", "PDAF") %>%
+  str_replace("Priority Social and Economic Projects Fund", "PSEPF")
+
+dt_table <- function(df, caption = NULL, page = 10, money_cols = NULL, pct_cols = NULL, money_digits = 0) {
+  dt <- datatable(df, rownames = FALSE, caption = caption, extensions = "Buttons",
+    options = list(pageLength = page, lengthMenu = c(10, 20, 50, 100), dom = "Bfrtip",
+      buttons = c("copy", "csv"), scrollX = TRUE, autoWidth = FALSE,
+      columnDefs = list(list(className = "dt-right", targets = which(sapply(df, is.numeric)) - 1))),
+    class = "stripe hover compact")
+  if (!is.null(money_cols)) { mc <- which(names(df) %in% money_cols)
+    if (length(mc)) dt <- formatRound(dt, mc, digits = money_digits, mark = ",") }
+  if (!is.null(pct_cols)) { pc <- which(names(df) %in% pct_cols)
+    if (length(pc)) dt <- formatPercentage(dt, pc, digits = 0) }
+  dt
+}
+
+## ---- Data: workbook is in thousands of pesos; scale to pesos -----------
+spf_ng <- read_excel(file_path, sheet = "SPFs") %>%
+  mutate(Fund = str_replace(Fund, "E-Govemment", "E-Government")) %>%
+  pivot_longer(matches("^20[0-9]{2}$"), names_to = "Year", values_to = "amount") %>%
+  mutate(Year = as.integer(Year), amount = amount * 1e3) %>%
+  pivot_wider(names_from = Particular, values_from = amount)
+
+rel <- read_excel(file_path, sheet = "Allotment_Releases") %>%
+  mutate(Release = Allotment_Release * 1e3)
+rel_fy <- rel %>% group_by(Fund, Year = FY) %>% summarise(Release = sum(Release), .groups = "drop")
+
+## Aggregate across funds, by year (GAA is NA for the un-enacted FY 2027)
+agg <- spf_ng %>% group_by(Year) %>%
+  summarise(NEP = sum(NEP, na.rm = TRUE), GAA = sum(GAA, na.rm = TRUE), .groups = "drop") %>%
+  mutate(GAA = if_else(Year >= 2027, NA_real_, GAA)) %>%
+  left_join(rel %>% group_by(Year = FY) %>% summarise(Releases = sum(Release), .groups = "drop"),
+            by = "Year")
+
+## By-fund totals over the released period (FY 2011-2026)
+fund_tot <- spf_ng %>% filter(Year <= 2026) %>% group_by(Fund) %>%
+  summarise(GAA = sum(GAA, na.rm = TRUE), .groups = "drop") %>%
+  left_join(rel %>% group_by(Fund) %>% summarise(Releases = sum(Release), .groups = "drop"), by = "Fund") %>%
+  arrange(desc(Releases))
+
+## Scalars for prose (verified against the workbook)
+tot_rel <- sum(rel$Release)
+cut24 <- agg$NEP[agg$Year == 2024] - agg$GAA[agg$Year == 2024]
+n_cut <- sum(agg$GAA < agg$NEP, na.rm = TRUE)
+pg_rel <- fund_tot$Releases[fund_tot$Fund == "Pension and Gratuity Fund"]
+mpbf_rel <- fund_tot$Releases[fund_tot$Fund == "Miscellaneous Personnel Benefits Fund"]
+nep27 <- agg$NEP[agg$Year == 2027]
+```
+
+# Overview {.unnumbered}
+
+The Special Purpose Funds are lump-sum appropriations in the General Appropriations Act that aren't tied to a specific agency when the budget passes. The DBM parcels them out to departments during the year, through Special Allotment Release Orders, as claims and needs arise. Two of them are essentially formulaic: the Allocation to Local Government Units, which is the constitutionally-mandated LGU share, and Budgetary Support to Government Corporations, the subsidies and equity for GOCCs. This report sets those two aside and looks at what's left, the discretionary lump sums: pensions, civilian and uniformed salary adjustments, the calamity and contingent funds, military modernisation, and a handful of smaller funds.
+
+These matter for two reasons. They hand the executive a large pool of money to allocate after the budget is enacted, which moves real spending decisions out of the appropriations debate and into in-year releases. And Congress has been cutting them in the GAA, year after year, even as it inflated the standby Unprogrammed Appropriations far above the President's proposal. Read alongside the [Unprogrammed Appropriations review](unprogrammed.html), the two tell one story about where control over lump-sum money has moved.
+
+The data cover FY 2011 to 2027: fund-level proposed (NEP) and enacted (GAA) amounts, and allotment releases broken down by fund and recipient department.
+
+# Key takeaways {#takeaways}
+
+<div class="takeaway">
+- **A big pool, mostly personnel.** Releases from these funds totalled `r php_b(tot_rel)` over FY 2011–2026. Two funds dominate: the Pension and Gratuity Fund (`r php_b(pg_rel)`) and the Miscellaneous Personnel Benefits Fund (`r php_b(mpbf_rel)`), together about four-fifths of the total.
+- **Congress trims them.** The enacted lump sums came in below the President's proposal in `r n_cut` of the 16 years with an enacted budget. The cut reached `r php_b(cut24)` in FY 2024, its largest.
+- **The mirror image of the standby fund.** As Congress cut the executive's lump-sum funds, it added hundreds of billions to the Unprogrammed Appropriations. Control over lump-sum money shifted from the executive to Congress.
+- **Some funds are released above their ceiling.** In a handful of years the Contingent and Calamity funds were released well beyond their enacted amount, the Contingent Fund at 2.26 times its GAA in 2017, funded from savings and other sources.
+- **The money goes to the uniformed services.** Defence and interior dominate the releases, driven by military and police pensions and AFP modernisation.
+</div>
+
+# How big they are {#trajectory}
+
+```{r fig-trajectory, fig.height=5.4}
+yrs <- 2011:2027
+bars <- agg %>% select(Year, `NEP (proposed)` = NEP, `GAA (enacted)` = GAA) %>%
+  pivot_longer(-Year, names_to = "series", values_to = "amount") %>%
+  mutate(series = factor(series, levels = c("NEP (proposed)", "GAA (enacted)")),
+         Year = factor(Year, levels = yrs)) %>% filter(!is.na(amount))
+line <- agg %>% filter(!is.na(Releases)) %>%
+  transmute(Year = factor(Year, levels = yrs), Releases, series = "Releases")
+ggplot() +
+  geom_col(data = bars, aes(Year, amount, fill = series),
+           position = position_dodge(width = 0.8), width = 0.72) +
+  geom_line(data = line, aes(Year, Releases, group = 1, colour = series), linewidth = 0.9) +
+  geom_point(data = line, aes(Year, Releases, colour = series), size = 1.9) +
+  scale_fill_manual(values = spf_pal[c("NEP (proposed)", "GAA (enacted)")]) +
+  scale_colour_manual(values = c("Releases" = unname(spf_pal["Releases"]))) +
+  scale_x_discrete(drop = FALSE) +
+  scale_y_continuous(labels = php_b_axis, expand = expansion(mult = c(0, 0.05))) +
+  labs(x = NULL, y = NULL,
+       title = "Congress enacts the lump sums below the proposal, year after year",
+       subtitle = "Lump-sum Special Purpose Funds: proposed (NEP) and enacted (GAA) as bars, released as the line",
+       caption = str_c("Excludes the LGU and GOCC transfers. FY 2027 shows the NEP only (GAA not yet enacted). ",
+                       "FY 2026 releases are as of August; all others full-year.")) +
+  theme_spf() +
+  guides(fill = guide_legend(order = 1), colour = guide_legend(order = 2)) +
+  theme(axis.text.x = element_text(size = 9))
+```
+
+The enacted lump sums have grown, from about `r php_b(agg$GAA[agg$Year==2011])` in 2011 to `r php_b(agg$GAA[agg$Year==2025])` in 2025, but the dark GAA bar sits below the light NEP bar in almost every year. Congress consistently enacts these funds below what the President proposes. The released amount, the orange line, tracks the enacted level fairly closely, closer than the Unprogrammed Appropriations ever do, because most of this money is committed spending: pensions that must be paid and salary adjustments already granted.
+
+# Congress trims the lump sums {#congress}
+
+The gap between proposal and enactment runs the opposite way to the Unprogrammed Appropriations. There, Congress added. Here, it cuts.
+
+```{r fig-gap, fig.height=4.8}
+gap <- agg %>% filter(!is.na(GAA)) %>%
+  transmute(Year, gap = GAA - NEP, dir = ifelse(gap >= 0, "Congress added", "Congress cut"))
+ggplot(gap, aes(factor(Year), gap, fill = dir)) +
+  geom_col(width = 0.7) +
+  geom_hline(yintercept = 0, color = "grey40") +
+  geom_text(aes(label = ifelse(abs(gap) >= 20e9, php_b(gap), ""),
+                vjust = ifelse(gap >= 0, -0.4, 1.3)), size = 3, fontface = "bold") +
+  scale_fill_manual(values = gap_pal) +
+  scale_y_continuous(labels = php_b_axis, expand = expansion(mult = c(0.14, 0.08))) +
+  labs(x = NULL, y = "Enacted minus proposed",
+       title = "Congress cut the lump-sum funds in 15 of 16 years",
+       subtitle = "Enacted (GAA) less proposed (NEP) lump-sum Special Purpose Funds, by fiscal year",
+       caption = "Negative = Congress enacted the funds below the President's proposal; positive = above it.") +
+  theme_spf()
+```
+
+The pattern is steady and it deepened under Marcos. Congress trimmed the lump-sum funds by `r php_b(abs(agg$GAA[agg$Year==2023]-agg$NEP[agg$Year==2023]))` in 2023 and `r php_b(cut24)` in 2024, the two largest cuts on record. Those are the same two years Congress inflated the Unprogrammed Appropriations most. The money didn't disappear; it moved. Cutting the executive's discretionary lump sums and building up a congressionally-shaped standby fund are two sides of the same shift in who controls post-enactment spending.
+
+# The funds {#funds}
+
+Twelve funds make up the total, but two of them, both personnel-related, account for most of it.
+
+```{r fig-funds, fig.height=5.0}
+ff <- fund_tot %>% filter(!is.na(Releases), Releases > 0) %>%
+  mutate(Fund = short_fund(Fund)) %>% arrange(desc(Releases))
+ggplot(ff, aes(reorder(Fund, Releases), Releases)) +
+  geom_col(fill = "#E6550D", width = 0.72) +
+  geom_text(aes(label = php_b(Releases)), hjust = -0.1, size = 3) +
+  coord_flip(clip = "off") +
+  scale_x_discrete(labels = function(x) str_wrap(x, 30)) +
+  scale_y_continuous(labels = php_b_axis, expand = expansion(mult = c(0, 0.16))) +
+  labs(x = NULL, y = NULL,
+       title = "Pensions and salary adjustments are the lump-sum budget",
+       subtitle = "Total releases by fund, FY 2011 to 2026",
+       caption = "From the allotment releases. The Priority Development Assistance Fund (PDAF) appears through FY 2013 only.") +
+  theme_spf()
+```
+
+The Pension and Gratuity Fund, which pays the pensions of retired military and uniformed personnel, released `r php_b(pg_rel)` over the period, more than half the total on its own. The Miscellaneous Personnel Benefits Fund, which covers salary adjustments and new positions across the government, released `r php_b(mpbf_rel)`. After those two, the funds thin out fast: the Calamity and Contingent funds, AFP modernisation, and the long tail of smaller and now-defunct funds, including the Priority Development Assistance Fund, the pork barrel abolished after 2013. The full fund-level detail, with proposed, enacted, and released amounts, is below.
+
+```{r tbl-funds}
+spf_ng %>% filter(Year <= 2026) %>% group_by(Fund) %>%
+  summarise(NEP = sum(NEP, na.rm = TRUE), GAA = sum(GAA, na.rm = TRUE), .groups = "drop") %>%
+  left_join(rel %>% group_by(Fund) %>% summarise(Releases = sum(Release), .groups = "drop"), by = "Fund") %>%
+  mutate(`Released / GAA` = Releases / GAA) %>%
+  arrange(desc(Releases)) %>%
+  transmute(Fund, `NEP` = NEP / 1e3, `GAA` = GAA / 1e3,
+            `Releases` = Releases / 1e3, `Released / GAA`) %>%
+  dt_table(page = 12, money_cols = c("NEP", "GAA", "Releases"),
+           pct_cols = "Released / GAA",
+           caption = "Lump-sum Special Purpose Funds by fund, FY 2011–2026 totals (PHP thousand). NEP left, GAA right.")
+```
+
+<p class="kbl-note">Amounts in PHP thousand, summed FY 2011–2026. "Released / GAA" over 100% means the fund was released above its enacted total across the period.</p>
+
+## The FY 2027 proposal {.unnumbered}
+
+The FY 2027 NEP proposes `r php_b(nep27)` in lump-sum funds, again led by the two personnel funds.
+
+```{r tbl-2027}
+spf_ng %>% filter(Year == 2027, !is.na(NEP), NEP > 0) %>%
+  arrange(desc(NEP)) %>%
+  transmute(Fund, `NEP (proposed)` = NEP / 1e3) %>%
+  dt_table(page = 12, money_cols = "NEP (proposed)",
+           caption = "FY 2027 proposed lump-sum Special Purpose Funds (PHP thousand).")
+```
+
+<p class="kbl-note">Amounts in PHP thousand. The FY 2027 GAA is not yet enacted.</p>
+
+# Released above the ceiling {#overrun}
+
+Most of these funds release at or below their enacted amount. A few don't. In several years the Contingent Fund and the Calamity Fund were released well past their GAA, topped up from savings, continuing appropriations, and other sources during the year.
+
+```{r fig-overrun, fig.height=4.4}
+over <- spf_ng %>% inner_join(rel_fy, by = c("Fund", "Year")) %>%
+  filter(!is.na(GAA), GAA > 0) %>% mutate(rate = Release / GAA) %>%
+  filter(rate > 1) %>% arrange(desc(rate)) %>%
+  mutate(lab = paste0(short_fund(Fund), ", ", Year))
+ggplot(over, aes(reorder(lab, rate), rate)) +
+  geom_col(fill = "#54278F", width = 0.68) +
+  geom_text(aes(label = percent(rate, accuracy = 1)), hjust = -0.15, size = 3, fontface = "bold") +
+  geom_hline(yintercept = 1, linetype = "dotted", color = "grey45") +
+  coord_flip(clip = "off") +
+  scale_y_continuous(labels = percent, expand = expansion(mult = c(0, 0.14))) +
+  labs(x = NULL, y = "Releases as a share of the enacted fund",
+       title = "When the Contingent and Calamity funds blow past their ceiling",
+       subtitle = "Fund-years where releases exceeded the enacted (GAA) amount",
+       caption = "From the appropriations and releases. Overruns are funded from savings, continuing appropriations, and augmentation.") +
+  theme_spf()
+```
+
+The Contingent Fund is the clearest case. In 2017 it carried a `r php_b(spf_ng$GAA[spf_ng$Fund=="Contingent Fund" & spf_ng$Year==2017])` appropriation but released `r php_b(rel_fy$Release[rel_fy$Fund=="Contingent Fund" & rel_fy$Year==2017])`, more than double. The Calamity Fund, now the National Disaster Risk Reduction and Management Fund, ran over its ceiling in 2011, 2014, 2017, and 2020, all years with major disasters. That these funds can be topped up mid-year is the point of having them, but it's also the transparency concern: the enacted number understates what actually gets spent, and the topping-up is decided by the executive after the budget is passed.
+
+# Which departments get them {#departments}
+
+Releases are allotted to implementing departments. Totalling them over three periods, roughly the Aquino, Duterte, and Marcos budget years, shows a concentration that barely moves.
+
+```{r fig-dept, fig.height=5.6}
+periods <- c("2011–2016", "2017–2022", "2023–2026")
+pdp <- rel %>%
+  mutate(period = case_when(FY >= 2011 & FY <= 2016 ~ periods[1],
+                            FY >= 2017 & FY <= 2022 ~ periods[2],
+                            FY >= 2023 & FY <= 2026 ~ periods[3], TRUE ~ NA_character_),
+         Dept = str_extract(Department, "\\(([^)]+)\\)$") %>% str_remove_all("[()]"),
+         Dept = coalesce(Dept, str_trunc(Department, 26))) %>%
+  filter(!is.na(period), !is.na(Release))
+ord <- pdp %>% group_by(Dept) %>% summarise(t = sum(Release), .groups = "drop") %>%
+  arrange(t) %>% pull(Dept)
+dept_top <- tail(ord, 10)
+dept_per <- pdp %>% filter(Dept %in% dept_top) %>%
+  group_by(Dept, period) %>% summarise(Release = sum(Release), .groups = "drop") %>%
+  mutate(Dept = factor(Dept, levels = dept_top), period = factor(period, levels = periods))
+ggplot(dept_per, aes(Dept, Release, fill = period)) +
+  geom_col(position = position_dodge(width = 0.78), width = 0.72) +
+  coord_flip(clip = "off") +
+  scale_fill_manual(values = setNames(c("#BDBDBD", "#F16913", "#54278F"), periods)) +
+  scale_y_continuous(labels = php_b_axis, expand = expansion(mult = c(0, 0.06))) +
+  labs(x = NULL, y = NULL,
+       title = "Defence and interior dominate every period",
+       subtitle = "Total lump-sum Special Purpose Fund releases by department, three periods",
+       caption = str_c("From the allotment releases. Top 10 departments by total release across FY 2011–2026. ",
+                       "FY 2026 releases are as of August, so the latest period is partial.")) +
+  theme_spf()
+dtot <- pdp %>% group_by(Dept) %>% summarise(t = sum(Release), .groups = "drop")
+deped_early <- pdp %>% filter(Dept == "DepEd", period == periods[1]) %>% summarise(s = sum(Release)) %>% pull(s)
+```
+
+The concentration barely moves. The Department of National Defense (`r php_b(dtot$t[dtot$Dept=="DND"])`) and the Department of the Interior and Local Government (`r php_b(dtot$t[dtot$Dept=="DILG"])`) lead in every period, together about two-thirds of all releases, driven by uniformed-personnel pensions, the military under DND, the police, fire, and jail services under DILG, plus AFP modernisation at Defence. Both grew into the 2017–2022 period and stayed high. The one real shift is at Education, which took the largest non-uniformed share in 2011–2016, about `r php_b(deped_early)` from the school-building fund, then dropped away as that fund wound down. The full period breakdown by department is below.
+
+```{r tbl-dept}
+rel %>%
+  mutate(period = case_when(FY >= 2011 & FY <= 2016 ~ "2011–2016",
+                            FY >= 2017 & FY <= 2022 ~ "2017–2022",
+                            FY >= 2023 & FY <= 2026 ~ "2023–2026", TRUE ~ NA_character_)) %>%
+  filter(!is.na(period), !is.na(Release)) %>%
+  group_by(Department, period) %>% summarise(Release = sum(Release) / 1e3, .groups = "drop") %>%
+  pivot_wider(names_from = period, values_from = Release, values_fill = 0) %>%
+  mutate(Total = `2011–2016` + `2017–2022` + `2023–2026`) %>%
+  arrange(desc(Total)) %>%
+  dt_table(page = 10, money_cols = c("2011–2016", "2017–2022", "2023–2026", "Total"),
+           caption = "Lump-sum Special Purpose Fund releases by department and period (PHP thousand).")
+```
+
+<p class="kbl-note">Amounts in PHP thousand. FY 2026 releases are as of August, so the 2023–2026 column is partial.</p>
+
+# Why it matters {#why}
+
+The lump-sum Special Purpose Funds are less contested than the Unprogrammed Appropriations, and for most of them that's warranted. Pensions and salary adjustments are obligations the government has to meet, and a lump-sum appropriation is a reasonable way to budget for them when the exact per-agency split isn't known at enactment.
+
+The concern is narrower. Some of these funds, the Contingent and Calamity funds above all, are released well beyond their enacted amount, topped up during the year from savings and other sources at the executive's discretion. The enacted figure, the one Congress debates and votes on, understates what actually flows. And the steady congressional cutting of the whole block, deepest in the same years the Unprogrammed Appropriations were inflated most, is the fiscal counterpart to a shift in control: away from the executive's post-enactment discretion over lump sums, toward a standby fund whose releases Congress has more say in shaping. Neither pool is well-suited to line-by-line scrutiny, which is the reason both are worth watching as the budget moves through the legislature.
+
+# A note on the data {#data-notes}
+
+**Source.** DBM Special Purpose Fund allotment-release annexes and the General Appropriations Act, compiled in `Compiled_-_Special_Purpose_Funds.xlsx`: fund-level NEP and GAA (`SPFs` sheet) and releases by fund and department (`Allotment_Releases`). The compilation excludes the two largest Special Purpose Funds, the Allocation to Local Government Units and Budgetary Support to Government Corporations, leaving the discretionary lump sums. Amounts in the workbook are in thousands of pesos; charts are shown in billions.
+
+**Reading the figures.** "NEP" is the proposed fund, "GAA" the enacted fund, and "Releases" the allotments actually issued during the year. FY 2027 shows the NEP only, since the GAA is not yet enacted. FY 2026 releases are as of August, so any figure that includes 2026 is partial for that year and shouldn't be compared directly with a full year. Releases above the GAA are not an error: these funds can be augmented mid-year from savings, continuing appropriations, and other sources.
+
+<p class="home-link"><a href="index.html">&larr; Back to all reports</a></p>

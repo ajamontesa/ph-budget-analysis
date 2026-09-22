@@ -179,6 +179,9 @@ slides_paths <- c(
 # cluster briefings. Same columns as `agencies`; add a row per fund.
 special_funds <- tibble::tribble(
   ~short, ~name,                          ~unit,                        ~output,              ~status,      ~blurb, ~highlights,
+  "SPF",  "Lump-Sum Special Purpose Funds", "The budget's discretionary lump sums", "special-purpose-funds.html", "published",
+  "The discretionary lump sums in the budget \u2014 pensions, salary adjustments, the calamity and contingent funds \u2014 once the LGU and GOCC transfers are set aside. Congress cuts them in the GAA year after year, deepest (\u20b1237B in 2024) in the same years it inflated the standby Unprogrammed Appropriations. Releases run \u20b13.1T since 2011, mostly uniformed-personnel pensions flowing to defence and interior. Includes fund-level trajectories, the cases where releases beat the ceiling, and sortable fund and department tables.",
+  "\u20b13.1T released FY 2011\u20132026; Pension & Gratuity and MPBF are about four-fifths of it  |  Congress cut the block below the NEP in 15 of 16 years, up to \u20b1237B in 2024  |  Contingent Fund released at 2.26\u00d7 its GAA in 2017; defence and interior take two-thirds",
   "UA",   "Unprogrammed Appropriations",  "The budget's standby fund",  "unprogrammed.html",  "published",
   "The standby fund that releases only if revenue overshoots the program or new loans come in. It ballooned under Marcos, reaching a \u20b1807B enacted fund in 2023, with Congress adding as much as \u20b1449B over the President's proposal before reversing course in 2026. Includes the year-by-year trajectory, the NEP-versus-GAA gap, utilisation rates, and sortable line-item and department breakdowns.",
   "Enacted fund peaked at \u20b1807B in 2023, up from \u20b175B in 2018  |  Congress added \u20b1449B over the NEP in 2024, then cut \u20b199B in 2026  |  Most of it goes unreleased; when it does, DPWH and transport lead"

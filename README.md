@@ -10,9 +10,9 @@ added to the most recent reviews.
 **Live site:** <https://ajamontesa.github.io/ph-budget-analysis/index.html> —
 the home page opens with two whole-of-budget reports, a macro-fiscal backdrop
 and an overall assessment of the FY 2027 NEP, then links to every published
-department report, a **special-funds** review of the Unprogrammed Appropriations,
-and a set of cross-cutting **sectoral / cluster briefings** that follow a theme
-across several departments.
+department report, **special-funds** reviews of the lump-sum Special Purpose Funds
+and the Unprogrammed Appropriations, and a set of cross-cutting **sectoral / cluster
+briefings** that follow a theme across several departments.
 The site is published via GitHub Pages from the `docs/` folder.
 
 ## Repository structure
@@ -23,7 +23,8 @@ budget-analysis/
 │   ├── Compiled_-_NEP-GAA-SAAODB-ByPAPLabelled.xlsx   # source data (one sheet per agency)
 │   ├── Compiled_-_DPWH.xlsx                            # DPWH (separate structure: long-run OSec, by operating unit, and by sub-program/line item)
 │   ├── Compiled_-_NEP-GAA-NoFAR1.xlsx                  # agencies without FAR No.1 (P/A/P NEP-GAA + agency-level SAAODB)
-│   └── Compiled_-_Unprogrammed.xlsx                    # Unprogrammed Appropriations (NEP_UA year totals, prog line items, prog_dept releases)
+│   ├── Compiled_-_Unprogrammed.xlsx                    # Unprogrammed Appropriations (NEP_UA year totals, prog line items, prog_dept releases)
+│   └── Compiled_-_Special_Purpose_Funds.xlsx           # lump-sum Special Purpose Funds (SPFs sheet: NEP/GAA by fund; Allotment_Releases: by fund x dept)
 ├── reports/                       # R Markdown sources (each is fully self-contained)
 │   ├── index.Rmd                  # landing page -> knits to index.html
 │   ├── Macro_Fiscal_Situation.Rmd # macro-fiscal backdrop -> macro-fiscal.html (pulls live data, see below)
@@ -42,7 +43,8 @@ budget-analysis/
 │   ├── NCMF_Budget_Analysis.Rmd
 │   ├── PCW_Budget_Analysis.Rmd
 │   ├── NYC_Budget_Analysis.Rmd
-│   └── Unprogrammed_Appropriations.Rmd # standby-fund review -> unprogrammed.html
+│   ├── Unprogrammed_Appropriations.Rmd # standby-fund review -> unprogrammed.html
+│   └── Special_Purpose_Funds.Rmd       # lump-sum SPF review -> special-purpose-funds.html
 └── docs/                          # GitHub Pages root (published HTML output)
     ├── index.html
     ├── agency-budget-utilization.html  # embed page: frames the agency-level Connect Cloud dashboard
@@ -63,6 +65,7 @@ budget-analysis/
     ├── ncmf.html
     ├── pcw.html
     ├── nyc.html
+    ├── special-purpose-funds.html      # lump-sum Special Purpose Funds review (special fund, after the departments)
     ├── unprogrammed.html               # Unprogrammed Appropriations review (special fund, after the departments)
     ├── slides/                     # briefing decks (standalone HTML, one per agency)
         ├── DAR_OSEC_Budget_Analysis.html
