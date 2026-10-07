@@ -8,8 +8,9 @@ tracing each peso from the Executive's proposal (NEP) through enactment
 added to the most recent reviews.
 
 **Live site:** <https://ajamontesa.github.io/ph-budget-analysis/index.html> —
-the home page opens with two whole-of-budget reports, a macro-fiscal backdrop
-and an overall assessment of the FY 2027 NEP, then links to every published
+the home page opens with three whole-of-budget reports, newest budget stage
+first: an assessment of the House's FY 2027 budget bill, an assessment of the
+President's FY 2027 NEP, and a macro-fiscal backdrop. It then links to every published
 department report, **special-funds** reviews of the lump-sum Special Purpose Funds
 and the Unprogrammed Appropriations, and a set of cross-cutting **sectoral / cluster
 briefings** that follow a theme across several departments.
@@ -29,6 +30,7 @@ budget-analysis/
 │   ├── index.Rmd                  # landing page -> knits to index.html
 │   ├── Macro_Fiscal_Situation.Rmd # macro-fiscal backdrop -> macro-fiscal.html (pulls live data, see below)
 │   ├── NEP_2027_Overall_Assessment.Rmd # whole-of-budget FY 2027 NEP assessment -> nep-2027-assessment.html
+│   ├── HGAB_2027_Assessment.Rmd    # House FY 2027 GAB assessment -> hgab-2027-assessment.html
 │   ├── DAR_OSEC_Budget_Analysis.Rmd
 │   ├── DA_Budget_Analysis.Rmd
 │   ├── DepEd_OSEC_Budget_Analysis.Rmd
@@ -49,8 +51,9 @@ budget-analysis/
     ├── index.html
     ├── agency-budget-utilization.html  # embed page: frames the agency-level Connect Cloud dashboard
     ├── pap-browser.html                # embed page: frames the P/A/P-level Connect Cloud dashboard
-    ├── macro-fiscal.html               # macro & fiscal backdrop report (featured, leads the page)
+    ├── hgab-2027-assessment.html        # House FY 2027 GAB assessment (featured, leads the page)
     ├── nep-2027-assessment.html         # whole-of-budget FY 2027 NEP assessment (featured)
+    ├── macro-fiscal.html               # macro & fiscal backdrop report (featured)
     ├── dar-osec.html
     ├── da-osec.html
     ├── deped-osec.html
@@ -104,11 +107,12 @@ CPI series) live at knit time from the public
 [`PH-Econ-Data`](https://github.com/ajamontesa/PH-Econ-Data) repository, and the
 medium-term fiscal targets (MTFF) are embedded in the Rmd itself. So it re-knits
 from just the `.Rmd` with a network connection, and no macro workbook is
-committed here. It and the FY 2027 NEP overall assessment
-(`nep-2027-assessment.html`) are the two featured top-level reports, placed on
-the landing page by the `features` table in `reports/index.Rmd` (edit or clear
-that table to change them); they render right after the dashboards and before
-the department reports.
+committed here. It, the FY 2027 NEP overall assessment (`nep-2027-assessment.html`), and the
+House FY 2027 GAB assessment (`hgab-2027-assessment.html`) are the three featured
+top-level reports, placed on the landing page by the `features` table in
+`reports/index.Rmd` (edit, reorder, or clear that table to change them). They
+render right after the dashboards and before the department reports, ordered
+newest budget stage first: House bill, then NEP, then the macro-fiscal backdrop.
 
 ## Workflow
 
