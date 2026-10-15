@@ -78,10 +78,10 @@ dashboards <- tibble::tribble(
 # right after the dashboards and before the department reports, in this order.
 # Add a row per top-level report; set `features <- features[0, ]` to hide all.
 features <- tibble::tribble(
-  ~label,                                  ~title,                                                            ~scope,                                                                                                                                                                              ~href,
-  "Whole-of-budget \u00b7 the House bill",  "The FY 2027 House General Appropriations Bill: An Assessment",     "What the House did to the President's proposal: where it added and cut, what's inside the bill, the red flags to watch, and what advocates can push for in the Senate now that the House has approved its version.", "hgab-2027-assessment.html",
-  "Whole-of-budget \u00b7 the proposal",    "The FY 2027 National Expenditure Program: An Overall Assessment", "What the FY 2027 budget proposes: the biggest increases and cuts against 2026, how well it answers the year's crises, the red flags to watch, and what advocates can push to amend in Congress.", "nep-2027-assessment.html",
-  "Whole-of-budget \u00b7 the backdrop",    "The Macroeconomic and Fiscal Situation",                          "How fast the economy is growing, what prices are doing, and how much room the fiscal position leaves the budget. The setting every department and sector report reads against.",       "macro-fiscal.html"
+  ~label,                                  ~title,                                                            ~scope,                                                                                                                                                                              ~href,                          ~deck,
+  "Whole-of-budget \u00b7 the House bill",  "The FY 2027 House General Appropriations Bill: An Assessment",     "What the House did to the President's proposal: where it added and cut, what's inside the bill, the red flags to watch, and what advocates can push for in the Senate now that the House has approved its version.", "hgab-2027-assessment.html", "hgab-2027-assessment-deck.html",
+  "Whole-of-budget \u00b7 the proposal",    "The FY 2027 National Expenditure Program: An Overall Assessment", "What the FY 2027 budget proposes: the biggest increases and cuts against 2026, how well it answers the year's crises, the red flags to watch, and what advocates can push to amend in Congress.", "nep-2027-assessment.html", "",
+  "Whole-of-budget \u00b7 the backdrop",    "The Macroeconomic and Fiscal Situation",                          "How fast the economy is growing, what prices are doing, and how much room the fiscal position leaves the budget. The setting every department and sector report reads against.",       "macro-fiscal.html", ""
 )
 
 # ---- EDIT THIS: one row per agency ---------------------------------------
@@ -273,7 +273,11 @@ body { margin:0; font-family:Arial,Helvetica,"IBM Plex Sans",sans-serif;
 .feature-title { font-size:21px; font-weight:700; line-height:1.25; margin:0 0 8px; color:#12233a; }
 .feature-card:hover .feature-title { color:var(--accent); }
 .feature-scope { font-size:14.5px; color:#333; margin:0 0 12px; line-height:1.55; max-width:80ch; }
-.feature-cta { font-size:14px; font-weight:700; color:var(--accent); }
+.feature-main { display:block; text-decoration:none; color:inherit; }
+.feature-ctarow { display:flex; gap:10px; align-items:baseline; }
+.feature-cta { font-size:14px; font-weight:700; color:var(--accent); text-decoration:none; }
+.feature-cta:hover { text-decoration:underline; }
+.feature-cta-sep { color:var(--muted); font-weight:400; }
 .cluster-list { display:flex; flex-direction:column; gap:14px; }
 .cluster-card { display:flex; gap:20px; align-items:center; justify-content:space-between;
                 background:#fff; border:1px solid var(--rule); border-left:4px solid #6a4a9c;
@@ -349,10 +353,14 @@ if (exists("dashboards") && nrow(dashboards) > 0) {
 
 # ---- Featured top-level reports (backdrop + whole-of-budget) -------------
 if (exists("features") && nrow(features) > 0) {
+  has_deck <- "deck" %in% names(features)
   for (i in seq_len(nrow(features))) {
     f <- features[i, ]
-    cat(sprintf('<a class="feature-card" href="%s"><div class="feature-label">%s</div><div class="feature-title">%s</div><p class="feature-scope">%s</p><span class="feature-cta">Read the analysis &rarr;</span></a>',
-                esc(f$href), esc(f$label), esc(f$title), esc(f$scope)))
+    deck_cta <- ""
+    if (has_deck && !is.na(f$deck) && nzchar(f$deck))
+      deck_cta <- sprintf('<span class="feature-cta-sep">&middot;</span><a class="feature-cta" href="%s">Slide deck &rarr;</a>', esc(f$deck))
+    cat(sprintf('<div class="feature-card"><a class="feature-main" href="%s"><div class="feature-label">%s</div><div class="feature-title">%s</div><p class="feature-scope">%s</p></a><div class="feature-ctarow"><a class="feature-cta" href="%s">Read the analysis &rarr;</a>%s</div></div>',
+                esc(f$href), esc(f$label), esc(f$title), esc(f$scope), esc(f$href), deck_cta))
   }
 }
 
