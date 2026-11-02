@@ -197,19 +197,32 @@ funding to a specific legislative district.
 | DPWH District Engineering Office (DEO) | Appropriations recorded against a named field office | A one-to-one amount for a congressional district or a named lawmaker |
 | PAP or project line, where detailed | The budgeted project classification, sometimes with location detail | Completion, contractor, disbursement, or beneficiary without other records |
 
-## Why the Program Series Begins in FY2018
+## Program Classification: PREXC and the 2014-2017 Crosswalk
 
-The long-run appropriation series reaches back to 1988, but the program and line-item
-series starts with FY2018, because of a change in budget architecture. Beginning with the
-FY2018 budget, the NEP and GAA adopted the Program Expenditure Classification (PREXC),
-supported by changes to the Unified Accounts Code Structure (UACS). PREXC organises an
-agency's operations into programs and sub-programs, with activities and projects recorded
-beneath them, which lets us encode DPWH Programs, Activities and Projects (PAPs) in a
-consistent hierarchy across successive budgets. This is consistency of the reporting
-framework, not a guarantee that each category means the same thing every year. The clearest
-counter-example is in this report: the FY2022 move of Local Program activities into
-Convergence, SIPAG and BIP, which has to be read by project type, not by program name
-alone. (UACS predates 2018 and was modified for PREXC, not introduced then.)
+The program and sub-program series runs from FY2014, but it crosses a change in budget
+architecture at FY2018. Beginning with the FY2018 budget, the NEP and GAA adopted the
+Program Expenditure Classification (PREXC), supported by changes to the Unified Accounts
+Code Structure (UACS). PREXC organises an agency's operations into programs and
+sub-programs, with activities and projects recorded beneath them. Before FY2018 the DPWH
+budget used a Major Final Output (MFO) structure, which does not line up one to one with
+the PREXC programs.
+
+To run Sections 4 and 5 back to 2014, the FY2014-2017 items are mapped onto the eight PREXC
+programs by a crosswalk: road works split into Asset Preservation, Network Development
+(including road upgrading), and the Bridge Program; flood works to Flood Management; the
+MFO 3 access roads to Convergence and Special Support; locally-funded projects to the Local
+Program; and foreign-assisted works distributed by type into the matching programs, since
+PREXC folds foreign assistance into programs rather than holding it as a separate line. The
+harmonized FY2014-2017 program totals reconcile to the operating-unit totals in Section 6
+within about half a percent.
+
+This is consistency of the reporting framework, not a guarantee that each category means the
+same thing every year. The FY2022 move of Local Program activities into Convergence, SIPAG
+and BIP is the clearest break within the PREXC period itself, and it has to be read by
+project type, not by program name alone. The pre-2018 program labels are ours: we matched
+the MFO structure onto the PREXC programs as closely as the two allow. Read them as a
+defensible reconstruction for continuity, not as identical PREXC accounting. (UACS predates 2018 and
+was modified for PREXC, not introduced then.)
 
 ## Budget Stages and Scope
 
@@ -219,7 +232,10 @@ Executive also issued a revised NEP (an errata), and for FY2027 the latest stage
 the House-stage budget (HB 10858, as approved on second reading), which is not an enacted
 GAA. The FY2019 and FY2025 GAA figures are post-veto. The headline long-run series is New
 plus Automatic Appropriations, while the program and operating-unit sections use New
-Appropriations only, so those totals run slightly below the headline. A recorded operating
+Appropriations only, so those totals run slightly below the headline. The same fiscal
+year can therefore carry two figures: the FY2019 proposal is ₱555.7B on the headline
+basis but ₱544.5B in New Appropriations, and the FY2026 enacted budget is ₱530.9B
+versus ₱529.6B. The gap is the automatic appropriations, and it is not a discrepancy. A recorded operating
 unit is not the same as where a project is built or the legislative district a lawmaker
 represents. And the difference between a proposal and the enacted law, the net NEP-to-GAA
 change, is not by itself a congressional addition: where a veto or a revised NEP sits
@@ -418,6 +434,7 @@ is what they do and do not support.
 
 | Period | Observable pattern in this report | How to read it |
 |---|---|---|
+| **FY2014–2016** | The district-oriented Local Program already climbing and the enacted budget already running above the proposal, with road and flood works dominant (pre-PREXC labels matched to the PREXC programs as best we could) | The baseline the later shifts build on, not yet remarkable on its own |
 | **FY2017–2019** | Large NEP-to-GAA adjustments, and the extraordinary FY2019 veto | An early sign that budget-stage changes deserved item-level review, not proof of a scheme |
 | **FY2020–2022** | Recurring DEO-coded increases; the Local Program gives way to Convergence, SIPAG and BIP | Administrative reallocation persists, and a comparability break appears |
 | **FY2023–2025** | Convergence peaks; large district-office concentrations; the 2025 flood-control scandal breaks | The patterns were already large before the scandal exposed them |
@@ -426,22 +443,68 @@ is what they do and do not support.
 
 # The DPWH Budget by Program
 
-DPWH organises its budget into eight **programs**. Consistent program labelling
-only begins with the **2018 budget**, so this section runs 2018-2026. These amounts are reported
-in **pesos** and are rescaled to **PHP billions** (`/ 1e9`). All
-figures are **New Appropriations** (the program totals reconcile to the
-New-Appropriations column used in Section 3).
+DPWH organises its budget into eight **programs**. PREXC program labelling begins
+with the **2018 budget**; the **2014-2017** figures here are matched from the
+earlier MFO-based structure onto the PREXC programs, as closely as we could, by a documented
+crosswalk (see the data note in Section 2),
+so this section now runs **2014-2026**. Amounts are in pesos, rescaled to **PHP
+billions**. All figures are **New Appropriations**, and the harmonized program totals
+reconcile to the operating-unit totals in Section 6 within about half a percent.
 
 ```{r load-byprogram}
-byprogram <- read_xlsx(data_path, sheet = "NewAppro_ByProgram") %>%
-  mutate(
-    Vetoed  = replace_na(as.numeric(Vetoed), 0),
-    Program = factor(Program, levels = dpwh_programs),
-    NEP_B   = NEP / 1e9,
-    GAA_B   = GAA / 1e9,                 # final (post-veto) GAA
-    Veto_B  = Vetoed / 1e9,
-    Realign = (GAA - NEP) / 1e9          # NEP -> enacted change (negative = cut)
-  )
+# 2018-2027 program totals: the compiled PREXC program breakdown.
+byprogram_18 <- read_xlsx(data_path, sheet = "NewAppro_ByProgram") %>%
+  transmute(FY = as.integer(FY), Program, NEP, GAA,
+            Vetoed = replace_na(as.numeric(Vetoed), 0))
+
+# 2014-2017 program totals, harmonized from the pre-PREXC (MFO-based) encoding.
+# The 2014-2017 budget used Major Final Outputs, not PREXC programs, so each leaf
+# item is mapped to one of the eight PREXC programs by the crosswalk below and
+# summed. Road works split into Asset Preservation / Network Development / Bridge,
+# flood works to Flood Management, MFO 3 access roads to Convergence, locally-funded
+# projects to the Local Program, and foreign-assisted works are distributed by type.
+# See the data note in Section 2. GenAdmin and Support to Operations carry over.
+prexc_xwalk_1417 <- function(L1, L2, L3) dplyr::case_when(
+  str_detect(L2, "Assets Preservation") ~ "Asset Preservation Program",
+  str_detect(L2, "Network Development") | str_detect(L2, "Road Upgrading") ~ "Network Development Program",
+  str_detect(L1, "MFO 1") & str_detect(L2, "Bridges") ~ "Bridge Program",
+  str_detect(L1, "MFO 2") ~ "Flood Management Program",
+  str_detect(L1, "MFO 3") ~ "Convergence and Special Support Program",
+  str_detect(L1, "Locally-Funded") ~ "Local Program",
+  str_detect(L1, "Foreign-Assisted") & str_detect(L2, "Flood") ~ "Flood Management Program",
+  str_detect(L1, "Foreign-Assisted") & str_detect(L3, "Bridge") ~ "Bridge Program",
+  str_detect(L1, "Foreign-Assisted") ~ "Network Development Program",
+  TRUE ~ NA_character_)
+
+.raw1417 <- read_xlsx(data_path, sheet = "2014-2017", col_names = FALSE)
+.h <- as.character(unlist(.raw1417[1, ])); .h[1:4] <- c("L0", "L1", "L2", "L3")
+.h[is.na(.h)] <- paste0("x", which(is.na(.h))); names(.raw1417) <- make.unique(.h)
+.pre1417 <- .raw1417[-1, ] %>% mutate(across(c(L0, L1, L2, L3), as.character))
+.long1417 <- function(df) df %>%
+  pivot_longer(matches("^(NEP|GAA_)[0-9]{4}_Amount$"), names_to = "key", values_to = "amt") %>%
+  mutate(FY = as.integer(str_extract(key, "[0-9]{4}")),
+         stage = if_else(str_detect(key, "^NEP"), "NEP", "GAA"),
+         amt = suppressWarnings(as.numeric(amt))) %>%
+  group_by(Program, FY, stage) %>% summarise(amt = sum(amt, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = stage, values_from = amt)
+# Operations programs from the leaf (L3) rows
+.d1417 <- .pre1417; .d1417$L3o <- .d1417$L3
+.d1417 <- .d1417 %>% fill(L0, L1, L2, .direction = "down")
+.ops1417 <- .d1417 %>% filter(!is.na(L3o)) %>%
+  mutate(Program = prexc_xwalk_1417(L1, L2, L3)) %>% filter(!is.na(Program)) %>% .long1417()
+# GenAdmin + Support to Operations from their L0 total rows (before fill)
+.oh1417 <- .pre1417 %>%
+  filter(L0 %in% c("GENERAL ADMINISTRATION AND SUPPORT", "SUPPORT TO OPERATIONS")) %>%
+  mutate(Program = recode(L0,
+    "GENERAL ADMINISTRATION AND SUPPORT" = "General Administration and Support",
+    "SUPPORT TO OPERATIONS" = "Support to Operations")) %>% .long1417()
+byprogram_14 <- bind_rows(.ops1417, .oh1417) %>% mutate(Vetoed = 0)
+
+byprogram <- bind_rows(byprogram_14, byprogram_18) %>%
+  mutate(Program = factor(Program, levels = dpwh_programs),
+         NEP_B = NEP / 1e9, GAA_B = GAA / 1e9,  # GAA is final (post-veto)
+         Veto_B = Vetoed / 1e9, Realign = (GAA - NEP) / 1e9) %>%
+  arrange(FY, Program)
 
 # Substantive programs (drops the two overhead lines) for the NEP-vs-GAA panels
 substantive <- setdiff(dpwh_programs,
@@ -451,19 +514,21 @@ substantive <- setdiff(dpwh_programs,
 ## Composition Over Time
 
 ```{r plot-composition-abs}
-ggplot(byprogram, aes(x = FY, y = GAA_B, fill = Program)) +
+ggplot(byprogram %>% filter(FY <= 2026), aes(x = FY, y = GAA_B, fill = Program)) +
   geom_col(color = "black", linewidth = 0.2, width = 0.82) +
-  geom_vline(xintercept = 2022.5, linetype = "dashed", alpha = 0.45) +
-  annotate("text", x = 2020,   y = Inf, label = "Duterte",
+  geom_vline(xintercept = c(2016.5, 2022.5), linetype = "dashed", alpha = 0.45) +
+  annotate("text", x = 2015,   y = Inf, label = "Aquino",
+           vjust = 1.4, size = 2.6, fontface = "bold") +
+  annotate("text", x = 2019.5, y = Inf, label = "Duterte",
            vjust = 1.4, size = 2.6, fontface = "bold") +
   annotate("text", x = 2024.5, y = Inf, label = "Marcos Jr.",
            vjust = 1.4, size = 2.6, fontface = "bold") +
-  scale_x_continuous(breaks = 2018:2026) +
+  scale_x_continuous(breaks = seq(2014, 2026, 2)) +
   scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.07))) +
   scale_fill_manual(values = program_colors, labels = function(x) str_wrap(x, 26)) +
   labs(x = NULL, y = "PHP billions", fill = NULL,
        title = "DPWH Budget Composition by Program (GAA)",
-       caption = "**Data Sources:** GAA documents, 2018-2026.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+       caption = "**Data Sources:** GAA documents, 2014-2026 (2014-2017 harmonized from the pre-PREXC MFO encoding; see Section 2).<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
   guides(fill = guide_legend(ncol = 2)) +
   theme_minimal() +
   theme(legend.position = "bottom", legend.text = element_text(size = 6.5),
@@ -475,20 +540,22 @@ ggplot(byprogram, aes(x = FY, y = GAA_B, fill = Program)) +
 ```
 
 ```{r plot-composition-share}
-ggplot(byprogram, aes(x = FY, y = GAA_B, fill = Program)) +
+ggplot(byprogram %>% filter(FY <= 2026), aes(x = FY, y = GAA_B, fill = Program)) +
   geom_col(color = "black", linewidth = 0.2, width = 0.82,
            position = position_fill()) +
-  geom_vline(xintercept = 2022.5, linetype = "dashed", alpha = 0.45) +
-  annotate("text", x = 2020,   y = Inf, label = "Duterte",
+  geom_vline(xintercept = c(2016.5, 2022.5), linetype = "dashed", alpha = 0.45) +
+  annotate("text", x = 2015,   y = Inf, label = "Aquino",
+           vjust = 1.4, size = 2.6, fontface = "bold") +
+  annotate("text", x = 2019.5, y = Inf, label = "Duterte",
            vjust = 1.4, size = 2.6, fontface = "bold") +
   annotate("text", x = 2024.5, y = Inf, label = "Marcos Jr.",
            vjust = 1.4, size = 2.6, fontface = "bold") +
-  scale_x_continuous(breaks = 2018:2026) +
+  scale_x_continuous(breaks = seq(2014, 2026, 2)) +
   scale_y_continuous(labels = scales::percent, expand = expansion(mult = c(0, 0.07))) +
   scale_fill_manual(values = program_colors, labels = function(x) str_wrap(x, 26)) +
   labs(x = NULL, y = "Share of DPWH GAA", fill = NULL,
        title = "DPWH Budget Composition by Program (GAA, 100% stacked)",
-       caption = "**Data Sources:** GAA documents, 2018-2026.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+       caption = "**Data Sources:** GAA documents, 2014-2026 (2014-2017 harmonized from the pre-PREXC MFO encoding; see Section 2).<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
   guides(fill = guide_legend(ncol = 2)) +
   theme_minimal() +
   theme(legend.position = "bottom", legend.text = element_text(size = 6.5),
@@ -499,20 +566,22 @@ ggplot(byprogram, aes(x = FY, y = GAA_B, fill = Program)) +
         plot.caption = element_markdown(size = 6))
 ```
 
-The composition shift is stark: the **Convergence and Special Support Program**
-(apricot/salmon) swells under the current administration, while the **Network
-Development** and **Flood Management** shares contract - most dramatically in the
-**2026 GAA**, where Flood Management is cut to a sliver. The dashed line marks the
-Duterte-to-Marcos transition (FY2023 is the first budget proposed by the current
-administration).
+The composition moves across three administrations. Through the Aquino budgets
+(2014-2016), Network Development and Flood Management dominated Operations and the
+local and convergence share was small. The **Convergence and Special Support Program**
+(apricot/salmon) then swells under Marcos, while the **Network Development** and
+**Flood Management** shares contract, most sharply in the **2026 GAA**, where Flood
+Management is cut to a sliver. The dashed lines mark the Aquino-to-Duterte (FY2017) and
+Duterte-to-Marcos (FY2023) transitions.
 
 ```{r table-composition}
 byprogram %>%
+  filter(FY <= 2026) %>%
   transmute(FY, Program, GAA_B) %>%
   pivot_wider(names_from = FY, values_from = GAA_B) %>%
   arrange(factor(Program, levels = dpwh_programs)) %>%
   mutate(across(-Program, ~comma(.x, accuracy = 0.1))) %>%
-  kbl(align = c("l", rep("r", 9)),
+  kbl(align = c("l", rep("r", 13)),
       caption = "GAA by Program, PHP billions") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
                 full_width = FALSE, font_size = 12)
@@ -542,12 +611,12 @@ ggplot(nepvgaa) +
   geom_text(data = nepvgaa_var, aes(x = FY, y = ypos, label = lab), size = 1.9) +
   facet_wrap(~Program, scales = "free_y", ncol = 3,
              labeller = label_wrap_gen(24)) +
-  scale_x_continuous(breaks = c(2018, 2020, 2022, 2024, 2026)) +
+  scale_x_continuous(breaks = c(2014, 2018, 2022, 2026)) +
   scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.13))) +
   scale_fill_manual(values = c("NEP" = "#ffa6b0", "GAA" = "#3994fc")) +
   labs(x = NULL, y = "PHP billions", fill = NULL,
        title = "DPWH by Program: NEP vs GAA, with Net Realignments (GAA - NEP)",
-       caption = "**Data Sources:** NEP and GAA documents, 2018-2026. Labels show the net change from NEP to enacted GAA (PHP B).<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+       caption = "**Data Sources:** NEP and GAA documents, 2014-2026 (2014-2017 harmonized, see Section 2). Labels show the net change from NEP to enacted GAA (PHP B).<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
   theme_bw() +
   theme(legend.position = "bottom", legend.text = element_text(size = 7),
         panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
@@ -595,7 +664,7 @@ byprogram %>%
   pivot_wider(names_from = FY, values_from = Realign) %>%
   arrange(factor(Program, levels = dpwh_programs)) %>%
   mutate(across(-Program, ~comma(.x, accuracy = 0.1))) %>%
-  kbl(align = c("l", rep("r", 9)),
+  kbl(align = c("l", rep("r", 13)),
       caption = "Net Realignment (GAA - NEP) by Program, PHP billions") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
                 full_width = FALSE, font_size = 12)
@@ -607,10 +676,13 @@ The program totals in Section 4 hide a great deal. Beneath each program sit
 **sub-programs** and, below those, the individual **line items** - "Preventive
 Maintenance – Primary Roads," "SIPAG – Access Roads... leading to Major/Strategic
 Public Buildings," and dozens more - that are where budgeting actually happens.
-This section works from a granular, multi-year encoding of those items (FY 2018
-onward) to ask three questions the aggregates cannot answer: **where has emphasis
-shifted between programs, what does Congress add to and cut at the most granular
-level, and which line items are the biggest - and has that changed?**
+This section works from a granular, multi-year encoding of those items to ask three
+questions the aggregates cannot answer: **where has emphasis shifted between programs,
+what does Congress add to and cut at the most granular level, and which line items are
+the biggest - and has that changed?** The program-group view runs from FY2014, with the
+pre-2018 items harmonized to PREXC programs by the Section 2 crosswalk. The item-level
+views stay within the PREXC era (FY2018 onward), because individual line-item names are
+not reconciled across the FY2018 classification break.
 
 For readability, line items that the budget splits only by road class - the
 separate *Primary Roads*, *Secondary Roads* and *Tertiary Roads* versions of
@@ -634,11 +706,18 @@ parse_granular <- function(sheet, years) {
       NEP = suppressWarnings(as.numeric(.data[[nc]])),
       GAA = if (gc %in% names(leaf)) suppressWarnings(as.numeric(.data[[gc]])) else NA_real_)
   }) %>%
-    mutate(Program = if_else(ProgramGroup %in% c("Convergence and Special Support Program", "Local Program"),
-                             ProgramGroup, SubProg),
+    mutate(Program = dplyr::case_when(
+             str_detect(ProgramGroup, "MFO |Locally-Funded|Foreign-Assisted") ~ prexc_xwalk_1417(ProgramGroup, SubProg, Item),
+             ProgramGroup %in% c("Convergence and Special Support Program", "Local Program") ~ ProgramGroup,
+             TRUE ~ SubProg),
            NEP_B = NEP / 1e9, GAA_B = GAA / 1e9, Add_B = GAA_B - NEP_B)
 }
-gran <- parse_granular("2018-2027", 2018:2027)
+# PREXC granular (2018-2027) plus the pre-PREXC MFO encoding (2014-2017), harmonized to
+# PREXC programs by the same crosswalk used in Section 4. The item *names* are not
+# reconciled across the FY2018 break, so the item-level views below stay within the PREXC
+# era; the program-group series (Local vs Convergence) extends to 2014.
+gran <- bind_rows(parse_granular("2014-2017", 2014:2017),
+                  parse_granular("2018-2027", 2018:2027))
 program_colors_short <- c("Asset Preservation" = "#3994fc", "Network Development" = "#6fcfd6",
                           "Bridge" = "#8fd9a8", "Flood Management" = "#ffe27a",
                           "Convergence & Special Support" = "#ffa6b0", "Local" = "#ffcf8b")
@@ -764,35 +843,36 @@ line. In **FY2022 the two swapped places** - Local collapsed and Convergence
 absorbed its role, then grew far larger.
 
 ```{r plot-local-convergence, fig.height=4.2}
-lc <- gran %>%
-  filter(ProgramGroup %in% c("Convergence and Special Support Program", "Local Program")) %>%
-  group_by(ProgramGroup, FY) %>%
-  summarise(GAA = sum(GAA_B, na.rm = TRUE), NEP = sum(NEP_B, na.rm = TRUE), .groups = "drop") %>%
-  mutate(Enacted = if_else(FY <= 2026, GAA, NA_real_),
-         Group = recode(ProgramGroup,
-                        "Convergence and Special Support Program" = "Convergence & Special Support",
-                        "Local Program" = "Local Program"))
+lc <- byprogram %>%
+  filter(Program %in% c("Convergence and Special Support Program", "Local Program"), FY <= 2026) %>%
+  transmute(FY, Program, Enacted = GAA_B,
+            Group = recode(Program,
+                           "Convergence and Special Support Program" = "Convergence & Special Support",
+                           "Local Program" = "Local Program"))
 ggplot(lc, aes(x = FY, y = Enacted, colour = Group, group = Group)) +
   geom_line(linewidth = 1.1) + geom_point(size = 2.2) +
   annotate("rect", xmin = 2021.5, xmax = 2022.5, ymin = -Inf, ymax = Inf, alpha = 0.08, fill = "red") +
   annotate("text", x = 2022, y = max(lc$Enacted, na.rm = TRUE) * 0.55,
            label = "FY2022:\nroles swap", size = 2.9, fontface = "bold", colour = "grey30") +
-  scale_x_continuous(breaks = 2018:2026) +
+  scale_x_continuous(breaks = seq(2014, 2026, 2)) +
   scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.06))) +
   scale_colour_manual(values = c("Convergence & Special Support" = "#b8336a", "Local Program" = "#3994fc")) +
   labs(x = NULL, y = "Enacted GAA (PHP billions)", colour = NULL,
        title = "The Local Program gives way to Convergence & Special Support",
-       subtitle = "Enacted new appropriations by program group, FY2018-2026",
-       caption = "**Data:** granular program encoding, operations items only.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+       subtitle = "Enacted new appropriations by program group, FY2014-2026 (2014-2017 harmonized)",
+       caption = "**Data:** program totals (NewAppro_ByProgram, New Appropriations); 2014-2017 harmonized.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
   theme_bw() +
   theme(legend.position = "top", panel.grid.minor = element_blank(),
         plot.title = element_text(face = "bold", size = 13),
         plot.subtitle = element_text(size = 9), plot.caption = element_markdown(size = 6))
 ```
 
-Before the swap, the Local Program ran at **₱119-281B** while Convergence sat at
-**₱30-62B**. In FY2022 the Local Program fell to **₱15B** and Convergence leapt to
-**₱353B**; it peaked at **₱504B in FY2025** before the FY2026 flood-driven cut
+Before the swap, the Local Program climbed steadily, from about **₱24B in 2014** to
+**₱281B in 2021**, while Convergence sat at **₱16-62B**. That long pre-2018 climb is
+the point: the district-oriented local program was already growing years before the
+scandal. (The 2014-2017 split between Local and Convergence is our best match of the older
+structure to the PREXC programs, so read those earlier years as indicative.) In FY2022 the Local Program fell to **₱15B** and Convergence leapt to
+**₱353B**; it peaked at **₱486B in FY2025** before the FY2026 flood-driven cut
 brought it to **₱240B**. Convergence is not a single purpose but a **basket** - 
 it houses the **SIPAG** and **BIP** sub-programs, whose items range from access
 roads and multi-purpose buildings to, notably, **flood-mitigation structures**.
@@ -811,7 +891,7 @@ insertable items**.
 
 ```{r plot-item-addcut, fig.height=5.6}
 item_add <- gran %>%
-  filter(FY <= 2025) %>%
+  filter(FY >= 2018, FY <= 2025) %>%
   group_by(Item, Program) %>%
   summarise(Add = sum(Add_B, na.rm = TRUE), .groups = "drop")
 addcut <- bind_rows(
@@ -977,23 +1057,71 @@ network toward a fast-expanding, district-oriented "convergence" portfolio.
 
 
 
-## Foreign-Assisted Projects: A Data Gap
+## Foreign-Assisted Projects: Proposed Large, Enacted Small
 
-The program figures above pool projects with different financing arrangements. Under the
-PREXC/UACS structure, foreign-assisted projects (FAPs) can in principle be identified
-separately from locally funded projects, and the two can differ in scale, planning horizon,
-procurement, disbursement schedule, and oversight. This report does not yet separate them.
-The current encoding does not carry a reliable FAP identifier, so a foreign-assisted versus
-locally funded breakdown would mean returning to the source budget schedules and the
-project-level financing fields. That is the next data extension.
+The program figures pool projects with different financing arrangements. The PREXC encoding
+tags foreign-assisted projects (FAPs) separately in the project line, so they can be pulled
+out; for 2014-2017 the pre-PREXC sheet carries an aggregate foreign-assisted total. FAPs are
+a small slice of DPWH operations, between about 1 and 4 percent of enacted new
+appropriations, but they move through the budget very differently from the district-oriented
+items, and the contrast is sharp.
 
-It matters for the argument here. The district-oriented items that dominate this narrative
-are mostly locally funded, and the externally assisted portfolio, which tends to be larger,
-multi-year projects, may sit on a different budgetary track, more stable between proposal
-and enactment. When the data support it, FAP and locally funded amounts should be shown as
-a cross-cutting classification within the same appropriations, not as a separate pot added
-to program totals, and annual appropriation should not be read as total project cost or
-loan disbursement.
+```{r plot-fap, fig.height=4.4}
+.fap_px <- read_xlsx(data_path, sheet = "PREXC-2018-2027") %>%
+  filter(str_detect(PAP, "^Foreign-Assisted Project")) %>%
+  select(matches("^(NEP|GAA|HGAB)_[0-9]{4}_EXP_TOTAL$")) %>%
+  pivot_longer(everything(), names_to = "key", values_to = "amt") %>%
+  mutate(FY = as.integer(str_extract(key, "[0-9]{4}")),
+         stage = str_extract(key, "^(NEP|GAA|HGAB)"), amt = as.numeric(amt)) %>%
+  group_by(FY, stage) %>% summarise(amt = sum(amt, na.rm = TRUE) / 1e9, .groups = "drop")
+.fap_14 <- .pre1417 %>% filter(L1 == "Foreign-Assisted Projects") %>%
+  pivot_longer(matches("^(NEP|GAA_)[0-9]{4}_Amount$"), names_to = "key", values_to = "amt") %>%
+  mutate(FY = as.integer(str_extract(key, "[0-9]{4}")),
+         stage = if_else(str_detect(key, "^NEP"), "NEP", "GAA"),
+         amt = suppressWarnings(as.numeric(amt))) %>%
+  group_by(FY, stage) %>% summarise(amt = sum(amt, na.rm = TRUE) / 1e9, .groups = "drop")
+fap <- bind_rows(.fap_14, .fap_px) %>%
+  pivot_wider(names_from = stage, values_from = amt) %>%
+  mutate(Enacted = if_else(FY == 2027, HGAB, GAA))
+fap_long <- fap %>%
+  transmute(FY, `NEP (proposed)` = NEP, `Enacted (GAA / House)` = Enacted) %>%
+  pivot_longer(-FY, names_to = "stage", values_to = "amt") %>%
+  mutate(stage = factor(stage, levels = c("NEP (proposed)", "Enacted (GAA / House)"))) %>%
+  filter(!is.na(amt))
+ggplot(fap_long, aes(factor(FY), amt, fill = stage)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.74, color = "black", linewidth = 0.2) +
+  geom_text(data = fap %>% filter(!is.na(NEP), !is.na(Enacted)) %>%
+              transmute(FY, net = Enacted - NEP, ypos = pmax(NEP, Enacted, na.rm = TRUE)),
+            aes(x = factor(FY), y = ypos + 3.5, label = sprintf("%+.0f", net)),
+            inherit.aes = FALSE, size = 2.5, fontface = "bold", colour = "grey30") +
+  scale_fill_manual(values = c("NEP (proposed)" = "#ffa6b0", "Enacted (GAA / House)" = "#3994fc")) +
+  scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.05))) +
+  labs(x = NULL, y = "PHP billions", fill = NULL,
+       title = "Foreign-Assisted Projects: Proposed Large, Enacted Small",
+       subtitle = "Proposed (NEP) vs enacted (GAA; House stage for FY2027); labels show enacted minus proposed (PHP B)",
+       caption = "**Data:** PREXC PAP encoding, items tagged Foreign-Assisted Project (2018-2027), and the aggregate FAP line (2014-2017). New Appropriations; FY2019 and FY2025 GAA post-veto.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_minimal() +
+  theme(legend.position = "bottom", panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
+        plot.title = element_text(face = "bold", size = 13), plot.subtitle = element_text(size = 8.5),
+        plot.caption = element_markdown(size = 6))
+```
+
+The pattern runs the opposite way to the district items. The Executive proposes FAPs large,
+around ₱70-100B a year since 2021, but Congress enacts them small. FY2024 fell from a
+₱70.7B proposal to almost nothing in New Appropriations, and across FY2018-2026 the NEP-to-GAA
+change for foreign-assisted projects averaged about a **68 percent reduction**, while the
+locally-funded district items were raised, not cut. So the budget process moves money out of
+the large, externally-assisted, nationally-planned projects and toward district-scale works,
+the same shift the operating-unit and line-item sections show from other angles. The
+foreign-assisted projects sit mostly in the **Flood Management**, **Network Development**, and
+**Bridge** programs.
+
+Three cautions. FAPs are often part-funded by loan proceeds, which are recorded outside New
+Appropriations, so some of the NEP-to-GAA reduction reflects financing structure rather than
+a straight cut; the figures here are New Appropriations, not loan disbursements or total
+project cost, and a multi-year project's annual appropriation is not its full cost. FAP is a
+cross-cutting financing class inside the programs above, not a separate pot to add to program
+totals. And the FY2019 and FY2025 enacted figures are post-veto.
 
 # New Appropriations by Operating Unit
 
@@ -1376,6 +1504,15 @@ lesson is simple: in a reshuffling year, the gross absolute change in office-lev
 appropriations is several times the headline net, and only the gross shows it. (Offsetting
 office gains and cuts do not by themselves prove money was transferred from one office to
 another; they are changes in where appropriations are recorded.)
+
+It helps to think of this the way fractal geometry thinks about the length of a coastline:
+the answer depends on the size of the ruler. Measure the DPWH's change between proposal and
+enactment at the department total and the net looks small. Measure it by program and more
+movement appears; by sub-program, by operating unit, and finally by individual project, the
+measured change keeps rising, because increases and cuts that cancelled at the coarse level
+stop cancelling once each is visible on its own. The net at the top is a floor, not the whole
+figure. The gross movement across district offices above is one rung down that ladder, and
+the project level, which this report does not yet reach, would show more again.
 
 ## The Largest District Engineering Offices in Each Congress
 
@@ -2292,7 +2429,7 @@ House-stage amount (HB 10858, as approved on second reading), not a final approp
 ## FY 2027 in Context: Comparison with FY 2026
 
 At **₱642.6B**, the FY 2027 proposal sits between the two FY 2026 figures. It is
-about **₱113B _above_** the ₱529.6B that was finally enacted for 2026 - a budget
+about **₱113B _above_** the ₱529.6B in New Appropriations finally enacted for 2026 - a budget
 slashed by the roughly ₱350B flood-control cut - but about **₱237B _below_** the
 ₱880B the Executive had originally proposed for 2026. In other words, the
 Department is proposing to spend more than the shrunken 2026 law allows, but well
