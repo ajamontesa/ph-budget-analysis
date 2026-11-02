@@ -1,6 +1,6 @@
 ---
 title: "DPWH Budget Analysis"
-subtitle: "Office of the Secretary — Long-Run Appropriations"
+subtitle: "Office of the Secretary - Long-Run Appropriations"
 author: "AJ Montesa / People's Budget Coalition"
 date: "`r format(Sys.Date(), '%d %B %Y')`"
 output:
@@ -100,12 +100,67 @@ congress_first_fy <- as.Date(c("1988-01-01", "1993-01-01", "1996-01-01", "1999-0
                                "2026-01-01"))
 ```
 
-# Overview
+# Executive Summary: Warning Signs Before the Scandal
+
+The 2025 flood-control scandal changed how the public reads the DPWH budget. It did not
+create the budgetary warning signs. The appropriation records show that the conditions
+that warranted a closer look appeared years before the scandal broke, from the middle of
+the Duterte administration onward. This report reconstructs what a careful reader of the
+NEP and GAA could already have seen, and then asks whether the FY 2027 budget departs from
+that history or repeats it.
+
+Three patterns recur across the period.
+
+The first is large and recurrent change between what the Executive proposed and what
+Congress enacted, concentrated in district engineering offices. In FY2019 the distance
+between the proposal, the legislated bill, and the final GAA ran to tens of billions, and
+the ₱95.4B presidential veto that followed showed how much the budget could shift between
+stages. Across FY2017-2026 the district offices were adjusted every year, and in several
+years the gross reshuffling among them was several times the net change the department
+totals report.
+
+The second is a classification break in FY2022. District-type local roads, multipurpose
+buildings, and flood-control works that had sat in the Local Program moved into the
+Convergence and Special Support Program, under the SIPAG and BIP labels. The program names
+changed faster than the works did, so a comparison by program title understates how long
+these activities have been funded.
+
+The third is geographic concentration. The home districts of most presidents, Speakers,
+and appropriations chairs were funded more generously while those officials held power,
+though with clear exceptions. This is an association, not a finding of misconduct, and it
+needs project-level evidence to carry more weight than that.
+
+The scandal's budgetary echo is FY2026. Flood Management fell from about ₱251B proposed to
+₱4.8B enacted, but most of that reduction was the Executive's own revised NEP, not a
+congressional cut, and the flood-control total across all programs should be checked before
+the reduction is read as a complete withdrawal of flood-control funding.
+
+FY2027 is the test. At the House stage (HB 10858, as approved on second reading), the bill makes the
+same shift from the Central Office to the districts that the enacted budgets have made every
+year, lifting the district share of the department from 20% to 28%. It is not a final
+appropriation, and on the evidence here it reproduces the earlier pattern rather than
+breaking from it.
+
+What this establishes, and what it does not: the budget record can show concentrations,
+budget-stage anomalies, and label changes that deserved examination sooner than 2025. It
+cannot, on its own, show that any earlier appropriation funded a ghost project, a kickback,
+or a political favour. Those are separate questions that need audit, procurement, and
+project-level records. A retrospectively recognisable red flag is a reason to demand
+transparency, not a verdict of corruption.
+
+A note on the figures. Unless stated otherwise, amounts are New Appropriations for the DPWH
+Office of the Secretary, by operating unit, in nominal pesos. The long-run series in the
+next section also includes Automatic Appropriations, so its totals run slightly higher, and
+the share-of-national-budget figure uses that wider base. FY2019 and FY2025 GAA figures are
+post-veto. FY2027 figures are the House second-reading stage, not an enacted GAA. Every
+chart states its basis.
+
+# Overview, Data, and Interpretation
 
 This first section profiles the long-run budget of the **DPWH Office of the
 Secretary**: a (still incomplete) time series of the
 **NEP**, **GAA**, and **Actual Obligations** running back to 1988. Three views
-are shown — the **nominal** trend, the department's **share of the national
+are shown - the **nominal** trend, the department's **share of the national
 budget**, and the **real (inflation-adjusted)** trend in constant 2018 prices.
 
 All figures throughout this document are drawn from the National Expenditure
@@ -121,6 +176,54 @@ A few conventions:
   for the share of the national budget.
 - Points mark **years with observed data**; the connecting line is interpolated,
   so visible gaps flag where encoding is still pending.
+
+## How to Read the Operating-Unit Geography
+
+The budget assigns appropriations to DPWH **operating units**: the Central Office, the
+Regional Offices, and the District Engineering Offices (DEOs). These are administrative
+budget-recording units. They are not the legislative districts represented in Congress. A
+DEO's name or service area can overlap with an electoral constituency, but the two do not
+correspond one to one, and money recorded under the Central Office may fund works built far
+outside Metro Manila. So the operating-unit analysis in this report is a distribution of
+appropriations by recorded operating unit, not a full accounting of where infrastructure is
+built or a direct measure of any legislator's influence. The political-geography
+comparisons later are screening indicators for project-level investigation, not proof of
+funding to a specific legislative district.
+
+| What the data identify | What they can show | What they cannot establish on their own |
+|---|---|---|
+| DPWH Central Office | Appropriations recorded against a central unit | The physical location of the funded works |
+| DPWH Regional Office | Appropriations assigned to a regional unit | A full province-by-province distribution |
+| DPWH District Engineering Office (DEO) | Appropriations recorded against a named field office | A one-to-one amount for a congressional district or a named lawmaker |
+| PAP or project line, where detailed | The budgeted project classification, sometimes with location detail | Completion, contractor, disbursement, or beneficiary without other records |
+
+## Why the Program Series Begins in FY2018
+
+The long-run appropriation series reaches back to 1988, but the program and line-item
+series starts with FY2018, because of a change in budget architecture. Beginning with the
+FY2018 budget, the NEP and GAA adopted the Program Expenditure Classification (PREXC),
+supported by changes to the Unified Accounts Code Structure (UACS). PREXC organises an
+agency's operations into programs and sub-programs, with activities and projects recorded
+beneath them, which lets us encode DPWH Programs, Activities and Projects (PAPs) in a
+consistent hierarchy across successive budgets. This is consistency of the reporting
+framework, not a guarantee that each category means the same thing every year. The clearest
+counter-example is in this report: the FY2022 move of Local Program activities into
+Convergence, SIPAG and BIP, which has to be read by project type, not by program name
+alone. (UACS predates 2018 and was modified for PREXC, not introduced then.)
+
+## Budget Stages and Scope
+
+Four distinctions run through the report, and the figures are labelled against them. The
+**NEP** is the Executive's proposal and the **GAA** is the enacted law; for FY2026 the
+Executive also issued a revised NEP (an errata), and for FY2027 the latest stage shown is
+the House-stage budget (HB 10858, as approved on second reading), which is not an enacted
+GAA. The FY2019 and FY2025 GAA figures are post-veto. The headline long-run series is New
+plus Automatic Appropriations, while the program and operating-unit sections use New
+Appropriations only, so those totals run slightly below the headline. A recorded operating
+unit is not the same as where a project is built or the legislative district a lawmaker
+represents. And the difference between a proposal and the enacted law, the net NEP-to-GAA
+change, is not by itself a congressional addition: where a veto or a revised NEP sits
+between the two, the change belongs to that documented stage, not to Congress.
 
 ```{r load-data}
 # New + Automatic Appropriations (the headline DPWH OSec budget)
@@ -156,8 +259,8 @@ dpwh_long <- dpwh_newauto %>%
 # The Long View: DPWH Appropriations Since 1988
 
 The four views below track the DPWH Office of the Secretary's budget across nearly
-four decades — in nominal pesos, as a share of the national budget, in
-inflation-adjusted terms, and in a single reference table — before the rest of
+four decades - in nominal pesos, as a share of the national budget, in
+inflation-adjusted terms, and in a single reference table - before the rest of
 the document turns to the program, item, and district-level detail of recent years.
 
 ## Nominal Trend
@@ -191,9 +294,9 @@ ggplot(data = dpwh_long %>% filter(!is.na(AmountB))) +
 ```
 
 In nominal terms the DPWH OSec budget climbs steeply from the mid-2010s. Two
-deviations from the usual NEP-to-GAA pattern stand out and are worth raising in
+deviations from the usual NEP-to-GAA pattern stand out, and both belong in
 hearings: the **2019 GAA fell below the NEP** (the year of the ₱95.4B line-item veto; a smaller ₱26.1B veto also trimmed the 2025 GAA),
-and the **2026 GAA drops sharply below its NEP** — the reverse of the
+and the **2026 GAA drops sharply below its NEP** - the reverse of the
 usual upward realignment seen in most other years.
 
 ## Share of the National Budget
@@ -229,7 +332,7 @@ ggplot(data = dpwh_long %>% filter(!is.na(Share))) +
 
 The share view rescales the same money against the size of the whole budget.
 The department's footprint roughly **doubles from ~6-8% (1990s-2000s) to a
-mid-teens share** in the latest years — evidence that DPWH's expansion outpaced
+mid-teens share** in the latest years - evidence that DPWH's expansion outpaced
 overall budget growth, not merely tracked it. The 2026 NEP-to-GAA gap reappears
 here as a one-year contraction in the GAA share.
 
@@ -269,10 +372,9 @@ ggplot(data = dpwh_long %>% filter(!is.na(RealB))) +
 
 Holding prices constant at 2018 tempers the nominal story: much of the post-2018
 "growth" is the price level catching up. In real terms the GAA budget is
-**broadly flat between 2018 and 2023** before resuming its climb — a useful
-counterweight to headline peso figures in the hearing room. Switch
-`deflator_choice` to `"GDPDeflator"` in the setup chunk to see the
-GDP-deflator version.
+**broadly flat between 2018 and 2023** before resuming its climb - a useful
+counterweight to headline peso figures in the hearing room. (Figures here use the
+CPI as the price base; the GDP-deflator version tells the same story.)
 
 ## Summary Table
 
@@ -308,13 +410,27 @@ dpwh_table %>%
                 full_width = FALSE, font_size = 13)
 ```
 
+## A Warning-Sign Timeline
+
+Before the detail, here is the sequence the rest of the report documents, and how to read
+each step. The patterns are observable in the appropriation record; the right-hand column
+is what they do and do not support.
+
+| Period | Observable pattern in this report | How to read it |
+|---|---|---|
+| **FY2017–2019** | Large NEP-to-GAA adjustments, and the extraordinary FY2019 veto | An early sign that budget-stage changes deserved item-level review, not proof of a scheme |
+| **FY2020–2022** | Recurring DEO-coded increases; the Local Program gives way to Convergence, SIPAG and BIP | Administrative reallocation persists, and a comparability break appears |
+| **FY2023–2025** | Convergence peaks; large district-office concentrations; the 2025 flood-control scandal breaks | The patterns were already large before the scandal exposed them |
+| **FY2026** | Flood Management cut sharply, most of it in the Executive's revised NEP | A budgetary response, with most of the reduction made before Congress acted |
+| **FY2027 (House stage)** | The Central-Office-to-district shift repeats; district share rises 20% to 28% | The test of whether practice has changed; on this evidence it repeats |
+
 # The DPWH Budget by Program
 
 DPWH organises its budget into eight **programs**. Consistent program labelling
 only begins with the **2018 budget**, so this section runs 2018-2026. These amounts are reported
 in **pesos** and are rescaled to **PHP billions** (`/ 1e9`). All
 figures are **New Appropriations** (the program totals reconcile to the
-New-Appropriations column used in Section 1).
+New-Appropriations column used in Section 3).
 
 ```{r load-byprogram}
 byprogram <- read_xlsx(data_path, sheet = "NewAppro_ByProgram") %>%
@@ -385,7 +501,7 @@ ggplot(byprogram, aes(x = FY, y = GAA_B, fill = Program)) +
 
 The composition shift is stark: the **Convergence and Special Support Program**
 (apricot/salmon) swells under the current administration, while the **Network
-Development** and **Flood Management** shares contract — most dramatically in the
+Development** and **Flood Management** shares contract - most dramatically in the
 **2026 GAA**, where Flood Management is cut to a sliver. The dashed line marks the
 Duterte-to-Marcos transition (FY2023 is the first budget proposed by the current
 administration).
@@ -422,7 +538,7 @@ nepvgaa_var <- byprogram %>%
 
 ggplot(nepvgaa) +
   geom_col(aes(x = FY, y = AmountB, fill = Item),
-           position = position_dodge(width = 0.75), width = 0.66) +
+           position = position_dodge(width = 0.75), width = 0.66, color = "black", linewidth = 0.2) +
   geom_text(data = nepvgaa_var, aes(x = FY, y = ypos, label = lab), size = 1.9) +
   facet_wrap(~Program, scales = "free_y", ncol = 3,
              labeller = label_wrap_gen(24)) +
@@ -442,7 +558,7 @@ ggplot(nepvgaa) +
         axis.text = element_text(size = 6.5))
 ```
 
-The same realignments read most cleanly as a matrix — each cell is the net move
+The same realignments read most cleanly as a matrix - each cell is the net move
 from the President's proposal (NEP) to the enacted law (GAA), with **blue =
 increases** and **red = cuts**:
 
@@ -469,7 +585,7 @@ ggplot(byprogram %>% filter(FY <= 2026), aes(x = FY, y = fct_rev(Program), fill 
 Two patterns stand out for the hearing room: the **Convergence and Special
 Support Program** gains year after year (peaking at **+₱265B in 2025**),
 while **Network Development** and **Bridge** programs are routinely trimmed from
-their proposed levels. The **2026** column is exceptional — Flood Management is
+their proposed levels. The **2026** column is exceptional - Flood Management is
 realigned **down by ~₱246B**, the largest single-program cut in the series.
 
 ```{r table-realign}
@@ -487,18 +603,18 @@ byprogram %>%
 
 # Inside the Programs: Sub-Programs and Line Items
 
-The program totals in Section 6 hide a great deal. Beneath each program sit
-**sub-programs** and, below those, the individual **line items** — "Preventive
+The program totals in Section 4 hide a great deal. Beneath each program sit
+**sub-programs** and, below those, the individual **line items** - "Preventive
 Maintenance – Primary Roads," "SIPAG – Access Roads... leading to Major/Strategic
-Public Buildings," and dozens more — that are where budgeting actually happens.
+Public Buildings," and dozens more - that are where budgeting actually happens.
 This section works from a granular, multi-year encoding of those items (FY 2018
 onward) to ask three questions the aggregates cannot answer: **where has emphasis
 shifted between programs, what does Congress add to and cut at the most granular
-level, and which line items are the biggest — and has that changed?**
+level, and which line items are the biggest - and has that changed?**
 
-For readability, line items that the budget splits only by road class — the
+For readability, line items that the budget splits only by road class - the
 separate *Primary Roads*, *Secondary Roads* and *Tertiary Roads* versions of
-Preventive Maintenance, Road Widening, and a few others — are combined here into a
+Preventive Maintenance, Road Widening, and a few others - are combined here into a
 single item each.
 
 ```{r granular-parse, include=FALSE}
@@ -576,9 +692,9 @@ short_item <- function(x, wrap = 30) {
 
 ## What's Inside the Major Programs
 
-The program names in Section 6 are broad umbrellas. Below is what each of the six
-operational programs actually contained in **FY2025** — the last full budget
-before the flood-control scandal reshaped the FY2026 cycle — shown as its
+The program names in Section 4 are broad umbrellas. Below is what each of the six
+operational programs actually contained in **FY2025** - the last full budget
+before the flood-control scandal reshaped the FY2026 cycle - shown as its
 constituent line items.
 
 ```{r plot-program-innards, fig.height=8.2}
@@ -595,7 +711,7 @@ innards <- gran %>%
                                               "Flood Management","Convergence & Special Support","Local")),
          key = reorder(str_c(short_item(Item), Program, sep = "___"), GAA_B))
 ggplot(innards, aes(x = GAA_B, y = key, fill = ProgLab)) +
-  geom_col(width = 0.72) +
+  geom_col(width = 0.72, color = "black", linewidth = 0.2) +
   facet_wrap(~ProgLab, scales = "free", ncol = 2) +
   scale_y_discrete(labels = function(x) str_remove(x, "___.*")) +
   scale_x_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.10))) +
@@ -619,12 +735,12 @@ The contents follow the department's core mandates, with two important exception
   landslides and disasters.
 - **Network Development** is road *expansion*: road widening, by-pass and diversion
   roads, missing links and new roads, flyovers and interchanges.
-- **Bridge** is exactly that — construction, replacement, widening and
+- **Bridge** is exactly that - construction, replacement, widening and
   retrofitting of bridges.
 - **Flood Management** is the government's headline flood line: construction and
   rehabilitation of flood-mitigation structures and drainage, including works
   along major river basins.
-- **Convergence & Special Support** is the outlier — not a single purpose but a
+- **Convergence & Special Support** is the outlier - not a single purpose but a
   **basket** of two sub-programs, **SIPAG** and **BIP**, whose items are access
   roads to public buildings, multi-purpose buildings, *and their own flood-
   mitigation structures*. Much of what looks like "convergence" spending is thus
@@ -633,9 +749,9 @@ The contents follow the department's core mandates, with two important exception
   multipurpose facilities, flood control and drainage) before FY2022, when most of
   it migrated into Convergence.
 
-The key takeaway is that **flood-control money is spread across at least three
-programs** — the Flood Management Program, the SIPAG/BIP flood-mitigation items
-inside Convergence, and the Local Program's flood-control line — which is part of
+**Flood-control money is spread across at least three
+programs**: the Flood Management Program, the SIPAG/BIP flood-mitigation items
+inside Convergence, and the Local Program's flood-control line - which is part of
 why the total was so hard to see, and so easy to inflate, before the FY2026
 reckoning.
 
@@ -644,7 +760,7 @@ reckoning.
 The clearest structural change in this period is a **relabeling of district
 infrastructure**. Through FY2021, locally-oriented projects ran through the
 **Local Program**; the **Convergence and Special Support Program** was a modest
-line. In **FY2022 the two swapped places** — Local collapsed and Convergence
+line. In **FY2022 the two swapped places** - Local collapsed and Convergence
 absorbed its role, then grew far larger.
 
 ```{r plot-local-convergence, fig.height=4.2}
@@ -677,15 +793,15 @@ ggplot(lc, aes(x = FY, y = Enacted, colour = Group, group = Group)) +
 Before the swap, the Local Program ran at **₱119-281B** while Convergence sat at
 **₱30-62B**. In FY2022 the Local Program fell to **₱15B** and Convergence leapt to
 **₱353B**; it peaked at **₱504B in FY2025** before the FY2026 flood-driven cut
-brought it to **₱240B**. Convergence is not a single purpose but a **basket** —
+brought it to **₱240B**. Convergence is not a single purpose but a **basket** - 
 it houses the **SIPAG** and **BIP** sub-programs, whose items range from access
 roads and multi-purpose buildings to, notably, **flood-mitigation structures**.
 So a large share of what looks like "convergence" or "special support" spending is,
 underneath, the same district road-and-building-and-drainage work that the Local
-Program used to carry — now concentrated in one fast-growing, discretionary
+Program used to carry - now concentrated in one fast-growing, discretionary
 program.
 
-## What Congress Adds To — and Cuts — at the Item Level
+## What Congress Adds To and Cuts at the Item Level
 
 Reading Congress's changes (enacted minus proposed) at the **individual item
 level**, over FY2018-2025 (the FY2026 cycle is treated separately below, as it was
@@ -706,7 +822,7 @@ addcut <- bind_rows(
          Dir = if_else(Add >= 0, "Added by Congress", "Cut by Congress"),
          Item = fct_reorder(Item, Add))
 ggplot(addcut, aes(x = Add, y = Item, fill = Dir)) +
-  geom_col(width = 0.72) +
+  geom_col(width = 0.72, color = "black", linewidth = 0.2) +
   geom_text(aes(label = sprintf("%+.0f", Add), hjust = if_else(addcut$Add >= 0, -0.12, 1.12)),
             size = 2.8, colour = "grey20") +
   scale_fill_manual(values = c("Added by Congress" = "#1a9850", "Cut by Congress" = "#d73027")) +
@@ -723,15 +839,15 @@ ggplot(addcut, aes(x = Add, y = Item, fill = Dir)) +
         axis.text.y = element_text(size = 7.5))
 ```
 
-The additions are dominated by **SIPAG and BIP** items — *Access Roads to Public
+The additions are dominated by **SIPAG and BIP** items - *Access Roads to Public
 Buildings* (**+₱207B** and **+₱105B**), *Multi-Purpose Buildings* (**+₱176B**),
-and their *Flood-Mitigation Structures* variants — together with **Local Roads
+and their *Flood-Mitigation Structures* variants - together with **Local Roads
 (+₱182B)** and **Multipurpose Facilities (+₱104B)**. The cuts fall on **large
 national works**: *By-Pass & Diversion Roads* (**-₱94B**), *Flood Mitigation in
 Major River Basins* (**-₱71B**), *New Bridges* (**-₱49B**), and *National Roads*
 (**-₱43B**). In other words, the legislature consistently trims the department's
 big strategic-network and major-river projects and redirects the money into
-smaller, district-level, more easily-sited items — the granular signature of the
+smaller, district-level, more easily-sited items - the granular signature of the
 Central-Office-to-districts pattern documented in the operating-unit analysis that
 follows.
 
@@ -751,12 +867,12 @@ item_add %>%
 
 FY2026 was unlike any other year in this dataset, and it is why the analysis above
 stops at FY2025. Midway through 2025 a **flood-control corruption scandal** broke
-open — ghost projects, kickbacks, and a wave of identically-priced "multi-purpose
+open - ghost projects, kickbacks, and a wave of identically-priced "multi-purpose
 building" and flood-control insertions. The fallout ran straight through the budget.
 
 The original FY2026 NEP, prepared under then-Secretary Manuel Bonoan and submitted
 in August 2025, proposed the department's usual large flood-control program. After
-the scandal, a new Secretary — **Vivencio "Vince" Dizon** — took over in
+the scandal, a new Secretary, **Vivencio "Vince" Dizon**, took over in
 September and submitted an **errata to the NEP**, removing locally-funded
 flood-control projects on the President's directive. Congress then cut further.
 The result is a rare three-step collapse: **original NEP → revised NEP → enacted
@@ -782,7 +898,7 @@ rev26_long <- rev26 %>% pivot_longer(-Program, names_to="Stage", values_to="B") 
          ProgLab=str_replace(Program,"Convergence and Special Support Program","Convergence & Spec. Support") %>% str_replace(" Program$",""),
          ProgLab=fct_reorder(ProgLab, B, .fun=max, .desc=TRUE))
 ggplot(rev26_long, aes(x=B, y=fct_rev(ProgLab), fill=Stage)) +
-  geom_col(position=position_dodge(width=0.78), width=0.72) +
+  geom_col(position=position_dodge(width=0.78), width=0.72, color = "black", linewidth = 0.2) +
   scale_x_continuous(labels=scales::comma, expand=expansion(mult=c(0,0.06))) +
   scale_fill_manual(values=c("Original NEP"="#f4a582","Revised NEP"="#b8336a","Enacted GAA"="#3994fc")) +
   labs(x="PHP billions", y=NULL, fill=NULL,
@@ -796,8 +912,8 @@ ggplot(rev26_long, aes(x=B, y=fct_rev(ProgLab), fill=Stage)) +
 ```
 
 Two moves stand out. The **Flood Management Program was gutted in the errata itself**
-— from about ₱251B in the original NEP to roughly ₱16B in the revised version, a
-cut of some ₱235B before Congress even voted — as the flood-mitigation items at
+ - from about ₱251B in the original NEP to roughly ₱16B in the revised version, a
+cut of some ₱235B before Congress even voted - as the flood-mitigation items at
 the heart of the scandal were pulled. But the revision was not purely subtractive:
 the **Convergence & Special Support Program actually rose** in the revised NEP
 (from ~₱168B to ~₱225B) and again in the enacted GAA (~₱240B), even as everything
@@ -806,8 +922,8 @@ cutting it from ~₱149B in the revised NEP to ~₱97B enacted.
 
 So the headline "DPWH budget cut by roughly a third" masks a reshuffle: the
 scandal removed the flood-control program that had been the vehicle for insertions,
-but the discretionary **Convergence** basket — which, as shown above, contains its
-*own* flood-mitigation and district-building items — emerged from the FY2026
+but the discretionary **Convergence** basket - which, as shown above, contains its
+*own* flood-mitigation and district-building items - emerged from the FY2026
 process *larger*, not smaller. Whether that represents genuine reform or the same
 spending under a cleaner-sounding label is exactly the kind of question the
 granular view is meant to surface.
@@ -816,7 +932,7 @@ granular view is meant to surface.
 
 Ranking items by **enacted** size shows how the composition of DPWH spending has
 turned over. In FY2018 the largest items were classic **road and flood works**; by
-FY2025 the **SIPAG and BIP** items — which barely existed earlier — sit at the
+FY2025 the **SIPAG and BIP** items, which barely existed earlier, sit at the
 very top, alongside the two big flood-mitigation lines.
 
 ```{r plot-biggest-items-shift, fig.height=4.8}
@@ -828,7 +944,7 @@ big_cmp <- gran %>%
          FYlab = factor(paste0("FY", FY), levels = c("FY2018", "FY2025")),
          key = reorder(str_c(ItemS, FY, sep = "___"), GAA_B))
 ggplot(big_cmp, aes(x = GAA_B, y = key, fill = FYlab)) +
-  geom_col(width = 0.72) +
+  geom_col(width = 0.72, color = "black", linewidth = 0.2) +
   geom_text(aes(label = round(GAA_B)), hjust = -0.15, size = 2.7, colour = "grey20") +
   facet_wrap(~FYlab, scales = "free", ncol = 2) +
   scale_y_discrete(labels = function(x) str_remove(x, "___.*")) +
@@ -848,25 +964,43 @@ ggplot(big_cmp, aes(x = GAA_B, y = key, fill = FYlab)) +
 
 The turnover is striking. In FY2018 the biggest items were **Flood Mitigation
 Structures (₱97B)**, **Road Widening (₱64B)**, **By-Pass & Diversion Roads
-(₱57B)**, **Local Roads (₱51B)** and **Missing Links / New Roads (₱36B)** — a
+(₱57B)**, **Local Roads (₱51B)** and **Missing Links / New Roads (₱36B)** - a
 portfolio of national road and flood works. By FY2025, the **SIPAG Access Roads to
-Public Buildings (₱137B)** and **BIP Multi-Purpose Buildings (₱96B)** items — which
-did not exist under those names before FY2022 — rank among the very largest,
+Public Buildings (₱137B)** and **BIP Multi-Purpose Buildings (₱96B)** items - which
+did not exist under those names before FY2022 - rank among the very largest,
 alongside the two big flood-mitigation lines (which Congress simultaneously *cut*
 from the proposal) and, once the road classes are combined, **Preventive
-Maintenance (₱104B)** — the quiet, recurring cost of keeping the existing network
+Maintenance (₱104B)** - the quiet, recurring cost of keeping the existing network
 usable. The composition of the
 DPWH budget, in short, has tilted from building and maintaining the national
 network toward a fast-expanding, district-oriented "convergence" portfolio.
 
 
 
+## Foreign-Assisted Projects: A Data Gap
+
+The program figures above pool projects with different financing arrangements. Under the
+PREXC/UACS structure, foreign-assisted projects (FAPs) can in principle be identified
+separately from locally funded projects, and the two can differ in scale, planning horizon,
+procurement, disbursement schedule, and oversight. This report does not yet separate them.
+The current encoding does not carry a reliable FAP identifier, so a foreign-assisted versus
+locally funded breakdown would mean returning to the source budget schedules and the
+project-level financing fields. That is the next data extension.
+
+It matters for the argument here. The district-oriented items that dominate this narrative
+are mostly locally funded, and the externally assisted portfolio, which tends to be larger,
+multi-year projects, may sit on a different budgetary track, more stable between proposal
+and enactment. When the data support it, FAP and locally funded amounts should be shown as
+a cross-cutting classification within the same appropriations, not as a separate pot added
+to program totals, and annual appropriation should not be read as total project cost or
+loan disbursement.
+
 # New Appropriations by Operating Unit
 
-The DPWH disburses its budget across some 200+ **operating units** — the Central
+The DPWH records and allocates its New Appropriations across some 200+ **operating units** - the Central
 Office, regional offices, and district engineering offices (DEOs). The data
 run from the **FY2014 budget** through **FY2026**, spanning the 16th through 20th
-Congresses — the Aquino, Duterte, and Marcos administrations, and **seven House
+Congresses - the Aquino, Duterte, and Marcos administrations, and **seven House
 Speakers**. The series is now complete across all thirteen fiscal years; the GAA
 encoded for **2019** reflects the budget *after* the President's ₱95.4-billion
 line-item veto (isolated below). That span lets us trace
@@ -927,6 +1061,29 @@ byoperunit <- read_xlsx(data_path, sheet = "NewAppro_ByOperUnit") %>%
 deo_all <- byoperunit %>% filter(str_detect(Office, "D.E. Office"), FY >= 2017)
 deo <- deo_all %>% filter(FY <= 2026)
 n_years_deo <- dplyr::n_distinct(deo$FY)
+
+# The FY2027 budget has no GAA yet. For the "enacted-side" views that run through
+# 2027, the House GAB (HB 10858, as approved on second reading / third-reading
+# print) stands in for the GAA, flagged by `house_stage`. `Enacted` is the GAA for
+# 2014-2026 and the HGAB for 2027; `Chg_B` is the NEP-to-enacted change in billions.
+byoperunit <- byoperunit %>%
+  mutate(house_stage = FY == 2027L,
+         Enacted   = if_else(FY == 2027L, coalesce(HGAB, 0), GAA),
+         Enacted_B = Enacted / 1e9,
+         Chg_B     = Enacted_B - NEP_B)
+
+# District engineering offices across the whole span (FY2014-2027). The FY >= 2017
+# `deo`/`deo_all` above are left untouched; `deo_full` feeds the gross-movement and
+# political-geography views, which need the earlier years and the House stage.
+deo_full <- byoperunit %>% filter(str_detect(Office, "D.E. Office"))
+
+# Office-type classification used by the total/gross/House-shift views.
+byoperunit <- byoperunit %>%
+  mutate(office_type = case_when(
+    str_detect(Office, "D.E. Office")            ~ "District engineering offices",
+    str_detect(Office, "Regional Office|^Region")~ "Regional offices",
+    Office == "Central Office"                   ~ "Central Office",
+    TRUE                                         ~ "Other"))
 ```
 
 Because the realignments that move money toward district engineering offices are made on the
@@ -986,13 +1143,13 @@ ggplot(central_split, aes(x = FY, y = GAA_B, fill = Unit)) +
         plot.caption = element_markdown(size = 6))
 ```
 
-Across the series the Central Office holds most of the *enacted* budget —
-typically **60-75%**, peaking at **75% in 2025** — with 2015-2016
+Across the series the Central Office holds most of the *enacted* budget - 
+typically **60-75%**, peaking at **75% in 2025** - with 2015-2016
 (both under 50%) and the unusual 2026 GAA (62%) the main exceptions. A single operating unit carrying most
 of the department's budget is a reason for *closer* scrutiny of centrally-managed
 projects, not a reason to assume they are already well accounted for. The enacted
 shares also understate how concentrated the executive's *proposal* is, and how
-much Congress rearranges it on the way to enactment — the subject of the section
+much Congress rearranges it on the way to enactment - the subject of the section
 that follows.
 
 ```{r table-central}
@@ -1015,12 +1172,12 @@ central_split %>%
 
 The executive's proposal concentrates the budget in the Central Office even more
 than the enacted law does. In pesos the redistribution is large and one-directional:
-Congress channels tens — and, in recent years, hundreds — of billions toward
+Congress channels tens of billions, and in recent years hundreds, toward
 district engineering offices between the proposal and the enacted law, in **every
 year on record**, while the Central Office is cut in most (first chart). In share
 terms the pattern is cleaner still: in every year (2014-2026) the Central
 Office's share of new
-appropriations *falls* from NEP to GAA while the districts' share *rises* — a
+appropriations *falls* from NEP to GAA while the districts' share *rises* - a
 swing reaching nearly **30 percentage points** in 2021 and 2023, when the proposal
 parked almost the entire budget centrally (second chart). Congress, in other words,
 systematically moves money toward named district engineering offices; this is the redistribution
@@ -1090,8 +1247,8 @@ byoperunit %>%
 
 Two of those Central cuts come with an asterisk, because they are not really
 Congress's doing. The operating-unit GAA encoded for **2019** is the budget *after*
-the President's **₱95.4-billion line-item veto** — the largest in recent memory
-— and that veto landed overwhelmingly on the Central Office (**₱74B** of the ₱95B
+the President's **₱95.4-billion line-item veto** - the largest in recent memory
+ - and that veto landed overwhelmingly on the Central Office (**₱74B** of the ₱95B
 struck, versus ₱21B across the districts). That is why 2019 shows such a deep
 Central cut above. Congress's own pre-veto budget was routine: it trimmed the
 Central Office by roughly **₱26B** and added about **₱30B** to the districts, the
@@ -1148,9 +1305,81 @@ veto_unit %>%
         axis.text.x = element_text(size = 9))
 ```
 
+## Net Versus Gross: The Churn Beneath the Totals
+
+Every realignment figure in this report so far is a **net** number: the enacted
+amount minus the proposal, for an office or a program. Net answers "where did the
+money end up," but it hides how much was moved to get there. If Congress adds ₱1
+billion to one district office and takes ₱1 billion from another, the net change is
+zero while ₱2 billion has changed hands.
+
+That gap matters most at the district level, where hundreds of offices are adjusted
+in a single bill. **Gross** movement sums the two directions separately: the total
+added to the offices that gained, and the total cut from the offices that lost. Net
+is the difference between the two; gross is their sum. The chart plots both for every
+year, with the net marked as a white diamond.
+
+```{r plot-deo-gross, fig.height=5}
+gross <- deo_full %>%
+  filter(!is.na(Enacted)) %>%
+  group_by(FY, house_stage) %>%
+  summarize(up = sum(Chg_B[Chg_B > 0]), down = sum(Chg_B[Chg_B < 0]), net = sum(Chg_B),
+            n_up = sum(Chg_B > 0), n_down = sum(Chg_B < 0), .groups = "drop")
+gross_long <- gross %>%
+  pivot_longer(c(up, down), names_to = "side", values_to = "Amount") %>%
+  mutate(side = factor(side, levels = c("up", "down"),
+                       labels = c("Gross increases (DEOs enacted above NEP)",
+                                  "Gross cuts (DEOs enacted below NEP)")))
+ggplot(gross_long, aes(x = FY, y = Amount, fill = side)) +
+  geom_col(width = 0.7, colour = "black", linewidth = 0.2) +
+  geom_hline(yintercept = 0, linewidth = 0.4) +
+  annotate("segment", x = 2026.5, xend = 2026.5, y = -Inf, yend = Inf,
+           linetype = "dashed", linewidth = 0.4, colour = "grey45") +
+  annotate("text", x = 2026.5, y = Inf, label = "House GAB ->", hjust = 1.05, vjust = 1.4,
+           size = 2.6, colour = "grey45") +
+  geom_point(data = gross, aes(x = FY, y = net), inherit.aes = FALSE,
+             shape = 23, size = 2.6, fill = "white", stroke = 1) +
+  geom_text(data = gross, aes(x = FY, y = up + 7, label = sprintf("+%.0f\n(%d)", up, n_up)),
+            inherit.aes = FALSE, size = 2.2, colour = "#1d4f8a", vjust = 0, lineheight = 0.85) +
+  geom_text(data = filter(gross, down < -0.5),
+            aes(x = FY, y = down - 7, label = sprintf("%.0f\n(%d)", down, n_down)),
+            inherit.aes = FALSE, size = 2.2, colour = "#9b4a55", vjust = 1, lineheight = 0.85) +
+  scale_fill_manual(values = c("Gross increases (DEOs enacted above NEP)" = "#3994fc",
+                               "Gross cuts (DEOs enacted below NEP)" = "#ffa6b0")) +
+  scale_x_continuous(breaks = 2014:2027) +
+  scale_y_continuous(labels = scales::comma, expand = expansion(mult = 0.14)) +
+  labs(x = NULL, y = "Enacted minus NEP, summed across DEOs (PHP billions)", fill = NULL,
+       title = "Gross Movements Across the District Engineering Offices",
+       subtitle = "Increases and cuts summed separately; the diamond marks the net. Labels: summed PHP billions and the number of district offices. FY2027 = House GAB.",
+       caption = "**Data Sources:** NEP and GAA, 2014-2026 (2019 and 2025 GAA are post-veto); FY2027 NEP and House GAB (HB 10858). Nominal pesos.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_minimal() +
+  theme(legend.position = "bottom", panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
+        plot.title = element_text(face = "bold", size = 13), plot.subtitle = element_text(size = 8.5),
+        plot.caption = element_markdown(size = 6))
+```
+
+In most years the net and the gross nearly coincide, because Congress adds to almost
+every district office and cuts very few. In 2021 and 2023 it raised 183 and 188
+offices and cut none, so gross equals net at ₱206B and ₱262B. (Both years are
+inflated by a proposal that parked nearly the whole district budget centrally, as the
+central-to-district section showed; the "movement" is really money returning to the
+offices it is spent through.)
+
+Three years break the pattern. In **2019** the
+net add to the districts was only about **₱9B**, but that nets a ₱34B increase to 123
+offices against a ₱25B cut to 59 - roughly **₱59B of gross churn**, with the final
+figure further shaped by the President's veto. **2026** looks similar: ₱23B net, but
+₱42B up across 123 offices and ₱19B down across 73. The FY2027 **House GAB** adds
+about **₱55B across 158 district offices** and trims only 20, so its ₱54B net sits
+close to its ₱56B gross - the House moved in one direction, toward the districts. The
+lesson is simple: in a reshuffling year, the gross absolute change in office-level
+appropriations is several times the headline net, and only the gross shows it. (Offsetting
+office gains and cuts do not by themselves prove money was transferred from one office to
+another; they are changes in where appropriations are recorded.)
+
 ## The Largest District Engineering Offices in Each Congress
 
-Which districts command the biggest budgets is not fixed — it shifts from one
+Which districts command the biggest budgets is not fixed - it shifts from one
 Congress to the next as offices are created, priorities move, and realignment
 patterns change. The charts and tables below rank the **top 20 district
 engineering offices in each Congress**, showing both what the Executive
@@ -1158,11 +1387,12 @@ engineering offices in each Congress**, showing both what the Executive
 Congress's budgets. Reading down the Congresses gives a sense of which parts of
 the country the DPWH budget has most favoured over time.
 
-```{r deo-top20-bycongress, fig.height=12}
-# Top 20 DEOs by enacted GAA within each Congress (enacted years only, FY<=2026),
-# with the matching proposed (NEP) amount shown alongside. Ranked independently
-# per facet using the Office___Congress key trick.
-deo_cong <- deo %>%
+```{r deo-top20-bycongress, fig.height=18}
+# Top 20 DEOs by enacted GAA within each Congress (enacted years only, FY2014-2026),
+# with the matching proposed (NEP) amount shown alongside. Ranked independently per
+# facet using the Office___Congress key trick. Sourced from deo_full so the 16th
+# Congress (FY2014-2016, Aquino) appears alongside the later Congresses.
+deo_cong <- deo_full %>% filter(FY <= 2026) %>%
   group_by(Congress, Office) %>%
   summarise(NEP = sum(NEP_B, na.rm = TRUE),
             GAA = sum(GAA_B, na.rm = TRUE), .groups = "drop")
@@ -1170,7 +1400,8 @@ deo_cong <- deo %>%
 top20_cong <- deo_cong %>%
   group_by(Congress) %>% slice_max(GAA, n = 20) %>% ungroup()
 
-cong_label <- c("17th (Duterte)" = "17th Congress (FY2017-2019)",
+cong_label <- c("16th (Aquino)"  = "16th Congress (FY2014-2016)",
+                "17th (Duterte)" = "17th Congress (FY2017-2019)",
                 "18th (Duterte)" = "18th Congress (FY2020-2022)",
                 "19th (Marcos)"  = "19th Congress (FY2023-2025)",
                 "20th (Marcos)"  = "20th Congress (FY2026)")
@@ -1181,7 +1412,7 @@ top20_cong %>%
          CongLabel = factor(recode(Congress, !!!cong_label), levels = unname(cong_label)),
          OfficeKey = reorder(str_c(Office, Congress, sep = "___"), AmountB * (Item == "GAA"))) %>%
   ggplot(aes(x = AmountB, y = OfficeKey, fill = Item)) +
-  geom_col(position = position_dodge(width = 0.72), width = 0.68) +
+  geom_col(position = position_dodge(width = 0.72), width = 0.68, color = "black", linewidth = 0.2) +
   facet_wrap(~CongLabel, ncol = 2, scales = "free") +
   scale_y_discrete(labels = function(x) str_remove(x, "___.*")) +
   scale_x_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.06))) +
@@ -1201,12 +1432,12 @@ top20_cong %>%
         axis.text.x = element_text(size = 6.5))
 ```
 
-A few patterns stand out. The offices that top the list migrate over time —
-**Abra** and other Cordillera and northern-Luzon districts dominate the Duterte
-Congresses, while **Bulacan**, **Nueva Ecija**, and Metro Manila offices rise to
+A few patterns stand out. The offices that top the list migrate over time. Under Aquino's 16th Congress,
+**Metro Manila**, **Cavite**, and **Bulacan** offices led; **Abra** and other
+Cordillera and northern-Luzon districts dominate the Duterte Congresses, while **Bulacan**, **Nueva Ecija**, and Metro Manila offices rise to
 the top under Marcos. And in almost every case the **enacted (blue) bar towers
 over the proposed (pink) one**: the largest districts are large not because the
-Executive proposed them so, but because Congress built them up on enactment —
+Executive proposed them so, but because Congress built them up on enactment - 
 the realignment story, seen from the districts' side.
 
 ### Top 20 tables, by Congress
@@ -1244,12 +1475,12 @@ Setting the Central Office aside, two questions matter for the hearings: which
 district engineering offices command the **largest budgets**, and how much of each budget was
 in the President's proposal versus added on enactment. The first two charts break
 the largest offices into what was **proposed** (grey) and what Congress **added** on
-enactment — shown as a single total (purple) in the first chart, then with the
+enactment - shown as a single total (purple) in the first chart, then with the
 additions split between the **Duterte** (red) and **Marcos** (blue) administrations in
 the second. The third chart ranks offices by the realignments they received within
-each Congress — now reaching back to the 16th (the three Aquino-era budgets) —
+each Congress, now reaching back to the 16th (the three Aquino-era budgets), 
 coloured by the fiscal year that delivered each addition, with the amounts the
-President later vetoed shown in grey — the FY2019 vetoes on the 17th-Congress bars
+President later vetoed shown in grey - the FY2019 vetoes on the 17th-Congress bars
 (medium grey) and the smaller FY2025 vetoes on the 19th (dark grey).
 
 ```{r plot-deo-proposed-added, fig.height=5.4}
@@ -1403,7 +1634,7 @@ bind_rows(plotted, veto_rows, veto_rows_25) %>%
 ```
 
 The realignment matrix below splits each of the most-favoured offices' realignments
-between the **Duterte** and **Marcos** administrations — making clear, for instance,
+between the **Duterte** and **Marcos** administrations - making clear, for instance,
 that **Abra**'s windfalls came overwhelmingly under Duterte (2017-2022), while others
 (e.g. **Bulacan 1st**, **Tarlac**) lean Marcos.
 
@@ -1453,15 +1684,15 @@ deo %>%
 
 Rather than single out any one region, this section applies a transparent screen
 to *every* district engineering office and lets the data nominate which ones deserve a deeper
-dive. Each office is scored on four independent signals over FY2017-2026 (the
+dive. Each office is scored on four screening dimensions over FY2017-2026 (the
 Duterte and Marcos administrations):
 
-- **Size** — it is among the ten largest recipients of realignments;
-- **Intensity** — realignments make up at least 60% of the office's enacted budget;
-- **Persistence** — it received a realignment in at least eight of the ten years;
-- **Tilt** — the office's realignment totals under the two administrations differ by at least ₱4B.
+- **Size** - it is among the ten largest recipients of realignments;
+- **Intensity** - realignments make up at least 60% of the office's enacted budget;
+- **Persistence** - it received a realignment in at least eight of the ten years;
+- **Tilt** - the office's realignment totals under the two administrations differ by at least ₱4B.
 
-Every signal builds on the same yearly *realignment* — the gap between an office's
+Every signal builds on the same yearly *realignment* - the gap between an office's
 enacted and proposed budget, **GAA − NEP** (in ₱B). The tilt signal sums those yearly
 realignments within each administration and takes the difference between the two totals:
 
@@ -1472,7 +1703,17 @@ positive tilt means the office gained more under Duterte and is shown **red** in
 below; a negative tilt means it gained more under Marcos and is shown **blue**; values near
 zero are grey.
 
-Offices that trip several signals at once are the natural candidates for scrutiny.
+Two cautions before reading the chart. The four dimensions overlap rather than stand
+independently: size and intensity both build on the same realignment total, so an office
+that clears several of them is not corroborated by four separate measures. Treat the
+shortlist as a heuristic for where to verify at the project level, not as a score. And the
+tilt dimension compares six Duterte-era years (FY2017-2022) with four Marcos-era years
+(FY2023-2026) in nominal pesos, so an office funded evenly across both would still read as
+Duterte-leaning on totals alone; the real annual averages in the political-geography
+section are the better guide to direction, and tilt here is only a rough flag.
+
+Offices that trip several dimensions at once are the candidates for closer, project-level
+scrutiny, with those caveats in mind.
 
 ```{r deo-screen-data}
 screen_base <- deo %>%
@@ -1558,19 +1799,19 @@ ggplot(deo_screen, aes(x = Insertion, y = InsShare)) +
         legend.title = element_text(size = 7), legend.text = element_text(size = 7))
 ```
 
-The vertical axis starts at 0% and extends only as far as the data require. Two sets of offices fall outside it. First, `r nrow(screen_nonep)` newly-created district engineering offices had **no proposed budget** (NEP = 0) anywhere in the FY2017-2026 window, so their realignment share is 100% by construction — money Congress provided where the executive proposed nothing — and they are excluded from the scatter: `r nonep_note`. Second, `r nrow(screen_offscale)` very small offices fall *below* 0%, where the cumulative *enacted* budget came in under the proposal (a net trim rather than the padding that dominates the chart): `r offscale_note`. Because these offices are tiny, a modest peso cut reads as a large negative share, so those values are denominator artefacts more than meaningful signals.
+The vertical axis starts at 0% and extends only as far as the data require. Two sets of offices fall outside it. First, `r nrow(screen_nonep)` newly-created district engineering offices had **no proposed budget** (NEP = 0) anywhere in the FY2017-2026 window, so their realignment share is 100% by construction (money Congress provided where the executive proposed nothing), and they are excluded from the scatter: `r nonep_note`. Second, `r nrow(screen_offscale)` very small offices fall *below* 0%, where the cumulative *enacted* budget came in under the proposal (a net trim rather than the padding that dominates the chart): `r offscale_note`. Because these offices are tiny, a modest peso cut reads as a large negative share, so those values are denominator artefacts more than meaningful signals.
 
-The screen returns a consistent shortlist — none of it about a single region.
-**Batangas 4th D.E. Office** is the largest single recipient of realignments —
+The screen returns a consistent shortlist - none of it about a single region.
+**Batangas 4th D.E. Office** is the largest single recipient of realignments - 
 **₱24.3B**, or **69%** of its enacted budget, padded in **all ten years** and
 favoured fairly evenly by both administrations (₱14.5B Duterte, ₱9.7B Marcos), a
 standing fixture regardless of who holds power. **Sorsogon** is similarly
 relentless (₱16.0B, 66%, every year) but tilts Marcos-ward. **Bulacan 1st**
 (₱20.7B) is the second-largest recipient and leans Marcos (₱12.7B vs ₱7.9B). At
-the politically lopsided extremes sit **Abra** — the clearest Duterte-era office
-(₱13.2B vs ₱3.1B) — and **Metro Manila 3rd**, its Marcos-era mirror (₱10.7B vs
+the politically lopsided extremes sit **Abra** - the clearest Duterte-era office
+(₱13.2B vs ₱3.1B) - and **Metro Manila 3rd**, its Marcos-era mirror (₱10.7B vs
 ₱3.8B). These offices, not any one province, are where the strongest patterns lie
-and where project-level records would be worth pulling.
+and where project-level records should be pulled.
 
 ```{r table-deo-screen}
 deo_screen %>%
@@ -1593,318 +1834,222 @@ deo_screen %>%
   column_spec(8, width = "13em")
 ```
 
-# The FY 2027 Proposal
+# The Political Geography of the District Offices
 
-The FY 2027 National Expenditure Program is the live budget document now before
-Congress — the one advocates can still shape. The proposal's figures already run
-through the tables and charts in the sections above; this section draws them
-together in one place: the proposal's overall size, its distribution **by program**
-and **by district engineering office**, and how it compares to the two most useful
-benchmarks — what the Executive proposed for FY 2026 (the previous **NEP**) and
-what Congress actually enacted (the previous **GAA**).
+This section maps the district engineering offices back to the officials with the most
+power over the budget: the sitting President, the Speaker who presided over each bill, and
+the chair of the House Appropriations Committee. It asks a narrow question: did the DPWH
+offices in their home province or city do better while they held the gavel?
 
-## FY 2027 in Context: Comparison with FY 2026
+Read these amounts carefully. They measure appropriations recorded against DPWH field
+offices in an official's home province or city. They do not measure funds the official
+personally controlled, or money allocated to that official's legislative district. As the
+geography note in the overview explains, a DPWH district engineering office is an
+administrative unit, not an electoral constituency, and the two need not line up. What
+follows is an exploratory association, useful for screening, not an estimate of patronage
+or of any official's causal influence.
 
-At **₱642.6B**, the FY 2027 proposal sits between the two FY 2026 figures. It is
-about **₱113B _above_** the ₱529.6B that was finally enacted for 2026 — a budget
-slashed by the roughly ₱350B flood-control cut — but about **₱237B _below_** the
-₱880B the Executive had originally proposed for 2026. In other words, the
-Department is proposing to spend more than the shrunken 2026 law allows, but well
-short of its own ambitions a year earlier.
+Three further cautions. The mapping sums every DEO in a figure's home province or city, so
+it is generous by construction, and the number of offices summed per figure varies (two to
+four in most cases, one in a few). A larger home-area budget can reflect construction need
+as readily as political preference. And FY2023 is distorted by a proposal that recorded
+almost the whole district budget centrally, which inflates that year's apparent change
+everywhere. The charts are a prompt for closer scrutiny, not a finding of misconduct.
+Shaded bands mark the administration that prepared each FY budget; where a figure's
+in-office years are highlighted, the faded bars are the years they were out of power.
+FY2027's figure is the House-stage budget (HB 10858).
 
-```{r plot-2627-compare, fig.height=5.2}
-cmp <- byprogram %>%
-  filter(FY %in% c(2026, 2027)) %>%
-  transmute(Program,
-            `NEP 2026` = if_else(FY == 2026, NEP_B, NA_real_),
-            `GAA 2026` = if_else(FY == 2026, GAA_B, NA_real_),
-            `NEP 2027` = if_else(FY == 2027, NEP_B, NA_real_)) %>%
-  group_by(Program) %>%
-  summarise(across(everything(), ~ sum(.x, na.rm = TRUE)), .groups = "drop") %>%
-  pivot_longer(-Program, names_to = "Series", values_to = "AmountB") %>%
-  mutate(Series = factor(Series, levels = c("NEP 2026", "GAA 2026", "NEP 2027")),
-         Program = factor(Program, levels = dpwh_programs))
+```{r polgeo-setup, include=FALSE}
+admin_spans <- tibble(Admin = c("Aquino", "Duterte", "Marcos"),
+                      start = c(2013.5, 2016.5, 2022.5), end = c(2016.5, 2022.5, 2027.5))
+admin_fill  <- c("Aquino" = "#fbe7a4", "Duterte" = "#f6b0a8", "Marcos" = "#b9d4f6")
+pg_item     <- c("NEP" = "#ffa6b0", "Enacted" = "#3994fc")
+admin_bands <- function() geom_rect(data = admin_spans,
+  aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf, fill = Admin),
+  inherit.aes = FALSE, alpha = 0.3)
 
-ggplot(cmp, aes(x = AmountB, y = fct_rev(Program), fill = Series)) +
-  geom_col(position = position_dodge(width = 0.75), width = 0.7) +
-  scale_x_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.06))) +
-  scale_y_discrete(labels = function(x) str_wrap(x, 24)) +
-  scale_fill_manual(values = c("NEP 2026" = "#ffd0d5", "GAA 2026" = "#3994fc", "NEP 2027" = "#c0392b")) +
-  labs(x = "PHP billions", y = NULL, fill = NULL,
-       title = "FY 2027 Proposal vs FY 2026, by Program",
-       subtitle = "Light pink = FY2026 proposed; blue = FY2026 enacted; red = FY2027 proposed",
-       caption = "**Data Sources:** NEP and GAA documents.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
-  theme_bw() +
-  theme(legend.position = "top", panel.grid.minor = element_blank(),
-        panel.grid.major.y = element_blank(),
-        plot.title = element_text(face = "bold", size = 13),
-        plot.subtitle = element_text(size = 9), plot.caption = element_markdown(size = 6),
-        axis.text.y = element_text(size = 8))
-```
+pres_map <- tribble(
+  ~Who,                     ~FY_from, ~FY_to, ~Offices,
+  "Aquino (Tarlac)",         2014L,    2016L,  list(c("Tarlac D.E. Office", "Tarlac 2nd D.E. Office")),
+  "Duterte (Davao City)",    2017L,    2022L,  list(c("Davao City D.E. Office", "Davao City 2nd D.E. Office", "Davao City 3rd D.E. Office")),
+  "Marcos (Ilocos Norte)",   2023L,    2027L,  list(c("Ilocos Norte 1st D.E. Office", "Ilocos Norte 2nd D.E. Office")))
+speaker_map <- tribble(
+  ~Who,                            ~FY_from, ~FY_to, ~Offices,
+  "Belmonte (QC 4th)*",             2014L,    2016L,  list(c("Quezon City 1st D.E. Office", "Quezon City 2nd D.E. Office")),
+  "Alvarez (Davao del Norte 1st)",  2017L,    2018L,  list(c("Davao del Norte D.E. Office", "Davao del Norte 2nd D.E. Office")),
+  "Arroyo (Pampanga 2nd)",          2019L,    2019L,  list("Pampanga 2nd D.E. Office"),
+  "Cayetano (Taguig-Pateros)*",     2020L,    2020L,  list(c("Metro Manila 1st D.E. Office", "Metro Manila 2nd D.E. Office")),
+  "Velasco (Marinduque)",           2021L,    2022L,  list("Marinduque D.E. Office"),
+  "Romualdez (Leyte 1st)",          2023L,    2025L,  list("Leyte 1st D.E. Office"),
+  "Dy (Isabela 6th)*",              2026L,    2027L,  list(c("Isabela 1st D.E. Office", "Isabela 2nd D.E. Office", "Isabela 3rd D.E. Office", "Isabela 4th D.E. Office")))
+chair_map <- tribble(
+  ~Who,                          ~FYs,                     ~Offices,
+  "Ungab (Davao City 3rd)",       list(c(2014:2016, 2020)), list(c("Davao City D.E. Office", "Davao City 2nd D.E. Office", "Davao City 3rd D.E. Office")),
+  "Nograles (Davao City 1st)",    list(2017:2019),          list(c("Davao City D.E. Office", "Davao City 2nd D.E. Office", "Davao City 3rd D.E. Office")),
+  "Yap (ACT-CIS; Benguet)*",      list(2021:2022),          list(c("Benguet 1st D.E. Office", "Benguet 2nd D.E. Office")),
+  "Co (Ako Bicol; Albay)*",       list(2023:2025),          list(c("Albay 1st D.E. Office", "Albay 2nd D.E. Office", "Albay 3rd D.E. Office")),
+  "Suansing (Nueva Ecija 1st)*",  list(2026:2027),          list(c("Nueva Ecija 1st D.E. Office", "Nueva Ecija 2nd D.E. Office")))
 
-Read program by program, the FY 2027 proposal looks far more like the FY 2026
-*proposal* than the FY 2026 *enacted* budget — the Executive is, in effect,
-re-proposing much of what Congress rearranged on the way to the 2026 GAA:
+build_panel <- function(map, data = deo_full) {
+  map %>% mutate(Who = factor(Who, levels = Who)) %>%
+    unnest_longer(Offices) %>% unnest_longer(Offices) %>%
+    inner_join(data, by = c("Offices" = "Office"), relationship = "many-to-many") %>%
+    group_by(Who, FY_from, FY_to, FY, house_stage) %>%
+    summarize(NEP_B = sum(NEP_B), Enacted_B = sum(Enacted_B), .groups = "drop") %>%
+    mutate(Realign_B = Enacted_B - NEP_B, in_office = FY >= FY_from & FY <= FY_to)
+}
+build_panel_years <- function(map, data = deo_full) {
+  map %>% mutate(Who = factor(Who, levels = Who)) %>%
+    unnest_longer(Offices) %>% unnest_longer(Offices) %>%
+    inner_join(data, by = c("Offices" = "Office"), relationship = "many-to-many") %>%
+    group_by(Who, FYs, FY, house_stage) %>%
+    summarize(NEP_B = sum(NEP_B), Enacted_B = sum(Enacted_B), .groups = "drop") %>%
+    mutate(Realign_B = Enacted_B - NEP_B, in_office = map2_lgl(FY, FYs, ~ .x %in% unlist(.y))) %>%
+    select(-FYs)
+}
+pres_panel    <- build_panel(pres_map)
+speaker_panel <- build_panel(speaker_map)
+chair_panel   <- build_panel_years(chair_map)
 
-- **Flood Management**, gutted to just **₱4.8B** in the 2026 GAA, is restored to
-  **₱103.5B** in the FY 2027 proposal (though still below its ₱250.8B FY2026 NEP).
-- **Network Development**, which Congress cut to **₱96.8B** on enactment, returns
-  to **₱176.6B** — close to its original FY2026 proposal.
-- The **Convergence and Special Support Program** — which Congress *inflated* to
-  **₱240.5B** on enactment — is proposed back down at **₱157.3B**, roughly its
-  FY2026 proposed level.
-
-The full comparison, with the proposed change measured against the enacted 2026
-budget (the current baseline):
-
-```{r table-2627-compare}
-byprogram %>%
-  filter(FY %in% c(2026, 2027)) %>%
-  group_by(Program) %>%
-  summarise(`NEP 2026` = sum(NEP_B[FY == 2026], na.rm = TRUE),
-            `GAA 2026` = sum(GAA_B[FY == 2026], na.rm = TRUE),
-            `NEP 2027` = sum(NEP_B[FY == 2027], na.rm = TRUE), .groups = "drop") %>%
-  mutate(`Chg. vs 2026 GAA` = `NEP 2027` - `GAA 2026`,
-         Program = factor(Program, levels = dpwh_programs)) %>%
-  arrange(desc(`NEP 2027`)) %>%
-  mutate(across(where(is.numeric), ~ round(.x, 1))) %>%
-  kbl(align = c("l", "r", "r", "r", "r"),
-      caption = "FY 2027 Proposed New Appropriations vs FY 2026, by Program (PHP billions)") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
-                full_width = FALSE, font_size = 12) %>%
-  row_spec(0, bold = TRUE)
-```
-
-
-## By Program: Proposed and Enacted Levels
-
-Zooming in on the programs, it helps to see the **overall levels** the Executive
-proposes and the legislature enacts — the raw distribution of pesos across
-programs, and where the **FY 2027 proposal** places them relative to the recent
-past.
-
-At the department level, the FY 2027 NEP proposes **₱642.6B** — a marked step
-down from the ₱880B proposed for 2026 and the ₱1,087.7B *enacted* for 2025 (the
-2025 figure is the post-veto total; see the veto section). The proposed-versus-enacted
-totals over the full window make the swings plain:
-
-```{r plot-levels-total, fig.height=3.8}
-totlevels <- byprogram %>%
-  group_by(FY) %>%
-  summarise(NEP = sum(NEP_B, na.rm = TRUE),
-            GAA = if (all(is.na(GAA_B))) NA_real_ else sum(GAA_B, na.rm = TRUE),
-            .groups = "drop") %>%
-  pivot_longer(c(NEP, GAA), names_to = "Item", values_to = "AmountB") %>%
-  filter(!is.na(AmountB)) %>%
-  mutate(Item = factor(Item, levels = c("NEP", "GAA")))
-
-ggplot(totlevels, aes(x = FY, y = AmountB, colour = Item, group = Item)) +
-  geom_line(linewidth = 0.9) + geom_point(size = 1.8) +
-  geom_text(aes(label = round(AmountB)), vjust = -0.8, size = 2.4, show.legend = FALSE) +
-  scale_x_continuous(breaks = c(seq(2018, 2026, 2), 2027)) +
-  scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0.05, 0.14))) +
-  scale_colour_manual(values = c("NEP" = "#ffa6b0", "GAA" = "#3994fc")) +
-  labs(x = NULL, y = "PHP billions", colour = NULL,
-       title = "DPWH Total New Appropriations: Proposed (NEP) vs Enacted (GAA)",
-       caption = "**Note:** FY2027 shows the NEP only (not yet enacted). FY2025 GAA is the post-veto total.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
-  theme_bw() +
-  theme(legend.position = "bottom", panel.grid.minor = element_blank(),
-        panel.grid.major.x = element_blank(),
-        plot.title = element_text(face = "bold", size = 13),
+pg_theme <- function() theme_minimal() +
+  theme(legend.position = "bottom", panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
+        strip.text = element_text(face = "bold", hjust = 0, size = 9),
+        plot.title = element_text(face = "bold", size = 13), plot.subtitle = element_text(size = 8.5),
         plot.caption = element_markdown(size = 6))
+
+pg_cap_levels <- "**Data Sources:** NEP and GAA, 2014-2026 (2019 GAA post-veto); FY2027 NEP and House GAB (HB 10858). Shaded bands = administration that prepared each FY budget. Nominal pesos.<br>**Visualization:** AJ Montesa / People's Budget Coalition."
+pg_cap_realign <- "**Data Sources:** as above; bars = enacted minus NEP. FY2023's proposal parked nearly all district funds centrally, inflating that year's add-on.<br>**Visualization:** AJ Montesa / People's Budget Coalition."
+
+plot_levels <- function(panel, title, subtitle, highlight = FALSE, ncol = 2) {
+  panel %>% pivot_longer(c(NEP_B, Enacted_B), names_to = "Item", values_to = "Amount") %>%
+    mutate(Item = factor(str_remove(Item, "_B"), levels = c("NEP", "Enacted")),
+           a = if (highlight) if_else(in_office, 1, 0.35) else 1) %>%
+    ggplot(aes(FY, Amount, fill = Item, alpha = a)) +
+    admin_bands() +
+    geom_col(position = position_dodge2(width = 0.8, preserve = "single"), color = "black", linewidth = 0.2, width = 0.8) +
+    facet_wrap(~ Who, ncol = ncol, scales = "free_y") +
+    scale_x_continuous(breaks = c(2014, 2017, 2020, 2023, 2026)) +
+    scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.08))) +
+    scale_fill_manual(values = c(pg_item, admin_fill), breaks = names(pg_item)) +
+    scale_alpha_identity() +
+    labs(x = NULL, y = "PHP billions", fill = NULL, title = title, subtitle = subtitle, caption = pg_cap_levels) +
+    pg_theme()
+}
+plot_realign <- function(panel, title, subtitle, highlight = FALSE, ncol = 2) {
+  panel %>% filter(!is.na(Realign_B)) %>%
+    mutate(Direction = if_else(Realign_B >= 0, "Enacted above NEP", "Enacted below NEP"),
+           a = if (highlight) if_else(in_office, 1, 0.35) else 1,
+           lab = if_else(abs(Realign_B) >= 0.3, sprintf("%+.1f", Realign_B), "")) %>%
+    ggplot(aes(FY, Realign_B, fill = Direction, alpha = a)) +
+    admin_bands() +
+    geom_col(color = "black", linewidth = 0.2, width = 0.7) +
+    geom_hline(yintercept = 0, linewidth = 0.4) +
+    geom_text(aes(label = lab, vjust = if_else(Realign_B >= 0, -0.4, 1.3)), size = 1.9, alpha = 1) +
+    facet_wrap(~ Who, ncol = ncol, scales = "free_y") +
+    scale_x_continuous(breaks = c(2014, 2017, 2020, 2023, 2026)) +
+    scale_y_continuous(labels = scales::comma, expand = expansion(mult = 0.16)) +
+    scale_fill_manual(values = c("Enacted above NEP" = "#3994fc", "Enacted below NEP" = "#ffa6b0", admin_fill),
+                      breaks = c("Enacted above NEP", "Enacted below NEP")) +
+    scale_alpha_identity() +
+    labs(x = NULL, y = "Enacted minus NEP (PHP billions)", fill = NULL, title = title, subtitle = subtitle, caption = pg_cap_realign) +
+    pg_theme()
+}
 ```
 
-The enacted budget ran *above* the proposal every year from 2020 to 2025 — a
-legislature adding to the President's plan — until FY2026, when the enacted
-total fell far *below* the proposal (the ₱246B flood-control cut). The FY2027
-proposal resets the level near ₱643B.
+## Presidents' Home Districts
 
-**How is the FY 2027 proposal distributed across programs?** Two programs account
-for more than half of it: Network Development (₱176.6B, 27%) and the
-Convergence and Special Support Program (₱157.3B, 25%) — the latter
-historically the *discretionary* program that Congress inflated through
-realignments, now proposed at a high level in the Executive's own document.
+Two of the last three presidents saw the DPWH offices in their home areas do markedly better while they
+held office. Davao City's district offices averaged about ₱4.6B a year in enacted
+appropriations under Duterte, against ₱1.7B in the years he was out of power; Ilocos
+Norte averaged ₱6.2B under Marcos against ₱2.3B before. Benigno Aquino III is the
+counter-example: Tarlac's offices were, if anything, a little smaller during his term.
+The full-colour bars below are the years each president prepared the budget.
 
-```{r plot-levels-byprogram, fig.height=5.0}
-lvl <- byprogram %>%
-  select(FY, Program, NEP_B, GAA_B) %>%
-  pivot_longer(c(NEP_B, GAA_B), names_to = "Item", values_to = "AmountB") %>%
-  mutate(Item = factor(if_else(Item == "NEP_B", "NEP (proposed)", "GAA (enacted)"),
-                       levels = c("NEP (proposed)", "GAA (enacted)"))) %>%
-  filter(!is.na(AmountB))
-
-ggplot(lvl, aes(x = FY, y = AmountB, fill = Program)) +
-  geom_col(width = 0.72) +
-  facet_wrap(~Item, ncol = 1) +
-  scale_x_continuous(breaks = c(seq(2018, 2026, 2), 2027)) +
-  scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.04))) +
-  scale_fill_manual(values = program_colors) +
-  labs(x = NULL, y = "PHP billions", fill = NULL,
-       title = "DPWH Budget Levels by Program: Proposed (NEP, to 2027) and Enacted (GAA, to 2026)",
-       caption = "**Note:** FY2027 GAA is omitted (not yet enacted). Each bar is the full department budget, split by program.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
-  theme_bw() +
-  theme(legend.position = "bottom", legend.text = element_text(size = 6.5),
-        panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
-        plot.title = element_text(face = "bold", size = 12),
-        plot.caption = element_markdown(size = 6),
-        strip.background = element_rect(fill = "white"),
-        strip.text = element_text(size = 9, face = "bold")) +
-  guides(fill = guide_legend(nrow = 2))
+```{r polgeo-president-levels, fig.height=3.8}
+plot_levels(pres_panel, "Presidents' Home District Offices: Proposed vs Enacted",
+            "Each panel sums all DEOs in the home province or city. Full-colour bars = FY budgets prepared under that President.",
+            highlight = TRUE, ncol = 3)
 ```
 
-Reading the two panels together is instructive. In the **enacted** budgets (lower
-panel), the Convergence and Special Support Program balloons after 2022 — the
-realignment story documented in Section 6. But the **proposed** budgets (upper
-panel) show the Executive itself steadily raising Convergence, so that by FY2027
-it is proposed at ₱157B before Congress touches it. The proposed FY2027
-distribution, in full:
-
-```{r table-levels-2027}
-byprogram %>%
-  filter(FY == 2027) %>%
-  transmute(Program,
-            `NEP 2027 (PHP B)` = round(NEP_B, 1),
-            `Share of proposal` = scales::percent(NEP_B / sum(NEP_B), accuracy = 0.1)) %>%
-  arrange(desc(`NEP 2027 (PHP B)`)) %>%
-  kbl(align = c("l", "r", "r"),
-      caption = "FY 2027 Proposed New Appropriations by Program (NEP)") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
-                full_width = FALSE, font_size = 12)
+```{r polgeo-president-realign, fig.height=3.6}
+plot_realign(pres_panel, "Presidents' Home Districts: What Congress Added",
+             "Enacted minus NEP. Full-colour bars = FY budgets prepared under that President.",
+             highlight = TRUE, ncol = 3)
 ```
 
+## House Speakers' Home Districts
 
-## Inside the Proposal: The Biggest Line Items
+The Speaker controls the House floor where most district insertions are made, so the
+pattern should be sharper here, and for several Speakers it is. The chart keeps every
+Speaker's home district across the whole window; their in-office years are the
+full-colour bars.
 
-Applying the same granular lens to the **FY 2027 proposal** shows what the Executive
-is prioritising *within* the programs. The largest proposed items are a telling mix
-of the national works Congress usually trims and the district-oriented items it
-usually adds.
-
-```{r plot-2027-items, fig.height=5.4}
-items27 <- gran %>%
-  filter(FY == 2027, NEP_B > 0) %>%
-  group_by(Item, Program) %>% summarise(NEP_B = sum(NEP_B, na.rm = TRUE), .groups = "drop") %>%
-  slice_max(NEP_B, n = 15) %>%
-  mutate(ProgLab = str_replace(Program, "Convergence and Special Support Program", "Convergence & Special Support") %>%
-                   str_replace(" Program$",""),
-         ItemS = short_item(Item), ItemS = fct_reorder(ItemS, NEP_B))
-ggplot(items27, aes(x = NEP_B, y = ItemS, fill = ProgLab)) +
-  geom_col(width = 0.74) +
-  geom_text(aes(label = round(NEP_B)), hjust = -0.15, size = 2.7, colour = "grey20") +
-  scale_x_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.10))) +
-  scale_fill_manual(values = program_colors_short, name = NULL) +
-  labs(x = "FY 2027 proposed NEP (PHP billions)", y = NULL,
-       title = "The 15 biggest line items in the FY 2027 proposal",
-       subtitle = "Coloured by program; a mix of national road works and Convergence district items",
-       caption = "**Data:** granular program encoding.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
-  theme_bw() +
-  theme(legend.position = "bottom", legend.text = element_text(size = 6.5),
-        panel.grid.minor = element_blank(), panel.grid.major.y = element_blank(),
-        plot.title = element_text(face = "bold", size = 13),
-        plot.subtitle = element_text(size = 9), plot.caption = element_markdown(size = 6),
-        axis.text.y = element_text(size = 7.5)) +
-  guides(fill = guide_legend(nrow = 2))
+```{r polgeo-speaker-levels, fig.height=4.4}
+plot_levels(speaker_panel, "House Speakers' Home District Offices: Proposed vs Enacted",
+            "* = all DEOs plausibly covering the district summed. Full-colour bars = FYs that Speaker presided over the budget.",
+            highlight = TRUE, ncol = 4)
 ```
 
-The single largest proposed item is **By-Pass & Diversion Roads (₱127B)** — a
-national Network Development line that Congress has historically *cut* by the most
-(recall the ₱94B cumulative reduction above). Right behind it is **BIP – Access
-Roads to Public Buildings (₱106B)**, a Convergence item of exactly the type
-Congress historically *adds*. The two big flood-mitigation lines return at ₱63B and
-₱41B. In other words, the FY 2027 NEP re-proposes a large national road-and-flood
-program — much of which the legislature has a track record of trimming in favour
-of district items — setting up the same proposal-versus-enactment tug-of-war at
-the item level that the rest of this report documents at the program and district
-levels.
-
-## By District Engineering Office: The Proposed Distribution
-
-Having seen how Congress has historically built up district budgets, it is worth
-turning the same geographic lens on the **FY 2027 proposal**. Its starting
-distribution across operating units is strikingly centralized — a reminder that
-the district-level build-up documented above happens *after* the proposal, not in
-it.
-
-Of the ₱642.6B proposed for FY 2027, **₱510.0B (79%) sits in the Central Office**
-and only **₱129.7B (20%) is distributed across the 198 district engineering
-offices** (the small remainder is in regional and other units). That 79/20 split
-is the raw material Congress works on: the district-level build-up that defines
-DPWH's budget politics happens *later*, in the move from proposal to enacted law.
-
-```{r plot-levels-centraldist, fig.height=3.8}
-unit_levels <- byoperunit %>%
-  mutate(Unit = case_when(Office == "Central Office"        ~ "Central Office",
-                          str_detect(Office, "D.E. Office") ~ "District Engineering Offices",
-                          str_detect(Office, "Regional")    ~ "Regional Offices",
-                          TRUE                              ~ "Other units")) %>%
-  filter(FY >= 2018) %>%
-  group_by(FY, Unit) %>%
-  summarise(NEP_B = sum(NEP_B, na.rm = TRUE), .groups = "drop") %>%
-  group_by(FY) %>% mutate(share = NEP_B / sum(NEP_B)) %>% ungroup() %>%
-  mutate(Unit = factor(Unit, levels = c("Central Office", "District Engineering Offices",
-                                         "Regional Offices", "Other units")))
-
-ggplot(unit_levels, aes(x = FY, y = share, fill = Unit)) +
-  geom_col(width = 0.74) +
-  scale_x_continuous(breaks = c(seq(2018, 2026, 2), 2027)) +
-  scale_y_continuous(labels = scales::percent, expand = expansion(mult = c(0, 0.02))) +
-  scale_fill_manual(values = c("Central Office" = "#3994fc",
-                               "District Engineering Offices" = "#ffa6b0",
-                               "Regional Offices" = "#bcbef2", "Other units" = "#d9d9d9")) +
-  labs(x = NULL, y = "Share of proposed NEP", fill = NULL,
-       title = "Where the Proposal Places the Money: NEP Share by Operating Unit",
-       caption = "**Note:** Each bar is the FY's *proposed* (NEP) new appropriations, split by operating unit. FY2027 is proposed only.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
-  theme_bw() +
-  theme(legend.position = "bottom", legend.text = element_text(size = 7),
-        panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
-        plot.title = element_text(face = "bold", size = 12.5),
-        plot.caption = element_markdown(size = 6)) +
-  guides(fill = guide_legend(nrow = 1))
+```{r polgeo-speaker-realign, fig.height=4.2}
+plot_realign(speaker_panel, "House Speakers' Home Districts: What Congress Added",
+             "Full-colour bars = FYs that Speaker presided.", highlight = TRUE, ncol = 4)
 ```
 
-At proposal stage the Central Office has held the overwhelming share of new
-appropriations every year — typically 75-85% — because the Executive budgets
-most district projects centrally and lets the release-and-realignment machinery
-distribute them. The FY2027 proposal (79% central) is squarely in that pattern.
+## Appropriations Committee Chairs' Home Districts
 
-**Which districts fare best in the proposal?** Even within the 20% that is
-pre-allocated to named districts, the FY2027 NEP is concentrated: the top office
-is proposed ₱3.5B while the median district gets a fraction of that.
+The chair writes the committee report. Davao City recurs here too - Ungab and Nograles,
+successive chairs, both represented it - as do the provincial ties of the party-list
+chairs who followed.
 
-```{r plot-levels-topdeo, fig.height=5.0}
-top_deo_27 <- deo_all %>%
-  filter(FY == 2027) %>%
-  slice_max(NEP_B, n = 20) %>%
-  mutate(Office = str_remove(Office, " D\\.E\\. Office$") %>% str_remove(" Engineering$"),
-         Office = fct_reorder(Office, NEP_B))
-
-ggplot(top_deo_27, aes(x = NEP_B, y = Office)) +
-  geom_col(fill = "#3994fc", width = 0.72) +
-  geom_text(aes(label = format(round(NEP_B, 2), nsmall = 2)), hjust = -0.15, size = 2.6) +
-  scale_x_continuous(expand = expansion(mult = c(0, 0.12))) +
-  labs(x = "FY 2027 proposed NEP (PHP billions)", y = NULL,
-       title = "Top 20 District Engineering Offices in the FY 2027 Proposal",
-       caption = "**Note:** Pre-allocated district amounts in the NEP, before congressional realignment.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
-  theme_bw() +
-  theme(panel.grid.minor = element_blank(), panel.grid.major.y = element_blank(),
-        plot.title = element_text(face = "bold", size = 12.5),
-        plot.caption = element_markdown(size = 6),
-        axis.text.y = element_text(size = 7))
+```{r polgeo-chair-levels, fig.height=4.0}
+plot_levels(chair_panel, "Appropriations Chairs' Home District Offices: Proposed vs Enacted",
+            "Full-colour bars = FY budgets handled by that chair. * = all DEOs in the province summed.",
+            highlight = TRUE, ncol = 3)
 ```
 
-The offices proposed the most in FY2027 — Bulacan 2nd (₱3.5B), Metro Manila 3rd
-(₱2.9B), Nueva Ecija 1st (₱2.8B) — are a mix of high-population and
-infrastructure-heavy districts. But the more important point for scrutiny is the
-gap between this proposed geography and the *enacted* one: as the realignment
-analysis above shows, Congress adds heavily to district offices during
-deliberations, so the enacted distribution of DPWH money will look very different
-from this proposal.
+```{r polgeo-chair-realign, fig.height=3.8}
+plot_realign(chair_panel, "Appropriations Chairs' Home Districts: What Congress Added",
+             "Full-colour bars = FY budgets handled by that chair.", highlight = TRUE, ncol = 3)
+```
 
+## In Office Versus Out: The Summary
+
+Averaging across the window makes the contrast plain. For each President and Speaker,
+the table compares the mean enacted budget of their home district offices, and the mean
+congressional add-on, in the years they held power against the years they did not.
+
+```{r polgeo-summary}
+bind_rows(President = pres_panel, Speaker = speaker_panel, .id = "Role") %>%
+  filter(FY <= 2026) %>%
+  group_by(Role, Who, in_office) %>%
+  summarize(Enacted = mean(Enacted_B), Realign = mean(Realign_B), .groups = "drop") %>%
+  pivot_wider(names_from = in_office, values_from = c(Enacted, Realign)) %>%
+  transmute(Role, `Official (home area)` = Who,
+            `Enacted, in office` = Enacted_TRUE, `Enacted, out` = Enacted_FALSE,
+            `Add-on, in office` = Realign_TRUE, `Add-on, out` = Realign_FALSE) %>%
+  arrange(Role) %>%
+  kable(digits = 2, caption = "Mean home-district DEO budget and congressional add-on (PHP billions), in-office vs out, FY2014-2026.") %>%
+  kable_styling(full_width = TRUE, font_size = 13, bootstrap_options = c("condensed", "striped", "hover")) %>%
+  collapse_rows(columns = 1, valign = "top")
+```
+
+The pattern holds for most officials but not all, and the exceptions matter. Among the
+three presidents, Duterte's and Marcos's home districts drew both larger enacted budgets
+and larger net additions while they were in power; Aquino's Tarlac did not. Among the
+seven Speakers, five home districts did better in office, but two did not: Belmonte's
+Quezon City offices averaged ₱2.43B in office against ₱4.88B out, and Alvarez's Davao del
+Norte ₱0.94B against ₱1.05B. This is a correlation, not a verdict. Home provinces differ
+in size, need, number of district offices, and absorptive capacity, and a larger
+home-district budget can follow from any of these. What the table supports is narrow:
+the DPWH offices in officials' home areas are often, though not always, funded more generously. That is a reason
+to read the district-level numbers above and the House FY 2027 jumps (Ilocos Norte, the
+Speaker's Isabela, the chair's Nueva Ecija) more closely, not a finding that any increase
+was improper.
 
 # The Line-Item Vetoes: 2019 and 2025
 
 Twice in this window the President reached past Congress's realignments and struck
-enacted amounts out of the DPWH budget by **line-item veto** — in **FY2019
+enacted amounts out of the DPWH budget by **line-item veto** - in **FY2019
 (₱95.4B)** and again in **FY2025 (₱26.1B)**. In both years the pattern was the
 same: Congress inflated the proposal (heavily in 2019's Local Program, and in
 2025's Convergence and Flood programs), and the President then vetoed a large
@@ -1915,10 +2060,10 @@ throughout this report is the **post-veto** figure in both years.
 
 In FY2019, Congress raised the DPWH's New Appropriations only modestly in
 aggregate (from a **₱544.5B** proposal to a **₱549.4B** legislated total) but **heavily
-reallocated** the money — above all into the Local Program. The President then
-exercised **line-item vetoes worth ₱95.37B**, almost all of it from that program,
+reallocated** the money - above all into the Local Program. The President then
+exercised **line-item vetoes totaling ₱95.37B**, almost all of it from that program,
 bringing the enacted GAA down to **₱454.0B** (the NEP-to-GAA dip visible back in
-Section 1). The three stages below are what the President **proposed** (NEP), what
+Section 3). The three stages below are what the President **proposed** (NEP), what
 Congress **legislated** (the pre-veto total), and what was finally **enacted**
 after the line-item veto.
 
@@ -1932,7 +2077,7 @@ veto_total <- tibble(
 )
 
 ggplot(veto_total, aes(x = Stage, y = AmountB, fill = Stage)) +
-  geom_col(width = 0.62) +
+  geom_col(width = 0.62, color = "black", linewidth = 0.2) +
   geom_text(aes(label = comma(AmountB, accuracy = 0.1)), vjust = -0.5, size = 3) +
   annotate("segment", x = 2, xend = 3, y = 575, yend = 575) +
   annotate("text", x = 2.5, y = 590, label = "vetoed: -P95.4B", size = 3, fontface = "bold") +
@@ -1959,7 +2104,7 @@ veto_prog <- byprogram %>%
          Program = factor(Program, levels = dpwh_programs))
 
 ggplot(veto_prog, aes(x = Stage, y = AmountB, fill = Stage)) +
-  geom_col(width = 0.7) +
+  geom_col(width = 0.7, color = "black", linewidth = 0.2) +
   facet_wrap(~Program, scales = "free_y", ncol = 4, labeller = label_wrap_gen(22)) +
   scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.1))) +
   scale_fill_manual(values = c("Proposed (NEP)" = "#ffa6b0", "Legislated (pre-veto)" = "#bcbef2",
@@ -1979,7 +2124,7 @@ ggplot(veto_prog, aes(x = Stage, y = AmountB, fill = Stage)) +
 
 The veto was overwhelmingly a **Local Program** event: only that program (plus
 token amounts in the two overhead lines) shows a legislated (pre-veto) bar towering over the
-enacted level. Unpacking the vetoed line items by **type of work** and by **engineering
+enacted level. Breaking the vetoed line items down by **type of work** and by **engineering
 office** shows where the realigned money had been parked:
 
 ```{r load-veto-detail}
@@ -1992,7 +2137,7 @@ veto_detail %>%
   group_by(Activity) %>%
   summarize(Veto_B = sum(Veto_B), .groups = "drop") %>%
   ggplot(aes(x = Veto_B, y = fct_reorder(Activity, Veto_B))) +
-  geom_col(fill = "#3994fc") +
+  geom_col(fill = "#3994fc", color = "black", linewidth = 0.2) +
   geom_text(aes(label = format(round(Veto_B, 1), nsmall = 1)), hjust = -0.15, size = 2.6) +
   scale_x_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.12))) +
   labs(x = "PHP billions vetoed", y = NULL,
@@ -2011,7 +2156,7 @@ veto_detail %>%
   summarize(Veto_B = sum(Veto_B), .groups = "drop") %>%
   slice_max(Veto_B, n = 15) %>%
   ggplot(aes(x = Veto_B, y = fct_reorder(Office, Veto_B))) +
-  geom_col(fill = "#ffa6b0") +
+  geom_col(fill = "#ffa6b0", color = "black", linewidth = 0.2) +
   geom_text(aes(label = format(round(Veto_B, 2), nsmall = 2)), hjust = -0.15, size = 2.4) +
   scale_x_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.14))) +
   labs(x = "PHP billions vetoed", y = NULL,
@@ -2063,8 +2208,8 @@ veto_detail %>%
 ## The 2025 Veto (₱26.1B)
 
 FY2025 repeated the pattern on a smaller scale. Congress raised the DPWH proposal
-sharply — from a **₱898.9B** NEP to a **₱1,113.8B** legislated total, a **+₱215B**
-insertion — and the President then vetoed **₱26.1B**, bringing the enacted GAA
+sharply - from a **₱898.9B** NEP to a **₱1,113.8B** legislated total, a **+₱215B**
+insertion - and the President then vetoed **₱26.1B**, bringing the enacted GAA
 to **₱1,087.7B**. Where 2019's veto fell on the Local Program, 2025's landed
 squarely on the two programs most associated with discretionary spending:
 **Convergence and Special Support (₱18.0B vetoed)** and **Flood Management
@@ -2080,7 +2225,7 @@ veto_total_25 <- tibble(
 )
 
 ggplot(veto_total_25, aes(x = Stage, y = AmountB, fill = Stage)) +
-  geom_col(width = 0.62) +
+  geom_col(width = 0.62, color = "black", linewidth = 0.2) +
   geom_text(aes(label = comma(AmountB, accuracy = 0.1)), vjust = -0.5, size = 3) +
   annotate("segment", x = 2, xend = 3, y = 1150, yend = 1150) +
   annotate("text", x = 2.5, y = 1175, label = "vetoed: -P26.1B", size = 3, fontface = "bold") +
@@ -2095,7 +2240,7 @@ ggplot(veto_total_25, aes(x = Stage, y = AmountB, fill = Stage)) +
         axis.text.x = element_text(size = 8))
 ```
 
-The vetoed amounts fell on three programs, and — as in 2019 — almost entirely
+The vetoed amounts fell on three programs, and, as in 2019, almost entirely
 on centrally-held appropriations:
 
 ```{r plot-veto2025-detail, fig.height=3.4}
@@ -2109,7 +2254,7 @@ central_share_25 <- read_xlsx(data_path, sheet = "2025_Veto") %>%
                  sum(GAA_Veto, na.rm = TRUE)) %>% pull(sh)
 
 ggplot(veto25_prog, aes(x = Veto_B, y = fct_reorder(Program, Veto_B))) +
-  geom_col(fill = "#8c8c8c", width = 0.6) +
+  geom_col(fill = "#8c8c8c", width = 0.6, color = "black", linewidth = 0.2) +
   geom_text(aes(label = comma(Veto_B, accuracy = 0.1)), hjust = -0.15, size = 3) +
   scale_x_continuous(expand = expansion(mult = c(0, 0.15))) +
   scale_y_discrete(labels = function(x) str_wrap(x, 24)) +
@@ -2125,7 +2270,7 @@ ggplot(veto25_prog, aes(x = Veto_B, y = fct_reorder(Program, Veto_B))) +
         axis.text.y = element_text(size = 8))
 ```
 
-As in 2019, the veto was overwhelmingly a **Central Office** event — about
+As in 2019, the veto was overwhelmingly a **Central Office** event - about
 **₱25.1B (96%)** of the ₱26.1B struck was drawn from centrally-held appropriations,
 with only token amounts removed from named district offices. The recurring story
 is the same across both years: the largest discretionary build-ups are inserted
@@ -2133,12 +2278,363 @@ centrally during deliberations, and it is there that the veto pen, when used,
 falls.
 
 
+# The FY 2027 Proposal
+
+FY 2027 is where the history in this report becomes a test. If the patterns above were
+warning signs visible before the scandal, the question for the budget now before Congress
+is whether it repeats them or breaks from them. This section draws the FY 2027 figures
+together in one place: the proposal's overall size, its distribution **by program** and
+**by district engineering office**, how it compares with the previous year's proposed
+(**NEP**) and enacted (**GAA**) budgets, and what the House did to it at second reading.
+The FY 2027 NEP is the live document advocates can still shape. The House figures are a
+House-stage amount (HB 10858, as approved on second reading), not a final appropriation.
+
+## FY 2027 in Context: Comparison with FY 2026
+
+At **₱642.6B**, the FY 2027 proposal sits between the two FY 2026 figures. It is
+about **₱113B _above_** the ₱529.6B that was finally enacted for 2026 - a budget
+slashed by the roughly ₱350B flood-control cut - but about **₱237B _below_** the
+₱880B the Executive had originally proposed for 2026. In other words, the
+Department is proposing to spend more than the shrunken 2026 law allows, but well
+short of its own ambitions a year earlier.
+
+```{r plot-2627-compare, fig.height=5.2}
+cmp <- byprogram %>%
+  filter(FY %in% c(2026, 2027)) %>%
+  transmute(Program,
+            `NEP 2026` = if_else(FY == 2026, NEP_B, NA_real_),
+            `GAA 2026` = if_else(FY == 2026, GAA_B, NA_real_),
+            `NEP 2027` = if_else(FY == 2027, NEP_B, NA_real_)) %>%
+  group_by(Program) %>%
+  summarise(across(everything(), ~ sum(.x, na.rm = TRUE)), .groups = "drop") %>%
+  pivot_longer(-Program, names_to = "Series", values_to = "AmountB") %>%
+  mutate(Series = factor(Series, levels = c("NEP 2026", "GAA 2026", "NEP 2027")),
+         Program = factor(Program, levels = dpwh_programs))
+
+ggplot(cmp, aes(x = AmountB, y = fct_rev(Program), fill = Series)) +
+  geom_col(position = position_dodge(width = 0.75), width = 0.7, color = "black", linewidth = 0.2) +
+  scale_x_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.06))) +
+  scale_y_discrete(labels = function(x) str_wrap(x, 24)) +
+  scale_fill_manual(values = c("NEP 2026" = "#ffd0d5", "GAA 2026" = "#3994fc", "NEP 2027" = "#c0392b")) +
+  labs(x = "PHP billions", y = NULL, fill = NULL,
+       title = "FY 2027 Proposal vs FY 2026, by Program",
+       subtitle = "Light pink = FY2026 proposed; blue = FY2026 enacted; red = FY2027 proposed",
+       caption = "**Data Sources:** NEP and GAA documents.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_bw() +
+  theme(legend.position = "top", panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.subtitle = element_text(size = 9), plot.caption = element_markdown(size = 6),
+        axis.text.y = element_text(size = 8))
+```
+
+Read program by program, the FY 2027 proposal looks far more like the FY 2026
+*proposal* than the FY 2026 *enacted* budget - the Executive is, in effect,
+re-proposing much of what Congress rearranged on the way to the 2026 GAA:
+
+- **Flood Management**, gutted to just **₱4.8B** in the 2026 GAA, is restored to
+  **₱103.5B** in the FY 2027 proposal (though still below its ₱250.8B FY2026 NEP).
+- **Network Development**, which Congress cut to **₱96.8B** on enactment, returns
+  to **₱176.6B** - close to its original FY2026 proposal.
+- The **Convergence and Special Support Program** - which Congress *inflated* to
+  **₱240.5B** on enactment - is proposed back down at **₱157.3B**, roughly its
+  FY2026 proposed level.
+
+The full comparison, with the proposed change measured against the enacted 2026
+budget (the current baseline):
+
+```{r table-2627-compare}
+byprogram %>%
+  filter(FY %in% c(2026, 2027)) %>%
+  group_by(Program) %>%
+  summarise(`NEP 2026` = sum(NEP_B[FY == 2026], na.rm = TRUE),
+            `GAA 2026` = sum(GAA_B[FY == 2026], na.rm = TRUE),
+            `NEP 2027` = sum(NEP_B[FY == 2027], na.rm = TRUE), .groups = "drop") %>%
+  mutate(`Chg. vs 2026 GAA` = `NEP 2027` - `GAA 2026`,
+         Program = factor(Program, levels = dpwh_programs)) %>%
+  arrange(desc(`NEP 2027`)) %>%
+  mutate(across(where(is.numeric), ~ round(.x, 1))) %>%
+  kbl(align = c("l", "r", "r", "r", "r"),
+      caption = "FY 2027 Proposed New Appropriations vs FY 2026, by Program (PHP billions)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = FALSE, font_size = 12) %>%
+  row_spec(0, bold = TRUE)
+```
+
+
+## By Program: Proposed and Enacted Levels
+
+Zooming in on the programs, it helps to see the **overall levels** the Executive
+proposes and the legislature enacts - the raw distribution of pesos across
+programs, and where the **FY 2027 proposal** places them relative to the recent
+past.
+
+At the department level, the FY 2027 NEP proposes **₱642.6B** - a marked step
+down from the ₱880B proposed for 2026 and the ₱1,087.7B *enacted* for 2025 (the
+2025 figure is the post-veto total; see the veto section). The proposed-versus-enacted
+totals over the full window make the swings plain:
+
+```{r plot-levels-total, fig.height=3.8}
+totlevels <- byprogram %>%
+  group_by(FY) %>%
+  summarise(NEP = sum(NEP_B, na.rm = TRUE),
+            GAA = if (all(is.na(GAA_B))) NA_real_ else sum(GAA_B, na.rm = TRUE),
+            .groups = "drop") %>%
+  pivot_longer(c(NEP, GAA), names_to = "Item", values_to = "AmountB") %>%
+  filter(!is.na(AmountB)) %>%
+  mutate(Item = factor(Item, levels = c("NEP", "GAA")))
+
+ggplot(totlevels, aes(x = FY, y = AmountB, colour = Item, group = Item)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 1.8) +
+  geom_text(aes(label = round(AmountB)), vjust = -0.8, size = 2.4, show.legend = FALSE) +
+  scale_x_continuous(breaks = c(seq(2018, 2026, 2), 2027)) +
+  scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0.05, 0.14))) +
+  scale_colour_manual(values = c("NEP" = "#ffa6b0", "GAA" = "#3994fc")) +
+  labs(x = NULL, y = "PHP billions", colour = NULL,
+       title = "DPWH Total New Appropriations: Proposed (NEP) vs Enacted (GAA)",
+       caption = "**Note:** FY2027 shows the NEP only (not yet enacted). FY2025 GAA is the post-veto total.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_bw() +
+  theme(legend.position = "bottom", panel.grid.minor = element_blank(),
+        panel.grid.major.x = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.caption = element_markdown(size = 6))
+```
+
+The enacted budget ran *above* the proposal every year from 2020 to 2025 - a
+legislature adding to the President's plan - until FY2026, when the enacted
+total fell far *below* the proposal (the ₱246B flood-control cut). The FY2027
+proposal resets the level near ₱643B.
+
+**How is the FY 2027 proposal distributed across programs?** Two programs account
+for more than half of it: Network Development (₱176.6B, 27%) and the
+Convergence and Special Support Program (₱157.3B, 25%) - the latter
+historically the *discretionary* program that Congress inflated through
+realignments, now proposed at a high level in the Executive's own document.
+
+```{r plot-levels-byprogram, fig.height=5.0}
+lvl <- byprogram %>%
+  select(FY, Program, NEP_B, GAA_B) %>%
+  pivot_longer(c(NEP_B, GAA_B), names_to = "Item", values_to = "AmountB") %>%
+  mutate(Item = factor(if_else(Item == "NEP_B", "NEP (proposed)", "GAA (enacted)"),
+                       levels = c("NEP (proposed)", "GAA (enacted)"))) %>%
+  filter(!is.na(AmountB))
+
+ggplot(lvl, aes(x = FY, y = AmountB, fill = Program)) +
+  geom_col(width = 0.72, color = "black", linewidth = 0.2) +
+  facet_wrap(~Item, ncol = 1) +
+  scale_x_continuous(breaks = c(seq(2018, 2026, 2), 2027)) +
+  scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.04))) +
+  scale_fill_manual(values = program_colors) +
+  labs(x = NULL, y = "PHP billions", fill = NULL,
+       title = "DPWH Budget Levels by Program: Proposed (NEP, to 2027) and Enacted (GAA, to 2026)",
+       caption = "**Note:** FY2027 GAA is omitted (not yet enacted). Each bar is the full department budget, split by program.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_bw() +
+  theme(legend.position = "bottom", legend.text = element_text(size = 6.5),
+        panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
+        plot.title = element_text(face = "bold", size = 12),
+        plot.caption = element_markdown(size = 6),
+        strip.background = element_rect(fill = "white"),
+        strip.text = element_text(size = 9, face = "bold")) +
+  guides(fill = guide_legend(nrow = 2))
+```
+
+Reading the two panels together is instructive. In the **enacted** budgets (lower
+panel), the Convergence and Special Support Program balloons after 2022 - the
+realignment story documented in Section 4. But the **proposed** budgets (upper
+panel) show the Executive itself steadily raising Convergence, so that by FY2027
+it is proposed at ₱157B before Congress touches it. The proposed FY2027
+distribution, in full:
+
+```{r table-levels-2027}
+byprogram %>%
+  filter(FY == 2027) %>%
+  transmute(Program,
+            `NEP 2027 (PHP B)` = round(NEP_B, 1),
+            `Share of proposal` = scales::percent(NEP_B / sum(NEP_B), accuracy = 0.1)) %>%
+  arrange(desc(`NEP 2027 (PHP B)`)) %>%
+  kbl(align = c("l", "r", "r"),
+      caption = "FY 2027 Proposed New Appropriations by Program (NEP)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = FALSE, font_size = 12)
+```
+
+
+## Inside the Proposal: The Biggest Line Items
+
+Applying the same granular lens to the **FY 2027 proposal** shows what the Executive
+is prioritising *within* the programs. The largest proposed items are a telling mix
+of the national works Congress usually trims and the district-oriented items it
+usually adds.
+
+```{r plot-2027-items, fig.height=5.4}
+items27 <- gran %>%
+  filter(FY == 2027, NEP_B > 0) %>%
+  group_by(Item, Program) %>% summarise(NEP_B = sum(NEP_B, na.rm = TRUE), .groups = "drop") %>%
+  slice_max(NEP_B, n = 15) %>%
+  mutate(ProgLab = str_replace(Program, "Convergence and Special Support Program", "Convergence & Special Support") %>%
+                   str_replace(" Program$",""),
+         ItemS = short_item(Item), ItemS = fct_reorder(ItemS, NEP_B))
+ggplot(items27, aes(x = NEP_B, y = ItemS, fill = ProgLab)) +
+  geom_col(width = 0.74, color = "black", linewidth = 0.2) +
+  geom_text(aes(label = round(NEP_B)), hjust = -0.15, size = 2.7, colour = "grey20") +
+  scale_x_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.10))) +
+  scale_fill_manual(values = program_colors_short, name = NULL) +
+  labs(x = "FY 2027 proposed NEP (PHP billions)", y = NULL,
+       title = "The 15 biggest line items in the FY 2027 proposal",
+       subtitle = "Coloured by program; a mix of national road works and Convergence district items",
+       caption = "**Data:** granular program encoding.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_bw() +
+  theme(legend.position = "bottom", legend.text = element_text(size = 6.5),
+        panel.grid.minor = element_blank(), panel.grid.major.y = element_blank(),
+        plot.title = element_text(face = "bold", size = 13),
+        plot.subtitle = element_text(size = 9), plot.caption = element_markdown(size = 6),
+        axis.text.y = element_text(size = 7.5)) +
+  guides(fill = guide_legend(nrow = 2))
+```
+
+The single largest proposed item is **By-Pass & Diversion Roads (₱127B)** - a
+national Network Development line that Congress has historically *cut* by the most
+(recall the ₱94B cumulative reduction above). Right behind it is **BIP – Access
+Roads to Public Buildings (₱106B)**, a Convergence item of exactly the type
+Congress historically *adds*. The two big flood-mitigation lines return at ₱63B and
+₱41B. In other words, the FY 2027 NEP re-proposes a large national road-and-flood
+program - much of which the legislature has a track record of trimming in favour
+of district items - setting up the same proposal-versus-enactment tug-of-war at
+the item level that the rest of this report documents at the program and district
+levels.
+
+## By District Engineering Office: The Proposed Distribution
+
+Having seen how Congress has historically built up district budgets, the same
+geographic lens applies to the **FY 2027 proposal**. Its starting
+distribution across operating units is strikingly centralized, a reminder that
+the district-level build-up documented above happens *after* the proposal, not in
+it.
+
+Of the ₱642.6B proposed for FY 2027, **₱510.0B (79%) sits in the Central Office**
+and only **₱129.7B (20%) is distributed across the 198 district engineering
+offices** (the small remainder is in regional and other units). That 79/20 split
+is the raw material Congress works on: the district-level build-up that defines
+DPWH's budget politics happens *later*, in the move from proposal to enacted law.
+
+```{r plot-levels-centraldist, fig.height=3.8}
+unit_levels <- byoperunit %>%
+  mutate(Unit = case_when(Office == "Central Office"        ~ "Central Office",
+                          str_detect(Office, "D.E. Office") ~ "District Engineering Offices",
+                          str_detect(Office, "Regional")    ~ "Regional Offices",
+                          TRUE                              ~ "Other units")) %>%
+  filter(FY >= 2018) %>%
+  group_by(FY, Unit) %>%
+  summarise(NEP_B = sum(NEP_B, na.rm = TRUE), .groups = "drop") %>%
+  group_by(FY) %>% mutate(share = NEP_B / sum(NEP_B)) %>% ungroup() %>%
+  mutate(Unit = factor(Unit, levels = c("Central Office", "District Engineering Offices",
+                                         "Regional Offices", "Other units")))
+
+ggplot(unit_levels, aes(x = FY, y = share, fill = Unit)) +
+  geom_col(width = 0.74, color = "black", linewidth = 0.2) +
+  scale_x_continuous(breaks = c(seq(2018, 2026, 2), 2027)) +
+  scale_y_continuous(labels = scales::percent, expand = expansion(mult = c(0, 0.02))) +
+  scale_fill_manual(values = c("Central Office" = "#3994fc",
+                               "District Engineering Offices" = "#ffa6b0",
+                               "Regional Offices" = "#bcbef2", "Other units" = "#d9d9d9")) +
+  labs(x = NULL, y = "Share of proposed NEP", fill = NULL,
+       title = "Where the Proposal Places the Money: NEP Share by Operating Unit",
+       caption = "**Note:** Each bar is the FY's *proposed* (NEP) new appropriations, split by operating unit. FY2027 is proposed only.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_bw() +
+  theme(legend.position = "bottom", legend.text = element_text(size = 7),
+        panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
+        plot.title = element_text(face = "bold", size = 12.5),
+        plot.caption = element_markdown(size = 6)) +
+  guides(fill = guide_legend(nrow = 1))
+```
+
+At proposal stage the Central Office has held the overwhelming share of new
+appropriations every year (typically 75-85%) because a large share is initially recorded under the Central Office; the later
+geography and implementing units would require project and fund-release records to
+verify. The FY2027 proposal (79% central) is squarely in that pattern.
+
+**Which districts fare best in the proposal?** Even within the 20% that is
+pre-allocated to named districts, the FY2027 NEP is concentrated: the top office
+is proposed ₱3.5B while the median district gets a fraction of that.
+
+```{r plot-levels-topdeo, fig.height=5.0}
+top_deo_27 <- deo_all %>%
+  filter(FY == 2027) %>%
+  slice_max(NEP_B, n = 20) %>%
+  mutate(Office = str_remove(Office, " D\\.E\\. Office$") %>% str_remove(" Engineering$"),
+         Office = fct_reorder(Office, NEP_B))
+
+ggplot(top_deo_27, aes(x = NEP_B, y = Office)) +
+  geom_col(fill = "#3994fc", width = 0.72, color = "black", linewidth = 0.2) +
+  geom_text(aes(label = format(round(NEP_B, 2), nsmall = 2)), hjust = -0.15, size = 2.6) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.12))) +
+  labs(x = "FY 2027 proposed NEP (PHP billions)", y = NULL,
+       title = "Top 20 District Engineering Offices in the FY 2027 Proposal",
+       caption = "**Note:** Pre-allocated district amounts in the NEP, before congressional realignment.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_bw() +
+  theme(panel.grid.minor = element_blank(), panel.grid.major.y = element_blank(),
+        plot.title = element_text(face = "bold", size = 12.5),
+        plot.caption = element_markdown(size = 6),
+        axis.text.y = element_text(size = 7))
+```
+
+The offices proposed the most in FY2027 - Bulacan 2nd (₱3.5B), Metro Manila 3rd
+(₱2.9B), Nueva Ecija 1st (₱2.8B) - are a mix of high-population and
+infrastructure-heavy districts. But the more important point for scrutiny is the
+gap between this proposed geography and the *enacted* one: as the realignment
+analysis above shows, Congress adds heavily to district offices during
+deliberations, so the enacted distribution of DPWH money will look very different
+from this proposal.
+
+
+## From Proposal to House Bill: The FY 2027 District Shift
+
+The FY 2027 budget is still moving through Congress. The House has approved its version
+on second reading (HB 10858, in its third-reading print), which gives the NEP a
+House-stage amount to measure against rather than an enacted GAA; every FY 2027 figure
+here is that House-stage amount, not a final appropriation. At that stage the House made
+the same move the enacted budgets above make every year, and made it sharply.
+It cut the DPWH Central Office by **₱42.4 billion** (₱510.0B to ₱467.6B) and added
+**₱53.9 billion** to the district engineering offices (₱129.7B to ₱183.6B), lifting
+the district share of the department from **20% to 28%** in a single chamber. The
+department total rose only about ₱11B, so most of the district gain is money shifted
+out of the Central Office rather than new appropriation. In the net-versus-gross terms
+above, this is a ₱54B net that sits close to a ₱56B gross: the House pushed in one
+direction, raising 158 of the 198 district offices and trimming only 20.
+
+```{r plot-hgab-deo-jumps, fig.height=5}
+deo_full %>% filter(FY == 2027) %>%
+  arrange(desc(Chg_B)) %>% slice_head(n = 15) %>%
+  mutate(Office = str_replace(Office, " D.E. Office", ""),
+         Office = fct_reorder(Office, Chg_B)) %>%
+  ggplot(aes(x = Chg_B, y = Office)) +
+  geom_col(fill = "#c8a8e9", colour = "black", linewidth = 0.2, width = 0.72) +
+  geom_text(aes(label = sprintf("+%.1f", Chg_B)), hjust = -0.15, size = 2.8) +
+  scale_x_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.12))) +
+  labs(x = "House GAB minus NEP (PHP billions)", y = NULL,
+       title = "The Biggest District Jumps in the House FY 2027 Bill",
+       subtitle = "District engineering offices with the largest increase from the FY 2027 NEP to the House GAB (HB 10858)",
+       caption = "**Data Sources:** FY 2027 NEP and House GAB (HB 10858, 3rd-reading print). Nominal pesos.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank(), panel.grid.major.y = element_blank(),
+        plot.title = element_text(face = "bold", size = 13), plot.subtitle = element_text(size = 9),
+        plot.caption = element_markdown(size = 6), axis.text.y = element_text(size = 8))
+```
+
+The largest single jump is **Ilocos Norte's 1st district**, the President's home
+province, which the House raised from ₱0.41B to ₱4.79B, nearly twelve times the
+proposal. Davao de Oro, Misamis Occidental, South Cotabato, and Isabela's 4th district
+ part of the Speaker's home province, follow. Whether increases like these track
+construction need or the political geography of the districts - the home provinces of
+presidents, Speakers, and appropriations chairs, examined in the political-geography
+section above - is the question they raise most sharply.
+
 # DPWH and the Unprogrammed Appropriations
 
 The **Unprogrammed Appropriations (UA)** is a standby fund that may only be
 released when revenue collections exceed targets or new financing is secured.
 Because releases happen *outside* the regular program structure, they are harder
-to track — and the DPWH's draw on the UA has become a focus of scrutiny, as a
+to track - and the DPWH's draw on the UA has become a focus of scrutiny, as a
 number of flood-control projects later flagged as questionable were reportedly
 financed through this route. The table records **allotments released** (the
 spending authority granted) and **obligations** (amounts actually committed);
@@ -2159,7 +2655,7 @@ ua_long <- ua %>%
 
 ```{r plot-ua, fig.height=4.2}
 ggplot(ua_long %>% filter(!is.na(AmountB)), aes(x = FY, y = AmountB, fill = Item)) +
-  geom_col(position = position_dodge(width = 0.7), width = 0.66) +
+  geom_col(position = position_dodge(width = 0.7), width = 0.66, color = "black", linewidth = 0.2) +
   scale_x_continuous(breaks = 2011:2025) +
   scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.06))) +
   scale_fill_manual(values = c("Allotments" = "#ffa6b0", "Obligations" = "#3994fc")) +
@@ -2177,10 +2673,10 @@ ggplot(ua_long %>% filter(!is.na(AmountB)), aes(x = FY, y = AmountB, fill = Item
 ```
 
 After a decade of negligible draws, UA releases to the DPWH surged from **₱16B in
-2022 to ₱89B in 2023 and ₱245B in 2024** — the latter alone roughly a quarter of
+2022 to ₱89B in 2023 and ₱245B in 2024** - the latter alone roughly a quarter of
 the department's entire regular budget that year. Yet a large share of these
 allotments went unobligated (about **54% utilised in 2024**, **50% in 2025**),
-which — alongside the project-level findings reported elsewhere — is exactly the
+which, alongside the project-level findings reported elsewhere, is exactly the
 kind of pattern that merits questioning at the hearings.
 
 ```{r table-ua}
@@ -2204,19 +2700,19 @@ ua %>%
 
 # Notes
 
-**On coverage.** The Section 1 series is intentionally left with gaps where the
+**On coverage.** The Section 3 series is intentionally left with gaps where the
 physical documents have not yet been encoded; points mark observed years. The
 by-operating-unit data now runs from the FY2014 budget through FY2026, so the
 department-wide comparisons span the 16th through 20th Congresses and seven House
 Speakers (see the Speaker table in the operating-unit section). The district-office
-deep-dives center on the Duterte and Marcos administrations (FY2017 onward —
+deep-dives center on the Duterte and Marcos administrations (FY2017 onward - 
 ten budgets, 2019 included), though the realignments-by-Congress chart reaches back
 to the 16th Congress (the three Aquino-era budgets) for context. The FY2019 figures
 use the enacted, post-veto GAA; the ₱95.4B line-item veto that year is isolated in
 its own chart and section.
 
 **On the 2019 GAA.** The GAA figures throughout are the **enacted, post-veto**
-levels (they reconcile to the Office-of-the-Secretary totals in Section 1).
+levels (they reconcile to the Office-of-the-Secretary totals in Section 3).
 "Legislated (pre-veto)" reconstructs what Congress passed by adding the vetoed
 amounts back to the enacted GAA. Because of this, every 2019 realignment figure in
 this document reflects the *combined* effect of Congress's reallocation and the
