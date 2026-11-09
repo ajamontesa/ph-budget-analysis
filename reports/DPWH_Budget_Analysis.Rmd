@@ -900,6 +900,86 @@ underneath, the same district road-and-building-and-drainage work that the Local
 Program used to carry - now concentrated in one fast-growing, discretionary
 program.
 
+## Three District Work Types: Flood Control, Buildings, and Roads
+
+The reclassification is easier to read through the work being funded than through the program
+labels. Three district-oriented work types recur across the Flood Management, Local, and
+Convergence programs, and grouping by work type rather than program name lets each run
+continuously from 2014: flood control, multi-purpose buildings, and local and access roads.
+Access roads on their own have a gap from 2018 to 2021, when they sat unnamed inside the Local
+Program's general road lines; folding them together with those local and farm-to-market road
+lines closes the gap and keeps the comparison honest. Each of the three shows the same gap
+between what the Executive proposes (NEP) and what Congress enacts (GAA), on its own chart
+below.
+
+```{r themes-data, include=FALSE}
+themes <- gran %>%
+  mutate(txt = tolower(paste(SubProg, Item)),
+         Theme = case_when(
+           Program == "Flood Management Program" ~ "Flood control",
+           str_detect(txt, "flood") &
+             Program %in% c("Local Program", "Convergence and Special Support Program") ~ "Flood control",
+           str_detect(txt, "access road|local road|farm.to.market|tourism|national road") &
+             Program %in% c("Local Program", "Convergence and Special Support Program") ~ "Local and access roads",
+           str_detect(txt, "multi.?purpose") &
+             Program %in% c("Local Program", "Convergence and Special Support Program") ~ "Multi-purpose buildings",
+           TRUE ~ NA_character_)) %>%
+  filter(!is.na(Theme), FY <= 2026) %>%
+  group_by(Theme, FY) %>%
+  summarise(NEP = sum(NEP_B, na.rm = TRUE), GAA = sum(GAA_B, na.rm = TRUE), .groups = "drop")
+
+theme_plot <- function(th, subtitle) {
+  themes %>% filter(Theme == th) %>%
+    pivot_longer(c(NEP, GAA), names_to = "Stage", values_to = "AmountB") %>%
+    mutate(Stage = factor(Stage, levels = c("NEP", "GAA"))) %>%
+    ggplot(aes(x = FY, y = AmountB, colour = Stage)) +
+    geom_line(linewidth = 1) + geom_point(size = 1.9) +
+    scale_x_continuous(breaks = 2014:2026) +
+    scale_y_continuous(labels = scales::comma, limits = c(0, NA), expand = expansion(mult = c(0, 0.1))) +
+    scale_colour_manual(values = c("NEP" = "#ffa6b0", "GAA" = "#3994fc")) +
+    labs(x = NULL, y = "PHP billions", colour = NULL, title = th, subtitle = subtitle,
+         caption = "**Data:** granular program encoding, New Appropriations; 2014-2017 harmonized.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+    theme_minimal() +
+    theme(legend.position = "bottom", panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
+          plot.title = element_text(face = "bold", size = 13), plot.subtitle = element_text(size = 9),
+          plot.caption = element_markdown(size = 6), axis.text.x = element_text(size = 7.5))
+}
+gv <- function(th, y) round(themes$GAA[themes$Theme == th & themes$FY == y])
+nv <- function(th, y) round(themes$NEP[themes$Theme == th & themes$FY == y])
+```
+
+Flood control is the clearest case, and the one the scandal put in the spotlight. Congress
+enacted it above the proposal through the Marcos budgets, `r nv("Flood control", 2025)`B
+proposed against `r gv("Flood control", 2025)`B enacted in 2025, before the FY2026 budget cut
+it from a `r nv("Flood control", 2026)`B proposal to `r gv("Flood control", 2026)`B, the drop
+that followed the flood-control scandal.
+
+```{r plot-theme-flood, fig.height=3.5}
+theme_plot("Flood control",
+           "Flood items across the Flood Management, Local, and Convergence programs")
+```
+
+Multi-purpose buildings run two to three times their proposal almost every year. In 2025 the
+Executive proposed `r nv("Multi-purpose buildings", 2025)`B and Congress enacted
+`r gv("Multi-purpose buildings", 2025)`B.
+
+```{r plot-theme-buildings, fig.height=3.5}
+theme_plot("Multi-purpose buildings",
+           "Multi-purpose buildings in the Local and Convergence programs")
+```
+
+Local and access roads, the combined category that spans the reclassification, show the same
+widening. In 2025 the proposal was `r nv("Local and access roads", 2025)`B and the enacted
+figure `r gv("Local and access roads", 2025)`B.
+
+```{r plot-theme-roads, fig.height=3.5}
+theme_plot("Local and access roads",
+           "Local, access, and farm-to-market roads in the Local and Convergence programs")
+```
+
+The three together are the district-scale, realignment-prone works that recur throughout this
+report, seen here from the angle of what the Executive asked for against what Congress enacted.
+
 ## What Congress Adds To and Cuts at the Item Level
 
 Reading Congress's changes (enacted minus proposed) at the **individual item
