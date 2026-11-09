@@ -235,7 +235,9 @@ plus Automatic Appropriations, while the program and operating-unit sections use
 Appropriations only, so those totals run slightly below the headline. The same fiscal
 year can therefore carry two figures: the FY2019 proposal is ₱555.7B on the headline
 basis but ₱544.5B in New Appropriations, and the FY2026 enacted budget is ₱530.9B
-versus ₱529.6B. The gap is the automatic appropriations, and it is not a discrepancy. A recorded operating
+versus ₱529.6B. The gap is the automatic appropriations, and it is not a discrepancy. That New
+Appropriations series now runs back to 2005, and the gap stays small throughout, between
+about ₱1B and ₱11B a year. A recorded operating
 unit is not the same as where a project is built or the legislative district a lawmaker
 represents. And the difference between a proposal and the enacted law, the net NEP-to-GAA
 change, is not by itself a congressional addition: where a veto or a revised NEP sits
@@ -270,6 +272,15 @@ dpwh_long <- dpwh_newauto %>%
     RealB    = AmountB / (Deflator / 100),         # constant 2018 prices
     Share    = Amount / TotalBudget
   )
+
+# DPWH New Appropriations only (the basis the program and district sections use),
+# now compiled as a long series back to FY2005. Enacted (GAA) side only, for the
+# nominal chart overlay; it tracks the New + Automatic series within a few billion.
+newonly_gaa <- read_xlsx(data_path, sheet = "DPWH_OSec", range = "F2:I41") %>%
+  setNames(c("FY", "NEP", "GAA", "Actual Obligations")) %>%
+  filter(!is.na(GAA)) %>%
+  transmute(FY_date = as_date(str_c(FY, "-01-01")),
+            Item = "New Appropriations only (GAA)", AmountB = GAA / 1e6)
 ```
 
 # The Long View: DPWH Appropriations Since 1988
@@ -282,7 +293,12 @@ the document turns to the program, item, and district-level detail of recent yea
 ## Nominal Trend
 
 ```{r plot-nominal}
-ggplot(data = dpwh_long %>% filter(!is.na(AmountB))) +
+nominal_data <- bind_rows(
+  dpwh_long %>% filter(!is.na(AmountB)) %>% transmute(FY_date, Item = as.character(Item), AmountB),
+  newonly_gaa %>% transmute(FY_date, Item, AmountB)
+) %>% mutate(Item = factor(Item, levels = c(item_levels, "New Appropriations only (GAA)")))
+
+ggplot(data = nominal_data) +
   geom_hline(yintercept = 0) +
   geom_vline(data = admin_lines, aes(xintercept = Start),
              linetype = "dashed", linewidth = 0.4, alpha = 0.45) +
@@ -295,11 +311,11 @@ ggplot(data = dpwh_long %>% filter(!is.na(AmountB))) +
   geom_point(aes(x = FY_date, y = AmountB, color = Item), size = 1.1) +
   scale_x_date(date_labels = "FY '%y", breaks = congress_first_fy, minor_breaks = NULL) +
   scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.05))) +
-  scale_color_manual(values = item_colors) +
+  scale_color_manual(values = c(item_colors, "New Appropriations only (GAA)" = "#4d4d4d")) +
   coord_cartesian(ylim = c(0, NA)) +
   labs(x = NULL, y = "PHP billions", color = NULL,
-       title = "DPWH Office of the Secretary: New + Automatic Appropriations",
-       caption = "**Data Sources:** NEP and GAA documents, 1988-2026.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+       title = "DPWH Office of the Secretary: New + Automatic, and New Appropriations",
+       caption = "**Data Sources:** NEP and GAA documents; New + Automatic 1988-2026, New Appropriations only 2005-2026.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
   theme_minimal() +
   theme(legend.position = c(0.15, 0.7),
         panel.grid.major.x = element_blank(),
@@ -309,7 +325,10 @@ ggplot(data = dpwh_long %>% filter(!is.na(AmountB))) +
         axis.text.x = element_text(size = 7))
 ```
 
-In nominal terms the DPWH OSec budget climbs steeply from the mid-2010s. Two
+The dark line is the **New Appropriations** series, the basis the program and district
+sections of this report use, now compiled back to FY2005. It runs just below the New +
+Automatic headline, by a few billion a year, so the two bases tell the same long-run story:
+a budget that climbs steeply from the mid-2010s. Two
 deviations from the usual NEP-to-GAA pattern stand out, and both belong in
 hearings: the **2019 GAA fell below the NEP** (the year of the ₱95.4B line-item veto; a smaller ₱26.1B veto also trimmed the 2025 GAA),
 and the **2026 GAA drops sharply below its NEP** - the reverse of the
@@ -523,7 +542,7 @@ ggplot(byprogram %>% filter(FY <= 2026), aes(x = FY, y = GAA_B, fill = Program))
            vjust = 1.4, size = 2.6, fontface = "bold") +
   annotate("text", x = 2024.5, y = Inf, label = "Marcos Jr.",
            vjust = 1.4, size = 2.6, fontface = "bold") +
-  scale_x_continuous(breaks = seq(2014, 2026, 2)) +
+  scale_x_continuous(breaks = 2014:2026) +
   scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.07))) +
   scale_fill_manual(values = program_colors, labels = function(x) str_wrap(x, 26)) +
   labs(x = NULL, y = "PHP billions", fill = NULL,
@@ -550,7 +569,7 @@ ggplot(byprogram %>% filter(FY <= 2026), aes(x = FY, y = GAA_B, fill = Program))
            vjust = 1.4, size = 2.6, fontface = "bold") +
   annotate("text", x = 2024.5, y = Inf, label = "Marcos Jr.",
            vjust = 1.4, size = 2.6, fontface = "bold") +
-  scale_x_continuous(breaks = seq(2014, 2026, 2)) +
+  scale_x_continuous(breaks = 2014:2026) +
   scale_y_continuous(labels = scales::percent, expand = expansion(mult = c(0, 0.07))) +
   scale_fill_manual(values = program_colors, labels = function(x) str_wrap(x, 26)) +
   labs(x = NULL, y = "Share of DPWH GAA", fill = NULL,
@@ -2524,8 +2543,8 @@ totlevels <- byprogram %>%
 ggplot(totlevels, aes(x = FY, y = AmountB, colour = Item, group = Item)) +
   geom_line(linewidth = 0.9) + geom_point(size = 1.8) +
   geom_text(aes(label = round(AmountB)), vjust = -0.8, size = 2.4, show.legend = FALSE) +
-  scale_x_continuous(breaks = c(seq(2018, 2026, 2), 2027)) +
-  scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0.05, 0.14))) +
+  scale_x_continuous(breaks = 2014:2027) +
+  scale_y_continuous(labels = scales::comma, limits = c(0, NA), expand = expansion(mult = c(0, 0.14))) +
   scale_colour_manual(values = c("NEP" = "#ffa6b0", "GAA" = "#3994fc")) +
   labs(x = NULL, y = "PHP billions", colour = NULL,
        title = "DPWH Total New Appropriations: Proposed (NEP) vs Enacted (GAA)",
@@ -2534,13 +2553,14 @@ ggplot(totlevels, aes(x = FY, y = AmountB, colour = Item, group = Item)) +
   theme(legend.position = "bottom", panel.grid.minor = element_blank(),
         panel.grid.major.x = element_blank(),
         plot.title = element_text(face = "bold", size = 13),
-        plot.caption = element_markdown(size = 6))
+        plot.caption = element_markdown(size = 6), axis.text.x = element_text(size = 7.5))
 ```
 
-The enacted budget ran *above* the proposal every year from 2020 to 2025 - a
-legislature adding to the President's plan - until FY2026, when the enacted
-total fell far *below* the proposal (the ₱246B flood-control cut). The FY2027
-proposal resets the level near ₱643B.
+The enacted budget ran *above* the proposal nearly every year from 2014 to 2025, a
+legislature steadily adding to the President's plan. The exception is FY2019, when the
+presidential veto pulled the enacted total below the proposal. FY2026 then fell far
+*below* the proposal (the ₱246B flood-control cut), and the FY2027 proposal resets the
+level near ₱643B.
 
 **How is the FY 2027 proposal distributed across programs?** Two programs account
 for more than half of it: Network Development (₱176.6B, 27%) and the
@@ -2559,7 +2579,7 @@ lvl <- byprogram %>%
 ggplot(lvl, aes(x = FY, y = AmountB, fill = Program)) +
   geom_col(width = 0.72, color = "black", linewidth = 0.2) +
   facet_wrap(~Item, ncol = 1) +
-  scale_x_continuous(breaks = c(seq(2018, 2026, 2), 2027)) +
+  scale_x_continuous(breaks = 2014:2027) +
   scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.04))) +
   scale_fill_manual(values = program_colors) +
   labs(x = NULL, y = "PHP billions", fill = NULL,
@@ -2571,7 +2591,8 @@ ggplot(lvl, aes(x = FY, y = AmountB, fill = Program)) +
         plot.title = element_text(face = "bold", size = 12),
         plot.caption = element_markdown(size = 6),
         strip.background = element_rect(fill = "white"),
-        strip.text = element_text(size = 9, face = "bold")) +
+        strip.text = element_text(size = 9, face = "bold"),
+        axis.text.x = element_text(size = 7.5)) +
   guides(fill = guide_legend(nrow = 2))
 ```
 
@@ -2660,7 +2681,7 @@ unit_levels <- byoperunit %>%
                           str_detect(Office, "D.E. Office") ~ "District Engineering Offices",
                           str_detect(Office, "Regional")    ~ "Regional Offices",
                           TRUE                              ~ "Other units")) %>%
-  filter(FY >= 2018) %>%
+  filter(FY >= 2014) %>%
   group_by(FY, Unit) %>%
   summarise(NEP_B = sum(NEP_B, na.rm = TRUE), .groups = "drop") %>%
   group_by(FY) %>% mutate(share = NEP_B / sum(NEP_B)) %>% ungroup() %>%
@@ -2669,19 +2690,21 @@ unit_levels <- byoperunit %>%
 
 ggplot(unit_levels, aes(x = FY, y = share, fill = Unit)) +
   geom_col(width = 0.74, color = "black", linewidth = 0.2) +
-  scale_x_continuous(breaks = c(seq(2018, 2026, 2), 2027)) +
-  scale_y_continuous(labels = scales::percent, expand = expansion(mult = c(0, 0.02))) +
+  scale_x_continuous(breaks = 2014:2027) +
+  scale_y_continuous(labels = scales::percent, breaks = seq(0, 1, 0.25),
+                     limits = c(0, NA), expand = expansion(mult = c(0, 0.02))) +
   scale_fill_manual(values = c("Central Office" = "#3994fc",
                                "District Engineering Offices" = "#ffa6b0",
                                "Regional Offices" = "#bcbef2", "Other units" = "#d9d9d9")) +
   labs(x = NULL, y = "Share of proposed NEP", fill = NULL,
        title = "Where the Proposal Places the Money: NEP Share by Operating Unit",
-       caption = "**Note:** Each bar is the FY's *proposed* (NEP) new appropriations, split by operating unit. FY2027 is proposed only.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
+       caption = "**Note:** Each bar is the FY's *proposed* (NEP) new appropriations, split by operating unit, FY2014-2027 (2014-2017 pre-PREXC offices). FY2027 is proposed only.<br>**Visualization:** AJ Montesa / People's Budget Coalition.") +
   theme_bw() +
   theme(legend.position = "bottom", legend.text = element_text(size = 7),
         panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
         plot.title = element_text(face = "bold", size = 12.5),
-        plot.caption = element_markdown(size = 6)) +
+        plot.caption = element_markdown(size = 6),
+        axis.text.x = element_text(size = 7.5)) +
   guides(fill = guide_legend(nrow = 1))
 ```
 
