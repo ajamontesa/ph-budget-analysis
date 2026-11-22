@@ -8,9 +8,11 @@ tracing each peso from the Executive's proposal (NEP) through enactment
 added to the most recent reviews.
 
 **Live site:** <https://ajamontesa.github.io/ph-budget-analysis/index.html> —
-the home page opens with three whole-of-budget reports, newest budget stage
-first: an assessment of the House's FY 2027 budget bill, an assessment of the
-President's FY 2027 NEP, and a macro-fiscal backdrop. It then links to every published
+the home page opens with four whole-of-budget reports, newest budget stage
+first: an assessment of the Senate Finance Committee's report on the FY 2027
+budget bill (Committee Report No. 131; subject to plenary amendments), an
+assessment of the House's FY 2027 budget bill, an assessment of the President's
+FY 2027 NEP, and a macro-fiscal backdrop. It then links to every published
 department report, **special-funds** reviews of the lump-sum Special Purpose Funds
 and the Unprogrammed Appropriations, and a set of cross-cutting **sectoral / cluster
 briefings** that follow a theme across several departments.
@@ -22,6 +24,9 @@ The site is published via GitHub Pages from the `docs/` folder.
 budget-analysis/
 ├── data/
 │   ├── Compiled_-_NEP-GAA-SAAODB-ByPAPLabelled.xlsx   # source data (one sheet per agency)
+│   ├── Compiled_-_PAPs.xlsx                            # full P/A/P compilation, all agencies, SUCs, GOCC support, SPFs, FY 2018-2027; NEP, GAA, House bill (HGAB) and Senate committee report (SGAB) columns
+│   ├── PH_Budget_Data_Set.xlsx                         # agency-level NEP/GAA totals and utilization (budget totals used to derive automatic and unprogrammed appropriations)
+│   ├── dashboardData.RData                             # offline fallback copy of the PH-Econ-Data macro series
 │   ├── Compiled_-_DPWH.xlsx                            # DPWH (separate structure: long-run OSec, by operating unit, and by sub-program/line item)
 │   ├── Compiled_-_NEP-GAA-NoFAR1.xlsx                  # agencies without FAR No.1 (P/A/P NEP-GAA + agency-level SAAODB)
 │   ├── Compiled_-_Unprogrammed.xlsx                    # Unprogrammed Appropriations (NEP_UA year totals, prog line items, prog_dept releases)
@@ -30,6 +35,7 @@ budget-analysis/
 │   ├── index.Rmd                  # landing page -> knits to index.html
 │   ├── Macro_Fiscal_Situation.Rmd # macro-fiscal backdrop -> macro-fiscal.html (pulls live data, see below)
 │   ├── NEP_2027_Overall_Assessment.Rmd # whole-of-budget FY 2027 NEP assessment -> nep-2027-assessment.html
+│   ├── SGAB_2027_Assessment.Rmd    # Senate FY 2027 GAB committee report assessment -> sgab-2027-assessment.html
 │   ├── HGAB_2027_Assessment.Rmd    # House FY 2027 GAB assessment -> hgab-2027-assessment.html
 │   ├── DAR_OSEC_Budget_Analysis.Rmd
 │   ├── DA_Budget_Analysis.Rmd
@@ -51,7 +57,10 @@ budget-analysis/
     ├── index.html
     ├── agency-budget-utilization.html  # embed page: frames the agency-level Connect Cloud dashboard
     ├── pap-browser.html                # embed page: frames the P/A/P-level Connect Cloud dashboard
-    ├── hgab-2027-assessment.html        # House FY 2027 GAB assessment (featured, leads the page)
+    ├── sgab-2027-assessment.html        # Senate committee report assessment (featured, leads the page)
+    ├── hgab-2027-assessment.html        # House FY 2027 GAB assessment (featured)
+    ├── hgab-2027-assessment-deck.html   # xaringan deck of the House assessment
+    ├── hgab-2027-assessment.pdf         # print edition of the House assessment
     ├── nep-2027-assessment.html         # whole-of-budget FY 2027 NEP assessment (featured)
     ├── macro-fiscal.html               # macro & fiscal backdrop report (featured)
     ├── dar-osec.html
@@ -107,12 +116,19 @@ CPI series) live at knit time from the public
 [`PH-Econ-Data`](https://github.com/ajamontesa/PH-Econ-Data) repository, and the
 medium-term fiscal targets (MTFF) are embedded in the Rmd itself. So it re-knits
 from just the `.Rmd` with a network connection, and no macro workbook is
-committed here. It, the FY 2027 NEP overall assessment (`nep-2027-assessment.html`), and the
-House FY 2027 GAB assessment (`hgab-2027-assessment.html`) are the three featured
+committed here. It, the FY 2027 NEP overall assessment (`nep-2027-assessment.html`), the
+House FY 2027 GAB assessment (`hgab-2027-assessment.html`), and the Senate committee
+report assessment (`sgab-2027-assessment.html`) are the four featured
 top-level reports, placed on the landing page by the `features` table in
 `reports/index.Rmd` (edit, reorder, or clear that table to change them). They
 render right after the dashboards and before the department reports, ordered
-newest budget stage first: House bill, then NEP, then the macro-fiscal backdrop.
+newest budget stage first: Senate committee report, House bill, NEP, then the
+macro-fiscal backdrop. The three FY 2027 assessments read `Compiled_-_PAPs.xlsx`,
+`Compiled_-_DPWH.xlsx` and `PH_Budget_Data_Set.xlsx` from `data/`, and pull the
+macro series from PH-Econ-Data at knit time (falling back to `data/dashboardData.RData`).
+The Senate report compares government corporations at program level only, because
+neither chamber's bill itemizes them further; it should be re-knit from the
+third-reading print once the Senate passes the bill.
 
 ## Workflow
 
@@ -177,8 +193,10 @@ newest budget stage first: House bill, then NEP, then the macro-fiscal backdrop.
   Automatic Appropriations and Special Purpose Fund transfers.
 - **Coverage:** NEP (proposed) for FY 2018-2026, extended to FY 2027 in the
   most recent reviews (the FY 2027 GAA is not yet enacted); GAA (enacted) for
-  FY 2018-2026; execution measures (Adjusted Allotments, Obligations,
-  Disbursements) for FY 2018-2025.
+  FY 2018-2026; the FY 2027 House bill (HB 10858, third-reading print) and the
+  Senate committee report (CR 131, 20 November 2026) in `Compiled_-_PAPs.xlsx`
+  and `Compiled_-_DPWH.xlsx`; execution measures (Adjusted Allotments,
+  Obligations, Disbursements) for FY 2018-2025.
 - **Source:** DBM-published budget and execution data.
 - **DPWH exception:** The DPWH review is department-wide (not OSec-only) and
   traces appropriations to 1988. It adds a granular encoding of DPWH's programs,
